@@ -12,18 +12,19 @@ data class PrayerResponse(
 
 data class PrayerData(
     val timings: Timings,
-    val date: DateInfo
+    val date: DateInfo,
+    val moonUrl: String = ""
 )
 
 data class Timings(
-    @SerializedName("Fajr") val fajr: String, // Bu gerçek İmsak vaktidir
+    @SerializedName("Fajr") val fajr: String,
     @SerializedName("Sunrise") val sunrise: String,
     @SerializedName("Dhuhr") val dhuhr: String,
     @SerializedName("Asr") val asr: String,
     @SerializedName("Maghrib") val maghrib: String,
-    @SerializedName("Isha") val isha: String
+    @SerializedName("Isha") val isha: String,
+    val kible: String = ""
 ) {
-    // Sabah vaktini Güneş'ten 60 dakika önce olacak şekilde hesaplıyoruz
     val sabah: String
         get() = try {
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -40,7 +41,9 @@ data class Timings(
 
 data class DateInfo(
     val readable: String,
-    val hijri: HijriInfo
+    val hijri: HijriInfo,
+    val fullMiladi: String = "",
+    val fullHicri: String = ""
 )
 
 data class HijriInfo(
@@ -54,6 +57,7 @@ data class MonthInfo(
 
 data class Province(
     val name: String, 
+    val id: String = "",
     val lat: Double = 41.0082, 
     val lon: Double = 28.9784
 )
@@ -61,6 +65,10 @@ data class Province(
 data class DailyContent(
     val verse: String = "",
     val verseSource: String = "",
+    val hadith: String = "",
+    val hadithSource: String = "",
+    val quote: String = "",
+    val quoteSource: String = "",
     val name: String = "",
     val nameMeaning: String = ""
 )

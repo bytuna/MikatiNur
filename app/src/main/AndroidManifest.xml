@@ -3,6 +3,8 @@
     package="com.example.mkat_nur">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -40,6 +42,34 @@
         <receiver
             android:name=".receiver.PrayerNotificationReceiver"
             android:exported="false" />
+
+        <activity
+            android:name=".PrayerPopupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MîkatıNur"
+            android:showOnLockScreen="true"
+            android:showForAllUsers="true"
+            android:turnScreenOn="true" />
+
+        <activity
+            android:name=".FridayMessageActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MîkatıNur"
+            android:showOnLockScreen="true"
+            android:showForAllUsers="true"
+            android:turnScreenOn="true" />
+
+        <receiver
+            android:name=".receiver.QuoteWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="REFRESH_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
 
     </application>
 </manifest>
