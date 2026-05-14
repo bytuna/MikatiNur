@@ -17,14 +17,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TesbihatScreen(onMenuClick: () -> Unit) {
+fun TesbihatScreen(
+    viewModel: com.example.mkat_nur.viewmodel.PrayerViewModel,
+    initialPrayer: String = "sabah",
+    onMenuClick: () -> Unit
+) {
     val context = LocalContext.current
-    var selectedPrayer by remember { mutableStateOf("sabah") }
+    
+    // Vakit anahtarlarını düzeltme (Örn: "Öğle" -> "ogle")
+    val prayerKeys = mapOf(
+        "imsak" to "sabah", "sabah" to "sabah", "güneş" to "sabah",
+        "öğle" to "ogle", "ikindi" to "ikindi", "akşam" to "aksam", "yatsı" to "yatsi"
+    )
+    
+    var selectedPrayer by remember { 
+        mutableStateOf(prayerKeys[initialPrayer.lowercase()] ?: "sabah") 
+    }
     var language by remember { mutableStateOf("tr") } // "tr" or "ar"
+    val fontSize by viewModel.fontSize.collectAsState()
+    
+    LaunchedEffect(initialPrayer) {
+        selectedPrayer = prayerKeys[initialPrayer.lowercase()] ?: "sabah"
+    }
     
     // Metni dosyadan okuyan fonksiyon
     fun loadTesbihatText(prayer: String, lang: String): String {
@@ -74,32 +91,38 @@ fun TesbihatScreen(onMenuClick: () -> Unit) {
                     }
                 }
 
-                // Dil Seçimi
+                // Dil ve Yazı Boyutu Seçimi
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.End
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterChip(
-                        selected = language == "tr",
-                        onClick = { language = "tr" },
-                        label = { Text("Türkçe") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            labelColor = Color.White,
-                            selectedLabelColor = Color.Black,
-                            selectedContainerColor = Color(0xFFFF9800)
+                    Row {
+                        FilterChip(
+                            selected = language == "tr",
+                            onClick = { language = "tr" },
+                            label = { Text("TR", fontSize = 12.sp) },
+                            colors = FilterChipDefaults.filterChipColors(labelColor = Color.White, selectedLabelColor = Color.Black, selectedContainerColor = Color(0xFFFF9800))
                         )
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    FilterChip(
-                        selected = language == "ar",
-                        onClick = { language = "ar" },
-                        label = { Text("Arapça") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            labelColor = Color.White,
-                            selectedLabelColor = Color.Black,
-                            selectedContainerColor = Color(0xFFFF9800)
+                        Spacer(Modifier.width(4.dp))
+                        FilterChip(
+                            selected = language == "ar",
+                            onClick = { language = "ar" },
+                            label = { Text("AR", fontSize = 12.sp) },
+                            colors = FilterChipDefaults.filterChipColors(labelColor = Color.White, selectedLabelColor = Color.Black, selectedContainerColor = Color(0xFFFF9800))
                         )
-                    )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f).padding(start = 16.dp)) {
+                        Icon(Icons.Default.FormatSize, null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+                        Slider(
+                            value = fontSize,
+                            onValueChange = { viewModel.setFontSize(it) },
+                            valueRange = 12f..36f,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
+                        )
+                    }
                 }
 
                 // İçerik Alanı
@@ -128,12 +151,14 @@ fun TesbihatScreen(onMenuClick: () -> Unit) {
                                 it.contains("çekilir")
                             }
                             
+                            val baseSize = if (isInstruction) fontSize * 0.8f else fontSize * 1.2f
+                            
                             Text(
                                 text = paragraph,
                                 color = if (isInstruction) Color(0xFFFF9800) else Color.White,
-                                fontSize = if (isInstruction) 14.sp else 22.sp, // Arapça için biraz daha büyük font daha iyi olur
+                                fontSize = baseSize.sp,
                                 fontWeight = if (isInstruction) FontWeight.Bold else FontWeight.Normal,
-                                lineHeight = if (isInstruction) 20.sp else 34.sp,
+                                lineHeight = (baseSize * 1.5f).sp,
                                 textAlign = if (language == "ar" && !isInstruction) androidx.compose.ui.text.style.TextAlign.Right else androidx.compose.ui.text.style.TextAlign.Left,
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                             )

@@ -5,20 +5,27 @@ import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.*
 import com.example.mkat_nur.model.DailyContent
 import com.example.mkat_nur.model.PrayerData
 import com.example.mkat_nur.model.Province
+import com.example.mkat_nur.model.toPrayerData
 import com.example.mkat_nur.receiver.PrayerNotificationReceiver
+import com.example.mkat_nur.util.NotificationHelper
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,7 +37,8 @@ sealed class PrayerUiState {
 
 data class CountdownState(
     val hours: Int, val minutes: Int, val seconds: Int,
-    val nextPrayer: String, val currentPrayer: String
+    val nextPrayer: String, val currentPrayer: String,
+    val isKerahat: Boolean = false
 )
 
 class PrayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -45,22 +53,21 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _countdownState = MutableStateFlow<CountdownState?>(null)
     val countdownState: StateFlow<CountdownState?> = _countdownState.asStateFlow()
 
-    // Hafızadan şehir bilgisini oku (Varsayılan İstanbul)
-    private val savedCity = prefs.getString("selected_city", "İstanbul") ?: "İstanbul"
-    private val _selectedProvince = MutableStateFlow(provinces.first { it.name == savedCity })
+    private val savedCityName = prefs.getString("selected_city_name", "İstanbul") ?: "İstanbul"
+    private val savedCityId = prefs.getString("selected_city_id", "9541") ?: "9541"
+    private val _selectedProvince = MutableStateFlow(Province(savedCityName, savedCityId))
     val selectedProvince: StateFlow<Province> = _selectedProvince.asStateFlow()
 
-    // Hafızadan tema bilgisini oku
     private val _isDarkMode = MutableStateFlow<Boolean?>(
         if (prefs.contains("is_dark_mode")) prefs.getBoolean("is_dark_mode", false) else null
     )
     val isDarkMode: StateFlow<Boolean?> = _isDarkMode.asStateFlow()
 
-    // Hafızadan hatırlatıcı bilgisini oku
-    private val _reminderMinutes = MutableStateFlow(prefs.getInt("reminder_minutes", 15))
-    val reminderMinutes: StateFlow<Int> = _reminderMinutes.asStateFlow()
+    private val _reminderMinutes = MutableStateFlow(
+        prefs.getStringSet("reminder_minutes_set", setOf("15"))?.map { it.toInt() }?.toSet() ?: setOf(15)
+    )
+    val reminderMinutes: StateFlow<Set<Int>> = _reminderMinutes.asStateFlow()
 
-    // --- YENİ AYARLAR ---
     private val _fontSize = MutableStateFlow(prefs.getFloat("font_size", 16f))
     val fontSize: StateFlow<Float> = _fontSize.asStateFlow()
 
@@ -70,7 +77,6 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _timeOffset = MutableStateFlow(prefs.getInt("time_offset", 0))
     val timeOffset: StateFlow<Int> = _timeOffset.asStateFlow()
 
-    // Her vakit için ayrı offset (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı)
     private val _imsakOffset = MutableStateFlow(prefs.getInt("offset_imsak", 0))
     val imsakOffset: StateFlow<Int> = _imsakOffset.asStateFlow()
 
@@ -94,16 +100,107 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _highlightColor = MutableStateFlow(prefs.getInt("highlight_color", 0xFFFF9800.toInt()))
     val highlightColor: StateFlow<Int> = _highlightColor.asStateFlow()
-    // -------------------
+
+    private val _slidingDuration = MutableStateFlow(prefs.getFloat("sliding_duration", 3f))
+    val slidingDuration: StateFlow<Float> = _slidingDuration.asStateFlow()
+
+    private val _showAyet = MutableStateFlow(prefs.getBoolean("show_ayet", true))
+    val showAyet: StateFlow<Boolean> = _showAyet.asStateFlow()
+
+    private val _showHadis = MutableStateFlow(prefs.getBoolean("show_hadis", true))
+    val showHadis: StateFlow<Boolean> = _showHadis.asStateFlow()
+
+    private val _showVecize = MutableStateFlow(prefs.getBoolean("show_vecize", true))
+    val showVecize: StateFlow<Boolean> = _showVecize.asStateFlow()
+
+    private val _showEsma = MutableStateFlow(prefs.getBoolean("show_esma", true))
+    val showEsma: StateFlow<Boolean> = _showEsma.asStateFlow()
+
+    private val _notifyImsak = MutableStateFlow(prefs.getBoolean("notify_imsak", true))
+    val notifyImsak: StateFlow<Boolean> = _notifyImsak.asStateFlow()
+
+    private val _notifySunrise = MutableStateFlow(prefs.getBoolean("notify_sunrise", true))
+    val notifySunrise: StateFlow<Boolean> = _notifySunrise.asStateFlow()
+
+    private val _notifyDhuhr = MutableStateFlow(prefs.getBoolean("notify_dhuhr", true))
+    val notifyDhuhr: StateFlow<Boolean> = _notifyDhuhr.asStateFlow()
+
+    private val _notifyAsr = MutableStateFlow(prefs.getBoolean("notify_asr", true))
+    val notifyAsr: StateFlow<Boolean> = _notifyAsr.asStateFlow()
+
+    private val _notifyMaghrib = MutableStateFlow(prefs.getBoolean("notify_maghrib", true))
+    val notifyMaghrib: StateFlow<Boolean> = _notifyMaghrib.asStateFlow()
+
+    private val _notifyIsha = MutableStateFlow(prefs.getBoolean("notify_isha", true))
+    val notifyIsha: StateFlow<Boolean> = _notifyIsha.asStateFlow()
+
+    private val _notifyKerahat = MutableStateFlow(prefs.getBoolean("notify_kerahat", true))
+    val notifyKerahat: StateFlow<Boolean> = _notifyKerahat.asStateFlow()
+
+    private val _lastUpdateTimestamp = MutableStateFlow(prefs.getLong("last_update_timestamp", 0L))
+    val lastUpdateTimestamp: StateFlow<Long> = _lastUpdateTimestamp.asStateFlow()
+
+    private val _autoLocationInterval = MutableStateFlow(prefs.getInt("auto_location_interval", 0))
+    val autoLocationInterval: StateFlow<Int> = _autoLocationInterval.asStateFlow()
+
+    private val _isWomenSpecial = MutableStateFlow(prefs.getBoolean("is_women_special", false))
+    val isWomenSpecial: StateFlow<Boolean> = _isWomenSpecial.asStateFlow()
+
+    private val _widgetTransparency = MutableStateFlow(prefs.getFloat("widget_transparency", 0.9f))
+    val widgetTransparency: StateFlow<Float> = _widgetTransparency.asStateFlow()
+
+    private val _widgetTitleColor = MutableStateFlow(prefs.getInt("widget_title_color", 0xFFFFD700.toInt()))
+    val widgetTitleColor: StateFlow<Int> = _widgetTitleColor.asStateFlow()
+
+    private val _widgetTextColor = MutableStateFlow(prefs.getInt("widget_text_color", 0xFFFFFFFF.toInt()))
+    val widgetTextColor: StateFlow<Int> = _widgetTextColor.asStateFlow()
 
     private val _dailyContent = MutableStateFlow(DailyContent())
     val dailyContent: StateFlow<DailyContent> = _dailyContent.asStateFlow()
 
+    private val _allVakitler = MutableStateFlow<List<PrayerData>>(emptyList())
+    val allVakitler: StateFlow<List<PrayerData>> = _allVakitler.asStateFlow()
+
+    private val _sehirler = MutableStateFlow<List<com.example.mkat_nur.network.SehirResponse>>(emptyList())
+    val sehirler: StateFlow<List<com.example.mkat_nur.network.SehirResponse>> = _sehirler.asStateFlow()
+
+    private val _ilceler = MutableStateFlow<List<com.example.mkat_nur.network.IlceResponse>>(emptyList())
+    val ilceler: StateFlow<List<com.example.mkat_nur.network.IlceResponse>> = _ilceler.asStateFlow()
+
+    private val _dataSource = MutableStateFlow("Yükleniyor...")
+    val dataSource: StateFlow<String> = _dataSource.asStateFlow()
+
     private var countdownJob: Job? = null
+    private var allPrayerDataList: List<PrayerData> = emptyList()
 
     init {
         fetchPrayerTimes()
         fetchDailyContent()
+        fetchSehirler()
+        scheduleAutoLocationWork(_autoLocationInterval.value)
+    }
+
+    private fun fetchSehirler() {
+        viewModelScope.launch {
+            try {
+                val list = RetrofitClient.diyanetInstance.getSehirler()
+                _sehirler.value = list.sortedBy { it.SehirAdi }
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "Şehirler çekilemedi: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchIlceler(sehirId: String) {
+        _ilceler.value = emptyList()
+        viewModelScope.launch {
+            try {
+                val list = RetrofitClient.diyanetInstance.getIlceler(sehirId)
+                _ilceler.value = list.sortedBy { it.IlceAdi }
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "İlçeler çekilemedi: ${e.message}")
+            }
+        }
     }
 
     fun toggleDarkMode(isDark: Boolean?) {
@@ -112,10 +209,18 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         else prefs.edit().putBoolean("is_dark_mode", isDark).apply()
     }
 
-    fun setReminderMinutes(mins: Int) {
-        _reminderMinutes.value = mins
-        prefs.edit().putInt("reminder_minutes", mins).apply()
-        // Hatırlatıcıları güncelle
+    fun toggleReminderMinute(mins: Int) {
+        val currentSet = _reminderMinutes.value.toMutableSet()
+        if (currentSet.contains(mins)) {
+            if (currentSet.size > 1 || mins != 0) { // En az bir seçim kalsın veya 0 (vaktinde) değilse
+                currentSet.remove(mins)
+            }
+        } else {
+            currentSet.add(mins)
+        }
+        _reminderMinutes.value = currentSet
+        prefs.edit().putStringSet("reminder_minutes_set", currentSet.map { it.toString() }.toSet()).apply()
+        
         val currentState = _uiState.value
         if (currentState is PrayerUiState.Success) {
             schedulePrayerAlarms(currentState.data)
@@ -137,10 +242,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         _timeOffset.value = offset
         prefs.edit().putInt("time_offset", offset).apply()
         applyOffsetToUiState()
-        // startCountdown'ı tetiklemek için fetchPrayerTimes yerine uiState'i kullanıyoruz
         val currentState = _uiState.value
         if (currentState is PrayerUiState.Success) {
-            startCountdown(currentState.data)
+            startCountdown(allPrayerDataList)
         }
     }
 
@@ -158,21 +262,19 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         applyOffsetToUiState()
         val currentState = _uiState.value
         if (currentState is PrayerUiState.Success) {
-            startCountdown(currentState.data)
+            startCountdown(allPrayerDataList)
         }
     }
 
     fun setNotificationSound(uri: String?) {
         _notificationSoundUri.value = uri
         prefs.edit().putString("notif_sound_uri", uri).apply()
-        // Bildirim kanalını yeni sesle güncellemek için NotificationHelper'ı tetikle
         com.example.mkat_nur.util.NotificationHelper(getApplication()).showNotification("Ses Güncellendi", "Yeni bildirim sesi ayarlandı.")
     }
 
     fun setHighlightColor(colorInt: Int) {
         _highlightColor.value = colorInt
         prefs.edit().putInt("highlight_color", colorInt).apply()
-        // Servisi güncelle
         val currentState = _offsetAppliedUiState.value
         if (currentState is PrayerUiState.Success) {
             com.example.mkat_nur.service.PrayerNotificationService.startService(
@@ -183,13 +285,189 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun setSlidingDuration(duration: Float) {
+        _slidingDuration.value = duration
+        prefs.edit().putFloat("sliding_duration", duration).apply()
+    }
+
+    fun setAutoLocationInterval(interval: Int) {
+        _autoLocationInterval.value = interval
+        prefs.edit().putInt("auto_location_interval", interval).apply()
+        // WorkManager'ı tetikle
+        scheduleAutoLocationWork(interval)
+    }
+
+    private fun scheduleAutoLocationWork(interval: Int) {
+        val workManager = WorkManager.getInstance(getApplication())
+        workManager.cancelAllWorkByTag("AutoLocationWork")
+        
+        if (interval > 0) {
+            val workRequest = PeriodicWorkRequestBuilder<com.example.mkat_nur.worker.LocationUpdateWorker>(
+                interval.toLong(), java.util.concurrent.TimeUnit.HOURS
+            ).addTag("AutoLocationWork").build()
+            
+            workManager.enqueueUniquePeriodicWork(
+                "AutoLocationWork",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                workRequest
+            )
+        }
+    }
+
+    fun toggleContentType(type: String, enabled: Boolean) {
+        when(type) {
+            "Ayet" -> { _showAyet.value = enabled; prefs.edit().putBoolean("show_ayet", enabled).apply() }
+            "Hadis" -> { _showHadis.value = enabled; prefs.edit().putBoolean("show_hadis", enabled).apply() }
+            "Vecize" -> { _showVecize.value = enabled; prefs.edit().putBoolean("show_vecize", enabled).apply() }
+            "Esma" -> { _showEsma.value = enabled; prefs.edit().putBoolean("show_esma", enabled).apply() }
+        }
+    }
+
+    fun toggleNotification(prayer: String, enabled: Boolean) {
+        val prefKey = "notify_${prayer.lowercase()}"
+        prefs.edit().putBoolean(prefKey, enabled).apply()
+        when(prayer) {
+            "İmsak" -> _notifyImsak.value = enabled
+            "Güneş" -> _notifySunrise.value = enabled
+            "Öğle" -> _notifyDhuhr.value = enabled
+            "İkindi" -> _notifyAsr.value = enabled
+            "Akşam" -> _notifyMaghrib.value = enabled
+            "Yatsı" -> _notifyIsha.value = enabled
+            "Kerahat" -> _notifyKerahat.value = enabled
+        }
+        // Alarmları güncelle
+        val currentState = _uiState.value
+        if (currentState is PrayerUiState.Success) {
+            schedulePrayerAlarms(currentState.data)
+        }
+    }
+
+    fun toggleAllNotifications(enabled: Boolean) {
+        val prayers = listOf("İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı", "Kerahat")
+        prayers.forEach { prayer ->
+            val prefKey = "notify_${prayer.lowercase()}"
+            prefs.edit().putBoolean(prefKey, enabled).apply()
+        }
+        _notifyImsak.value = enabled
+        _notifySunrise.value = enabled
+        _notifyDhuhr.value = enabled
+        _notifyAsr.value = enabled
+        _notifyMaghrib.value = enabled
+        _notifyIsha.value = enabled
+        _notifyKerahat.value = enabled
+
+        val currentState = _uiState.value
+        if (currentState is PrayerUiState.Success) {
+            schedulePrayerAlarms(currentState.data)
+        }
+    }
+
+    fun toggleWomenSpecial(enabled: Boolean) {
+        _isWomenSpecial.value = enabled
+        prefs.edit().putBoolean("is_women_special", enabled).apply()
+        
+        // Bildirim göster
+        val helper = NotificationHelper(getApplication())
+        if (enabled) {
+            helper.showNotification("Kadın Özel Modu Aktif", "Vakit bildirimleri geçici olarak sessize alındı.")
+        } else {
+            helper.showNotification("Kadın Özel Modu Kapatıldı", "Vakit bildirimleri tekrar aktif edildi.")
+        }
+        
+        // Alarmları güncelle
+        val currentState = _uiState.value
+        if (currentState is PrayerUiState.Success) {
+            schedulePrayerAlarms(currentState.data)
+        }
+    }
+
+    fun setWidgetTransparency(transparency: Float) {
+        _widgetTransparency.value = transparency
+        prefs.edit().putFloat("widget_transparency", transparency).apply()
+        // Widget'ı güncellemek için broadcast gönder
+        val intent = Intent(getApplication(), com.example.mkat_nur.receiver.QuoteWidgetProvider::class.java).apply {
+            action = "REFRESH_WIDGET"
+        }
+        getApplication<Application>().sendBroadcast(intent)
+    }
+
+    fun setWidgetTitleColor(color: Int) {
+        _widgetTitleColor.value = color
+        prefs.edit().putInt("widget_title_color", color).apply()
+        val intent = Intent(getApplication(), com.example.mkat_nur.receiver.QuoteWidgetProvider::class.java).apply {
+            action = "REFRESH_WIDGET"
+        }
+        getApplication<Application>().sendBroadcast(intent)
+    }
+
+    fun setWidgetTextColor(color: Int) {
+        _widgetTextColor.value = color
+        prefs.edit().putInt("widget_text_color", color).apply()
+        val intent = Intent(getApplication(), com.example.mkat_nur.receiver.QuoteWidgetProvider::class.java).apply {
+            action = "REFRESH_WIDGET"
+        }
+        getApplication<Application>().sendBroadcast(intent)
+    }
+
     fun refreshLocation() {
-        fetchPrayerTimes()
+        fetchLocationAndDistrict()
+    }
+
+    private fun fetchLocationAndDistrict() {
+        viewModelScope.launch {
+            _dataSource.value = "GPS Konum Aranıyor..."
+            try {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplication<Application>())
+                val location = try {
+                    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).await()
+                } catch (e: SecurityException) {
+                    Log.e("PrayerViewModel", "GPS İzni Yok: ${e.message}")
+                    null
+                }
+                
+                if (location != null) {
+                    val geocoder = Geocoder(getApplication(), Locale("tr"))
+                    val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                    
+                    if (!addresses.isNullOrEmpty()) {
+                        val city = addresses[0].adminArea ?: "" // Örn: İstanbul
+                        val district = addresses[0].subAdminArea ?: addresses[0].locality ?: "" // Örn: Pendik
+                        
+                        Log.d("PrayerViewModel", "GPS Konum: $city, $district")
+                        
+                        // Önce şehri bul
+                        val sehirList = RetrofitClient.diyanetInstance.getSehirler()
+                        val matchedSehir = sehirList.find { it.SehirAdi.contains(city, ignoreCase = true) }
+                        
+                        if (matchedSehir != null) {
+                            // Sonra ilçeyi bul
+                            val ilceList = RetrofitClient.diyanetInstance.getIlceler(matchedSehir.SehirID)
+                            val matchedIlce = ilceList.find { it.IlceAdi.contains(district, ignoreCase = true) }
+                                ?: ilceList.find { it.IlceAdi.contains(city, ignoreCase = true) } // İlçe bulunamazsa merkezi dene
+                            
+                            if (matchedIlce != null) {
+                                onProvinceSelected(Province(matchedIlce.IlceAdi, matchedIlce.IlceID))
+                                return@launch
+                            }
+                        }
+                    }
+                }
+                _dataSource.value = "GPS Başarısız, Kayıtlı Veri."
+                fetchPrayerTimes()
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "GPS Hatası: ${e.message}")
+                _dataSource.value = "GPS Hatası, Kayıtlı Veri."
+                fetchPrayerTimes()
+            }
+        }
     }
 
     fun onProvinceSelected(province: Province) {
         _selectedProvince.value = province
-        prefs.edit().putString("selected_city", province.name).apply()
+        prefs.edit()
+            .putString("selected_city_name", province.name)
+            .putString("selected_city_id", province.id)
+            .apply()
         fetchPrayerTimes()
     }
 
@@ -198,15 +476,91 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         _offsetAppliedUiState.value = PrayerUiState.Loading
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.instance.getPrayerTimes(_selectedProvince.value.name, "Turkey")
-                _uiState.value = PrayerUiState.Success(response.data)
-                applyOffsetToUiState()
-                schedulePrayerAlarms(response.data)
+                // 1. Önce hafızadaki (Cache) veriyi kontrol et
+                loadVakitlerFromCache()
+
+                val cityIdentifier = if (_selectedProvince.value.id.isNotEmpty()) _selectedProvince.value.id else _selectedProvince.value.name
+                val responseList = RetrofitClient.diyanetInstance.getVakitler(cityIdentifier)
                 
-                startCountdown(response.data)
+                if (responseList.isNotEmpty()) {
+                    val now = System.currentTimeMillis()
+                    _lastUpdateTimestamp.value = now
+                    prefs.edit().putLong("last_update_timestamp", now).apply()
+
+                    _dataSource.value = "Diyanet (Resmi)"
+                    allPrayerDataList = responseList.map { it.toPrayerData() }
+                    _allVakitler.value = allPrayerDataList
+                    saveVakitlerToCache(allPrayerDataList) // Hafızaya kaydet
+                    
+                    val todayStr = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+                    val prayerData = allPrayerDataList.find { it.date.readable == todayStr } ?: allPrayerDataList[0]
+
+                    _uiState.value = PrayerUiState.Success(prayerData)
+                    applyOffsetToUiState()
+                    schedulePrayerAlarms(prayerData)
+                    startCountdown(allPrayerDataList)
+                } else {
+                    handleFetchError("Veri bulunamadı.")
+                }
             } catch (e: Exception) {
-                _uiState.value = PrayerUiState.Error("Hata: ${e.message}")
-                _offsetAppliedUiState.value = PrayerUiState.Error("Hata: ${e.message}")
+                Log.e("PrayerViewModel", "Diyanet API Hatası: ${e.message}")
+                handleFetchError(e.message ?: "Bilinmeyen Hata")
+            }
+        }
+    }
+
+    private fun handleFetchError(message: String) {
+        if (_allVakitler.value.isNotEmpty()) {
+            _dataSource.value = "Diyanet (Hafıza)"
+            // Eğer internet yoksa ama hafızada veri varsa, bugünün verisini bul
+            val todayStr = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+            val todayData = _allVakitler.value.find { it.date.readable == todayStr } ?: _allVakitler.value[0]
+            
+            _uiState.value = PrayerUiState.Success(todayData)
+            applyOffsetToUiState()
+            startCountdown(_allVakitler.value)
+        } else {
+            // Hiç veri yoksa fallback'e git
+            _dataSource.value = "Aladhan (Yedek)"
+            fetchPrayerTimesAladhan()
+        }
+    }
+
+    private fun saveVakitlerToCache(data: List<PrayerData>) {
+        val gson = com.google.gson.Gson()
+        val json = gson.toJson(data)
+        prefs.edit().putString("vakitler_cache_${_selectedProvince.value.id}", json).apply()
+    }
+
+    private fun loadVakitlerFromCache() {
+        try {
+            val json = prefs.getString("vakitler_cache_${_selectedProvince.value.id}", null)
+            if (json != null) {
+                val gson = com.google.gson.Gson()
+                val type = object : com.google.gson.reflect.TypeToken<List<PrayerData>>() {}.type
+                val cachedData: List<PrayerData> = gson.fromJson(json, type)
+                _allVakitler.value = cachedData
+                allPrayerDataList = cachedData
+            }
+        } catch (e: Exception) {
+            Log.e("PrayerViewModel", "Cache okuma hatası: ${e.message}")
+            prefs.edit().remove("vakitler_cache_${_selectedProvince.value.id}").apply()
+        }
+    }
+
+    private fun fetchPrayerTimesAladhan() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.aladhanInstance.getPrayerTimes(_selectedProvince.value.name, "Turkey")
+                val prayerData = response.data
+                allPrayerDataList = listOf(prayerData)
+                _uiState.value = PrayerUiState.Success(prayerData)
+                applyOffsetToUiState()
+                schedulePrayerAlarms(prayerData)
+                startCountdown(allPrayerDataList)
+            } catch (e: Exception) {
+                _uiState.value = PrayerUiState.Error("Aladhan API Hatası: ${e.message}")
+                _offsetAppliedUiState.value = PrayerUiState.Error("Aladhan API Hatası: ${e.message}")
             }
         }
     }
@@ -227,7 +581,6 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             val modifiedData = currentState.data.copy(timings = modifiedTimings)
             _offsetAppliedUiState.value = PrayerUiState.Success(modifiedData)
 
-            // Servise güncel (offsetli) veriyi gönder
             com.example.mkat_nur.service.PrayerNotificationService.startService(
                 getApplication(),
                 _selectedProvince.value.name,
@@ -238,26 +591,30 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun fetchDailyContent() {
         viewModelScope.launch {
-            val type = _dailyContentType.value
-            val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-            
-            // Veri havuzu (Normalde API'den veya DB'den gelir, şimdilik statik)
-            val verses = listOf("Şüphesiz güçlükle beraber bir kolaylık vardır." to "İnşirah, 5", "Allah sabredenlerle beraberdir." to "Bakara, 153")
-            val hadiths = listOf("Ameller niyetlere göredir." to "Buhari", "Sizin en hayırlınız Kur'an'ı öğrenen ve öğretendir." to "Tirmizi")
-            val quotes = listOf("Bismillah her hayrın başıdır." to "Sözler, Risale-i Nur", "Güzel gören güzel düşünür." to "Mektubat, Risale-i Nur")
+            try {
+                val contentManager = com.example.mkat_nur.util.ContentManager(getApplication())
+                val ayet = contentManager.getContentByType("ayet")
+                val hadis = contentManager.getContentByType("hadis")
+                val vecize = contentManager.getContentByType("vecize")
 
-            val selected = when(type) {
-                "Ayet" -> verses[dayOfYear % verses.size]
-                "Hadis" -> hadiths[dayOfYear % hadiths.size]
-                "Vecize" -> quotes[dayOfYear % quotes.size]
-                else -> verses[0]
+                // Esmaü'l Hüsna hala sabit kalabilir veya onu da bir dosyaya taşıyabilirsiniz
+                val names = listOf(
+                    "Er-Rahmân" to "Dünyada bütün mahlukata rızık veren.",
+                    "Er-Rahîm" to "Ahirette müminlere sonsuz ikramda bulunan.",
+                    "El-Melik" to "Kâinatın mutlak sahibi ve yöneticisi."
+                )
+                val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+                val n = names[dayOfYear % names.size]
+
+                _dailyContent.value = DailyContent(
+                    verse = ayet.text, verseSource = ayet.source,
+                    hadith = hadis.text, hadithSource = hadis.source,
+                    quote = vecize.text, quoteSource = vecize.source,
+                    name = n.first, nameMeaning = n.second
+                )
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "İçerik yükleme hatası: ${e.message}")
             }
-
-            // Esmaül Hüsna her zaman gösterilebilir veya o da değişebilir
-            val names = listOf("Er-Rahmân" to "Dünyada bütün mahlukata rızık veren.")
-            val n = names[dayOfYear % names.size]
-            
-            _dailyContent.value = DailyContent(selected.first, selected.second, n.first, n.second)
         }
     }
 
@@ -276,72 +633,97 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun schedulePrayerAlarms(data: PrayerData) {
         val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val reminderMins = _reminderMinutes.value
+        
+        // Kadın özel modu aktifse alarmları iptal et ve kurma
+        if (_isWomenSpecial.value) {
+            cancelAllAlarms(alarmManager)
+            return
+        }
+
+        val reminderMinsSet = _reminderMinutes.value
         val commonOffset = _timeOffset.value
 
-        val prayerTimes = listOf(
-            "İmsak" to applyOffset(data.timings.fajr, commonOffset + _imsakOffset.value),
-            "Güneş" to applyOffset(data.timings.sunrise, commonOffset + _sunriseOffset.value),
-            "Öğle" to applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value),
-            "İkindi" to applyOffset(data.timings.asr, commonOffset + _asrOffset.value),
-            "Akşam" to applyOffset(data.timings.maghrib, commonOffset + _maghribOffset.value),
-            "Yatsı" to applyOffset(data.timings.isha, commonOffset + _ishaOffset.value)
+        val prayerTimes = mutableListOf(
+            Triple("İmsak", applyOffset(data.timings.fajr, commonOffset + _imsakOffset.value), _notifyImsak.value),
+            Triple("Güneş", applyOffset(data.timings.sunrise, commonOffset + _sunriseOffset.value), _notifySunrise.value),
+            Triple("Öğle", applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value), _notifyDhuhr.value),
+            Triple("İkindi", applyOffset(data.timings.asr, commonOffset + _asrOffset.value), _notifyAsr.value),
+            Triple("Akşam", applyOffset(data.timings.maghrib, commonOffset + _maghribOffset.value), _notifyMaghrib.value),
+            Triple("Yatsı", applyOffset(data.timings.isha, commonOffset + _ishaOffset.value), _notifyIsha.value)
         )
+
+        // Kerahat Vakitlerini Ekle
+        if (_notifyKerahat.value) {
+            val sunriseTime = applyOffset(data.timings.sunrise, commonOffset + _sunriseOffset.value)
+            val dhuhrTime = applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value)
+            val maghribTime = applyOffset(data.timings.maghrib, commonOffset + _maghribOffset.value)
+
+            prayerTimes.add(Triple("Kerahat (İşrak)", applyOffset(sunriseTime, 45), true))
+            prayerTimes.add(Triple("Kerahat (İstiva)", applyOffset(dhuhrTime, -45), true))
+            prayerTimes.add(Triple("Kerahat (İsfirar)", applyOffset(maghribTime, -45), true))
+        }
 
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val now = Calendar.getInstance()
 
-        prayerTimes.forEachIndexed { index, (name, timeStr) ->
+        // Cuma Mesajı Alarmı (Öğleden 45 dk önce)
+        if (now.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY) {
+            try {
+                val dhuhrTime = applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value)
+                val dateParsed = sdf.parse(dhuhrTime.substringBefore(" "))!!
+                val cumaCal = Calendar.getInstance().apply {
+                    val temp = Calendar.getInstance().apply { time = dateParsed }
+                    set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
+                    set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                    add(Calendar.MINUTE, -45)
+                }
+
+                if (cumaCal.after(now)) {
+                    val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java).apply {
+                        putExtra("IS_FRIDAY_MESSAGE", true)
+                    }
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        getApplication(), 9999, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setExactAlarm(alarmManager, cumaCal.timeInMillis, pendingIntent)
+                }
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "Friday alarm error: ${e.message}")
+            }
+        }
+
+        prayerTimes.forEachIndexed { index, (name, timeStr, isNotifyEnabled) ->
+            if (!isNotifyEnabled) return@forEachIndexed // Bildirim kapalıysa atla
+
             try {
                 val dateParsed = sdf.parse(timeStr.substringBefore(" "))!!
-                val prayerCal = Calendar.getInstance().apply {
-                    val temp = Calendar.getInstance().apply { time = dateParsed }
-                    set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                    
-                    // Namaz vaktinden reminderMins önce
-                    add(Calendar.MINUTE, -reminderMins)
-                }
-
-                // Vakit gelince çalacak alarm (0 dakika kala)
-                val exactPrayerCal = Calendar.getInstance().apply {
-                    val temp = Calendar.getInstance().apply { time = dateParsed }
-                    set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-
-                // Hatırlatıcı Alarmı (Örn: 15 dk önce)
-                if (reminderMins > 0 && prayerCal.after(now)) {
-                    val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java).apply {
-                        putExtra("PRAYER_NAME", name)
-                        putExtra("MINUTES_LEFT", reminderMins)
+                
+                reminderMinsSet.forEach { mins ->
+                    val prayerCal = Calendar.getInstance().apply {
+                        val temp = Calendar.getInstance().apply { time = dateParsed }
+                        set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
+                        set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                        add(Calendar.MINUTE, -mins)
                     }
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        getApplication(),
-                        index + 100, // Çakışma olmasın
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    setExactAlarm(alarmManager, prayerCal.timeInMillis, pendingIntent)
-                }
 
-                // Tam Vakit Alarmı (0 dk önce)
-                if (exactPrayerCal.after(now)) {
-                    val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java).apply {
-                        putExtra("PRAYER_NAME", name)
-                        putExtra("MINUTES_LEFT", 0)
+                    if (prayerCal.after(now)) {
+                        val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java).apply {
+                            putExtra("PRAYER_NAME", name)
+                            putExtra("MINUTES_LEFT", mins)
+                        }
+                        // Request code için vakit indeksi ve dakika değerini birleştiriyoruz (çakışma olmaması için)
+                        val requestCode = (index * 1000) + mins
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            getApplication(), requestCode, intent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                        setExactAlarm(alarmManager, prayerCal.timeInMillis, pendingIntent)
                     }
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        getApplication(),
-                        index + 200,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    setExactAlarm(alarmManager, exactPrayerCal.timeInMillis, pendingIntent)
                 }
             } catch (e: Exception) {
                 Log.e("PrayerViewModel", "Error scheduling alarm for $name: ${e.message}")
@@ -367,88 +749,156 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun startCountdown(data: PrayerData) {
+    private fun cancelAllAlarms(alarmManager: AlarmManager) {
+        val reminders = listOf(0, 15, 30, 45)
+        for (index in 0..10) {
+            for (mins in reminders) {
+                val requestCode = (index * 1000) + mins
+                val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java)
+                val pendingIntent = PendingIntent.getBroadcast(
+                    getApplication(), requestCode, intent,
+                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+                )
+                if (pendingIntent != null) {
+                    alarmManager.cancel(pendingIntent)
+                    pendingIntent.cancel()
+                }
+            }
+        }
+        // Cuma alarmını da iptal et
+        val fridayIntent = Intent(getApplication(), PrayerNotificationReceiver::class.java)
+        val fridayPending = PendingIntent.getBroadcast(
+            getApplication(), 9999, fridayIntent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (fridayPending != null) {
+            alarmManager.cancel(fridayPending)
+            fridayPending.cancel()
+        }
+    }
+
+    private fun startCountdown(dataList: List<PrayerData>) {
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
             while (true) {
                 val now = Calendar.getInstance()
                 val format = SimpleDateFormat("HH:mm", Locale.getDefault())
-                
                 val commonOffset = _timeOffset.value
+                
+                val todayStr = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(now.time)
+                val currentData = dataList.find { it.date.readable == todayStr } ?: dataList.getOrNull(0) ?: break
+                
                 val timings = mapOf(
-                    "İmsak" to applyOffset(data.timings.fajr, commonOffset + _imsakOffset.value),
-                    "Sabah" to applyOffset(data.timings.sabah, commonOffset + _imsakOffset.value),
-                    "Güneş" to applyOffset(data.timings.sunrise, commonOffset + _sunriseOffset.value),
-                    "Öğle" to applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value),
-                    "İkindi" to applyOffset(data.timings.asr, commonOffset + _asrOffset.value),
-                    "Akşam" to applyOffset(data.timings.maghrib, commonOffset + _maghribOffset.value),
-                    "Yatsı" to applyOffset(data.timings.isha, commonOffset + _ishaOffset.value)
+                    "İmsak" to applyOffset(currentData.timings.fajr, commonOffset + _imsakOffset.value),
+                    "Sabah" to applyOffset(currentData.timings.sabah, commonOffset + _imsakOffset.value),
+                    "Güneş" to applyOffset(currentData.timings.sunrise, commonOffset + _sunriseOffset.value),
+                    "Öğle" to applyOffset(currentData.timings.dhuhr, commonOffset + _dhuhrOffset.value),
+                    "İkindi" to applyOffset(currentData.timings.asr, commonOffset + _asrOffset.value),
+                    "Akşam" to applyOffset(currentData.timings.maghrib, commonOffset + _maghribOffset.value),
+                    "Yatsı" to applyOffset(currentData.timings.isha, commonOffset + _ishaOffset.value)
                 )
 
                 val sortedTimes = timings.mapNotNull { entry ->
                     try {
                         val dateParsed = format.parse(entry.value.substringBefore(" "))
                         val cal = Calendar.getInstance().apply {
+                            time = now.time
                             val temp = Calendar.getInstance().apply { time = dateParsed!! }
                             set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
                             set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
                             set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
                         }
                         entry.key to cal
                     } catch (e: Exception) { null }
                 }.sortedBy { it.second.timeInMillis }
 
-                var nextN = "İmsak"; var nextT: Calendar? = null; var currN = "Yatsı"
+                var nextN = ""; var nextT: Calendar? = null; var currN = "Yatsı"
+                
                 for (i in sortedTimes.indices) {
                     if (now.before(sortedTimes[i].second)) {
-                        nextN = sortedTimes[i].first; nextT = sortedTimes[i].second
-                        currN = if (i == 0) "Yatsı" else sortedTimes[i-1].first; break
+                        nextN = sortedTimes[i].first
+                        nextT = sortedTimes[i].second
+                        currN = if (i == 0) "Yatsı" else sortedTimes[i-1].first
+                        break
                     }
                 }
+                
                 if (nextT == null) {
-                    nextT = (sortedTimes.first().second.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 1) }
+                    // Yarının verisini al
+                    val tomorrowCal = (now.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 1) }
+                    val tomorrowStr = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(tomorrowCal.time)
+                    val tomorrowData = dataList.find { it.date.readable == tomorrowStr } ?: dataList.getOrNull(1)
+
+                    if (tomorrowData != null) {
+                        val tomorrowImsakStr = applyOffset(tomorrowData.timings.fajr, commonOffset + _imsakOffset.value)
+                        val dateParsed = format.parse(tomorrowImsakStr.substringBefore(" "))!!
+                        nextT = Calendar.getInstance().apply {
+                            time = tomorrowCal.time
+                            val temp = Calendar.getInstance().apply { time = dateParsed }
+                            set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
+                            set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        nextN = "İmsak"
+                    } else {
+                        // Eğer yarın verisi yoksa (ay sonu vb), bugünküne 1 gün ekle (fallback)
+                        nextT = (sortedTimes.first().second.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 1) }
+                        nextN = "İmsak"
+                    }
                 }
+                
+                val isRamadan = currentData.date.hijri.month.en.contains("Ramadan", true)
+                var nextP = when(nextN) {
+                    "Sabah" -> "Sabah'a"
+                    "İmsak" -> "İmsak'a"
+                    "Akşam" -> if (isRamadan) "İftar'a" else "Akşam'a"
+                    "Güneş" -> "Güneş'e"
+                    "Öğle" -> "Öğle'ye"
+                    "İkindi" -> "İkindi'ye"
+                    "Yatsı" -> "Yatsı'ya"
+                    else -> "$nextN'ye"
+                }
+
+                // Kerahat Vakti Kontrolü
+                var isKerahat = false
+                try {
+                    val sunriseCal = sortedTimes.find { it.first == "Güneş" }?.second
+                    val dhuhrCal = sortedTimes.find { it.first == "Öğle" }?.second
+                    val maghribCal = sortedTimes.find { it.first == "Akşam" }?.second
+
+                    if (sunriseCal != null) {
+                        val sunriseEnd = (sunriseCal.clone() as Calendar).apply { add(Calendar.MINUTE, 45) }
+                        if (now.after(sunriseCal) && now.before(sunriseEnd)) isKerahat = true
+                    }
+                    if (dhuhrCal != null) {
+                        val dhuhrStart = (dhuhrCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
+                        if (now.after(dhuhrStart) && now.before(dhuhrCal)) isKerahat = true
+                    }
+                    if (maghribCal != null) {
+                        val maghribStart = (maghribCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
+                        if (now.after(maghribStart) && now.before(maghribCal)) isKerahat = true
+                    }
+                } catch (e: Exception) {
+                    Log.e("PrayerViewModel", "Kerahat kontrol hatası: ${e.message}")
+                }
+                
                 val diff = nextT!!.timeInMillis - now.timeInMillis
-                val newState = CountdownState((diff/(1000*60*60)).toInt(), ((diff/(1000*60))%60).toInt(), ((diff/1000)%60).toInt(), nextN, currN)
-                _countdownState.value = newState
+                _countdownState.value = CountdownState((diff/(1000*60*60)).toInt(), ((diff/(1000*60))%60).toInt(), ((diff/1000)%60).toInt(), nextP, currN, isKerahat)
                 
                 delay(1000)
             }
         }
     }
 
+
     companion object {
-        val provinces = listOf(
-            Province("Adana"), Province("Adıyaman"), Province("Afyonkarahisar"),
-            Province("Ağrı"), Province("Amasya"), Province("Ankara"),
-            Province("Antalya"), Province("Artvin"), Province("Aydın"),
-            Province("Balıkesir"), Province("Bilecik"), Province("Bingöl"),
-            Province("Bitlis"), Province("Bolu"), Province("Burdur"),
-            Province("Bursa"), Province("Çanakkale"), Province("Çankırı"),
-            Province("Çorum"), Province("Denizli"), Province("Diyarbakır"),
-            Province("Edirne"), Province("Elazığ"), Province("Erzincan"),
-            Province("Erzurum"), Province("Eskişehir"), Province("Gaziantep"),
-            Province("Giresun"), Province("Gümüşhane"), Province("Hakkari"),
-            Province("Hatay"), Province("Isparta"), Province("İçel"),
-            Province("İstanbul"), Province("İzmir"), Province("Kars"),
-            Province("Kastamonu"), Province("Kayseri"), Province("Kırklareli"),
-            Province("Kırşehir"), Province("Kocaeli"), Province("Konya"),
-            Province("Kütahya"), Province("Malatya"), Province("Manisa"),
-            Province("Kahramanmaraş"), Province("Mardin"), Province("Muğla"),
-            Province("Muş"), Province("Nevşehir"), Province("Niğde"),
-            Province("Ordu"), Province("Rize"), Province("Sakarya"),
-            Province("Samsun"), Province("Siirt"), Province("Sinop"),
-            Province("Sivas"), Province("Tekirdağ"), Province("Tokat"),
-            Province("Trabzon"), Province("Tunceli"), Province("Şanlıurfa"),
-            Province("Uşak"), Province("Van"), Province("Yozgat"),
-            Province("Zonguldak"), Province("Aksaray"), Province("Bayburt"),
-            Province("Karaman"), Province("Kırıkkale"), Province("Batman"),
-            Province("Şırnak"), Province("Bartın"), Province("Ardahan"),
-            Province("Iğdır"), Province("Yalova"), Province("Karabük"),
-            Province("Kilis"), Province("Osmaniye"), Province("Düzce"), Province("Mersin")
-        ).let { list ->
-            val collator = java.text.Collator.getInstance(java.util.Locale("tr", "TR"))
-            list.sortedWith(compareBy(collator) { it.name })
-        }
+        // Artık şehirler API'den dinamik çekiliyor, bu liste sadece yedek/ilk açılış için.
+        val initialProvinces = listOf(
+            Province("İstanbul", "9541"),
+            Province("Ankara", "9206"),
+            Province("İzmir", "9560")
+        )
     }
 }

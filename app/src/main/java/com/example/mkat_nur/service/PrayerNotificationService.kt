@@ -36,25 +36,25 @@ class PrayerNotificationService : Service() {
                     context.startService(intent)
                 }
             } catch (e: Exception) {
-                Log.e("PrayerService", "Service start failed")
+                Log.e("PrayerService", "Service start failed: ${e.message}")
             }
         }
 
         fun getTurkishHijri(monthEn: String): String {
             val input = monthEn.trim()
             return when {
-                input.contains("Muharram", true) -> "Muharrem"
-                input.contains("Safar", true) -> "Safer"
-                input.contains("Rabi", true) && input.contains("awwal", true) -> "Rebiülevvel"
-                input.contains("Rabi", true) && (input.contains("thani", true) || input.contains("akhir", true)) -> "Rebiülahir"
-                input.contains("Jumada", true) && (input.contains("ula", true) || input.contains("1", true)) -> "Cemaziyelevvel"
-                input.contains("Jumada", true) && (input.contains("akhira", true) || input.contains("2", true)) -> "Cemaziyelahir"
-                input.contains("Rajab", true) -> "Recep"
-                input.contains("Sha", true) && input.contains("ban", true) -> "Şaban"
-                input.contains("Ramadan", true) -> "Ramazan"
-                input.contains("Shawwal", true) -> "Şevval"
-                input.contains("Qi", true) || input.contains("Qa", true) -> "Zilkade"
-                input.contains("Hijjah", true) -> "Zilhicce"
+                input.contains("Muharram", true) || input == "1" -> "Muharrem"
+                input.contains("Safar", true) || input == "2" -> "Safer"
+                input.contains("Rabi", true) && input.contains("awwal", true) || input == "3" -> "Rebiülevvel"
+                input.contains("Rabi", true) && (input.contains("thani", true) || input.contains("akhir", true)) || input == "4" -> "Rebiülahir"
+                input.contains("Jumada", true) && (input.contains("ula", true) || input.contains("1", true)) || input == "5" -> "Cemaziyelevvel"
+                input.contains("Jumada", true) && (input.contains("akhira", true) || input.contains("2", true)) || input == "6" -> "Cemaziyelahir"
+                input.contains("Rajab", true) || input == "7" -> "Recep"
+                input.contains("Sha", true) && input.contains("ban", true) || input == "8" -> "Şaban"
+                input.contains("Ramadan", true) || input == "9" -> "Ramazan"
+                input.contains("Shawwal", true) || input == "10" -> "Şevval"
+                input.contains("Qi", true) || input.contains("Qa", true) || input == "11" -> "Zilkade"
+                input.contains("Hijjah", true) || input == "12" -> "Zilhicce"
                 else -> input
             }
         }
@@ -91,7 +91,7 @@ class PrayerNotificationService : Service() {
 
     private fun createPlaceholderNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_launcher_mosque)
             .setContentTitle("Mîkat-ı Nur")
             .setContentText("Vakitler takip ediliyor...")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -115,14 +115,15 @@ class PrayerNotificationService : Service() {
             remoteViews.setTextViewText(R.id.notif_date_hijri, "${data.date.hijri.day} $turkishMonth")
 
             val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
-            val activeColor = prefs.getInt("highlight_color", Color.parseColor("#FFFF9800"))
-            val defaultColor = Color.BLACK
+            val activeColor = prefs.getInt("highlight_color", android.graphics.Color.parseColor("#FFFF9800"))
+            val defaultColor = android.graphics.Color.BLACK
 
             countdown?.let {
+                val isRamadan = data.date.hijri.month.en.contains("Ramadan", true)
                 val nextP = when(it.nextPrayer) {
                     "Sabah" -> "Sabah'a"
                     "İmsak" -> "İmsak'a"
-                    "Akşam" -> "İftar'a"
+                    "Akşam" -> if (isRamadan) "İftar'a" else "Akşam'a"
                     "Güneş" -> "Güneş'e"
                     "Öğle" -> "Öğle'ye"
                     "İkindi" -> "İkindi'ye"
@@ -132,6 +133,12 @@ class PrayerNotificationService : Service() {
                 val countdownStr = String.format(Locale.getDefault(), "%s %02d:%02d:%02d", nextP, it.hours, it.minutes, it.seconds)
                 remoteViews.setTextViewText(R.id.notif_current_prayer_time, countdownStr)
                 remoteViews.setTextColor(R.id.notif_current_prayer_time, activeColor)
+
+                if (it.isKerahat) {
+                    remoteViews.setViewVisibility(R.id.notif_kerahat_warning, android.view.View.VISIBLE)
+                } else {
+                    remoteViews.setViewVisibility(R.id.notif_kerahat_warning, android.view.View.GONE)
+                }
             }
 
             // Vakitleri doldur
@@ -159,11 +166,11 @@ class PrayerNotificationService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+            // DecoratedCustomViewStyle'ı kaldırıyoruz, bazı cihazlarda inflation hatasına sebep olabiliyor
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_mosque)
                 .setCustomContentView(remoteViews)
                 .setCustomBigContentView(remoteViews)
-                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
@@ -172,7 +179,7 @@ class PrayerNotificationService : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             manager.notify(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
-            Log.e("PrayerService", "Notification update failed")
+            Log.e("PrayerService", "Notification update failed: ${e.message}")
         }
     }
 
@@ -225,13 +232,37 @@ class PrayerNotificationService : Service() {
                 nextT = (sortedTimes.first().second.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 1) }
             }
 
+            // Kerahat Vakti Kontrolü
+            var isKerahat = false
+            try {
+                val sunriseCal = sortedTimes.find { it.first == "Güneş" }?.second
+                val dhuhrCal = sortedTimes.find { it.first == "Öğle" }?.second
+                val maghribCal = sortedTimes.find { it.first == "Akşam" }?.second
+
+                if (sunriseCal != null) {
+                    val sunriseEnd = (sunriseCal.clone() as Calendar).apply { add(Calendar.MINUTE, 45) }
+                    if (now.after(sunriseCal) && now.before(sunriseEnd)) isKerahat = true
+                }
+                if (dhuhrCal != null) {
+                    val dhuhrStart = (dhuhrCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
+                    if (now.after(dhuhrStart) && now.before(dhuhrCal)) isKerahat = true
+                }
+                if (maghribCal != null) {
+                    val maghribStart = (maghribCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
+                    if (now.after(maghribStart) && now.before(maghribCal)) isKerahat = true
+                }
+            } catch (e: Exception) {
+                Log.e("PrayerService", "Kerahat kontrol hatası: ${e.message}")
+            }
+
             val diff = nextT!!.timeInMillis - now.timeInMillis
             return CountdownState(
                 (diff / (1000 * 60 * 60)).toInt(),
                 ((diff / (1000 * 60)) % 60).toInt(),
                 ((diff / 1000) % 60).toInt(),
                 nextN,
-                currN
+                currN,
+                isKerahat
             )
         } catch (e: Exception) {
             return null

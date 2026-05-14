@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -71,6 +72,10 @@ dependencies {
     // RETROFİT (API verileri için)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // COIL (Görüntüler için)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    // GPS KONUM (Yeni eklendi)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
