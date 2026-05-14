@@ -31,9 +31,12 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
+import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
+import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
+import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
 
@@ -132,6 +135,16 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
+                    label = { Text("Kıble Bulucu", color = Color.White) },
+                    selected = false,
+                    icon = { Icon(Icons.Default.Explore, null, tint = Color.White) },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate("qibla")
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+                NavigationDrawerItem(
                     label = { Text("Kur'an-ı Kerim", color = Color.White) },
                     selected = false,
                     icon = { Icon(Icons.Default.MenuBook, null, tint = Color.White) },
@@ -206,6 +219,11 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
             composable("kaza_takibi") {
                 KazaScreen(
                     onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("qibla") {
+                QiblaScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable("settings") {
