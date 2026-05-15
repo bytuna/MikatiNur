@@ -47,25 +47,26 @@ class NotificationHelper(val context: Context) {
                     .build())
                 enableLights(true)
                 enableVibration(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
             manager.createNotificationChannel(channel)
         }
     }
 
-    fun showNotification(title: String, message: String) {
+    fun showNotification(title: String, message: String, fullScreenIntent: Intent? = null) {
         createNotificationChannel() // Kanalın varlığından emin ol
         
         val channelId = getDynamicChannelId()
         val soundUriStr = prefs.getString("notif_sound_uri", null)
         val soundUri = if (soundUriStr != null) Uri.parse(soundUriStr) else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        val intent = Intent(context, MainActivity::class.java).apply {
+        val mainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val pendingIntent = PendingIntent.getActivity(
+        val mainPendingIntent = PendingIntent.getActivity(
             context, 
             0, 
-            intent, 
+            mainIntent, 
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -74,11 +75,23 @@ class NotificationHelper(val context: Context) {
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL) // Ses, Titreşim ve Işıkları varsayılan yap
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setSound(soundUri)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setFullScreenIntent(pendingIntent, true) // Kilit ekranında göstermek için
+            .setContentIntent(mainPendingIntent)
+
+        if (fullScreenIntent != null) {
+            val popupPendingIntent = PendingIntent.getActivity(
+                context,
+                1,
+                fullScreenIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.setFullScreenIntent(popupPendingIntent, true)
+        } else {
+            builder.setFullScreenIntent(mainPendingIntent, true) // Kilit ekranında göstermek için varsayılan
+        }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         

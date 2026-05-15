@@ -17,8 +17,7 @@ import com.example.mkat_nur.model.Province
 import com.example.mkat_nur.model.toPrayerData
 import com.example.mkat_nur.receiver.PrayerNotificationReceiver
 import com.example.mkat_nur.util.NotificationHelper
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -173,11 +172,45 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private var countdownJob: Job? = null
     private var allPrayerDataList: List<PrayerData> = emptyList()
 
+    private var locationCallback: LocationCallback? = null
+
     init {
         fetchPrayerTimes()
         fetchDailyContent()
         fetchSehirler()
         scheduleAutoLocationWork(_autoLocationInterval.value)
+        startLocationTracking()
+    }
+
+    private fun startLocationTracking() {
+        if (_autoLocationInterval.value == 0) return
+        
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplication<Application>())
+        val locationRequest = LocationRequest.Builder(
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            1000 * 60 * 60 // 1 saat
+        ).apply {
+            setMinUpdateDistanceMeters(5000f) // 5 km
+        }.build()
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let {
+                    Log.d("PrayerViewModel", "Otomatik konum güncelleme tetiklendi: ${it.latitude}, ${it.longitude}")
+                    fetchLocationAndDistrict()
+                }
+            }
+        }
+
+        try {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback!!,
+                android.os.Looper.getMainLooper()
+            )
+        } catch (e: SecurityException) {
+            Log.e("PrayerViewModel", "Konum izni eksik.")
+        }
     }
 
     private fun fetchSehirler() {
@@ -295,6 +328,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().putInt("auto_location_interval", interval).apply()
         // WorkManager'ı tetikle
         scheduleAutoLocationWork(interval)
+        
+        // Foreground takibi güncelle
+        locationCallback?.let {
+            LocationServices.getFusedLocationProviderClient(getApplication<Application>()).removeLocationUpdates(it)
+            locationCallback = null
+        }
+        if (interval > 0) {
+            startLocationTracking()
+        }
     }
 
     private fun scheduleAutoLocationWork(interval: Int) {
@@ -469,6 +511,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("selected_city_id", province.id)
             .apply()
         fetchPrayerTimes()
+        com.example.mkat_nur.receiver.QuoteWidgetProvider.updateAllWidgets(getApplication())
     }
 
     private fun fetchPrayerTimes() {
@@ -499,6 +542,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     applyOffsetToUiState()
                     schedulePrayerAlarms(prayerData)
                     startCountdown(allPrayerDataList)
+                    com.example.mkat_nur.receiver.QuoteWidgetProvider.updateAllWidgets(getApplication())
                 } else {
                     handleFetchError("Veri bulunamadı.")
                 }
@@ -701,7 +745,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val dateParsed = sdf.parse(timeStr.substringBefore(" "))!!
                 
-                reminderMinsSet.forEach { mins ->
+                // Vakit girdi uyarısı (0. dakika) her zaman eklenmeli
+                val allReminders = reminderMinsSet.toMutableSet().apply { add(0) }
+                
+                allReminders.forEach { mins ->
                     val prayerCal = Calendar.getInstance().apply {
                         val temp = Calendar.getInstance().apply { time = dateParsed }
                         set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
@@ -850,16 +897,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 
                 val isRamadan = currentData.date.hijri.month.en.contains("Ramadan", true)
-                var nextP = when(nextN) {
-                    "Sabah" -> "Sabah'a"
-                    "İmsak" -> "İmsak'a"
-                    "Akşam" -> if (isRamadan) "İftar'a" else "Akşam'a"
-                    "Güneş" -> "Güneş'e"
-                    "Öğle" -> "Öğle'ye"
-                    "İkindi" -> "İkindi'ye"
-                    "Yatsı" -> "Yatsı'ya"
-                    else -> "$nextN'ye"
-                }
+                var nextP = if (nextN == "Akşam" && isRamadan) "İftar" else nextN
 
                 // Kerahat Vakti Kontrolü
                 var isKerahat = false
@@ -892,6 +930,14 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+
+    override fun onCleared() {
+        super.onCleared()
+        locationCallback?.let {
+            LocationServices.getFusedLocationProviderClient(getApplication<Application>()).removeLocationUpdates(it)
+        }
+        countdownJob?.cancel()
+    }
 
     companion object {
         // Artık şehirler API'den dinamik çekiliyor, bu liste sadece yedek/ilk açılış için.

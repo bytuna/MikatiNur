@@ -86,6 +86,7 @@ class LocationUpdateWorker(
                     .putLong("last_update_timestamp", now)
                     .apply()
                 
+                com.example.mkat_nur.receiver.QuoteWidgetProvider.updateAllWidgets(applicationContext)
                 Log.d("LocationUpdateWorker", "Vakitler güncellendi ve kaydedildi.")
             }
         } catch (e: Exception) {

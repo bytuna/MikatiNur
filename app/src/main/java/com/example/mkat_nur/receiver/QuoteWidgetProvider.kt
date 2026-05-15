@@ -8,12 +8,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.SystemClock
 import android.view.View
 import android.widget.RemoteViews
 import com.example.mkat_nur.MainActivity
 import com.example.mkat_nur.R
 import com.example.mkat_nur.util.ContentManager
 import com.example.mkat_nur.util.PrayerManager
+import java.util.Calendar
 
 class QuoteWidgetProvider : AppWidgetProvider() {
 
@@ -25,16 +27,28 @@ class QuoteWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+        schedulePeriodicUpdate(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == "REFRESH_WIDGET" || intent.action == Intent.ACTION_TIME_TICK) {
+        val actions = listOf(
+            "REFRESH_WIDGET",
+            Intent.ACTION_TIME_TICK,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED
+        )
+        if (intent.action in actions) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val thisWidget = ComponentName(context, QuoteWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget)
             for (appWidgetId in appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, appWidgetId)
+            }
+            
+            if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+                schedulePeriodicUpdate(context)
             }
         }
     }
@@ -59,11 +73,16 @@ class QuoteWidgetProvider : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        // Her 1 saatte bir otomatik güncelle (Pil dostu inexact alarm)
-        alarmManager.setInexactRepeating(
+        // Her 1 dakikada bir güncelle (Countdown için)
+        val now = Calendar.getInstance()
+        now.set(Calendar.SECOND, 0)
+        now.set(Calendar.MILLISECOND, 0)
+        now.add(Calendar.MINUTE, 1)
+
+        alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
-            System.currentTimeMillis() + 3600000,
-            3600000,
+            now.timeInMillis,
+            60000,
             pendingIntent
         )
     }
@@ -83,6 +102,15 @@ class QuoteWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        fun updateAllWidgets(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val thisWidget = ComponentName(context, QuoteWidgetProvider::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget)
+            for (appWidgetId in appWidgetIds) {
+                updateAppWidget(context, appWidgetManager, appWidgetId)
+            }
+        }
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -132,6 +160,29 @@ class QuoteWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.tv_ikindi, prayerData.timings.asr.substringBefore(" "))
                 views.setTextViewText(R.id.tv_aksam, prayerData.timings.maghrib.substringBefore(" "))
                 views.setTextViewText(R.id.tv_yatsi, prayerData.timings.isha.substringBefore(" "))
+
+                // Countdown (Chronometer with seconds flowing)
+                val nextVakitInfo = prayerManager.getNextVakitInfo(prayerData)
+                if (nextVakitInfo != null) {
+                    val (label, nextVakitTime) = nextVakitInfo
+                    
+                    val suffix = when (label) {
+                        "İmsak" -> "İmsak'a"
+                        "Güneş" -> "Güneş'e"
+                        "Öğle" -> "Öğle'ye"
+                        "İkindi" -> "İkindi'ye"
+                        "Akşam" -> "Akşam'a"
+                        "Yatsı" -> "Yatsı'ya"
+                        else -> label
+                    }
+                    views.setTextViewText(R.id.widget_next_vakit_label, "$suffix:")
+
+                    val remainingMillis = nextVakitTime - System.currentTimeMillis()
+                    val baseTime = SystemClock.elapsedRealtime() + remainingMillis
+                    views.setChronometer(R.id.widget_countdown, baseTime, null, true)
+                    views.setChronometerCountDown(R.id.widget_countdown, true)
+                }
+                views.setTextColor(R.id.widget_countdown, titleColor)
                 
                 if (prayerManager.isKerahat(prayerData)) {
                     views.setViewVisibility(R.id.widget_kerahat, View.VISIBLE)

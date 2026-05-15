@@ -50,18 +50,28 @@ class PrayerNotificationReceiver : BroadcastReceiver() {
             
             val message = if (minutesLeft == 0) contentBody else "$prayerName vaktine $minutesLeft dakika kaldı."
             
-            helper.showNotification(title, message)
-
-            // EĞER VAKİT TAM GİRDİYSE (0. dakika), HARİCİ EKRANI AÇ
+            // EĞER VAKİT TAM GİRDİYSE (0. dakika), HARİCİ EKRANI HAZIRLA
+            var popupIntent: Intent? = null
             if (minutesLeft == 0) {
-                val popupIntent = Intent(context, PrayerPopupActivity::class.java).apply {
+                popupIntent = Intent(context, PrayerPopupActivity::class.java).apply {
                     putExtra("TYPE", randomContent.type)
                     putExtra("CONTENT", randomContent.text)
                     putExtra("SOURCE", randomContent.source)
                     putExtra("PRAYER_NAME", prayerName)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
-                context.startActivity(popupIntent)
+            }
+
+            // Bildirimi göster (Vakit girdiyse popupIntent ile birlikte)
+            helper.showNotification(title, message, popupIntent)
+
+            // Bazı cihazlarda fullScreenIntent tetiklenmeyebilir, manuel de deniyoruz
+            if (minutesLeft == 0 && popupIntent != null) {
+                try {
+                    context.startActivity(popupIntent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
         } catch (e: Exception) {
