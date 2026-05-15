@@ -34,6 +34,7 @@ import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
+import com.example.mkat_nur.ui.quran.QuranScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.qibla.QiblaScreen
@@ -148,7 +149,10 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     label = { Text("Kur'an-ı Kerim", color = Color.White) },
                     selected = false,
                     icon = { Icon(Icons.Default.MenuBook, null, tint = Color.White) },
-                    onClick = { scope.launch { drawerState.close() } },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate("quran")
+                    },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
@@ -228,6 +232,11 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
             }
             composable("settings") {
                 SettingsScreen(viewModel = viewModel)
+            }
+            composable("quran") {
+                QuranScreen(
+                    onMenuClick = { scope.launch { drawerState.open() } }
+                )
             }
             composable("women_special") {
                 WomenSpecialScreen(

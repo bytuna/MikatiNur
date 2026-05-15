@@ -1,11 +1,8 @@
 package com.example.mkat_nur.ui.prayer
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,6 +31,7 @@ import com.example.mkat_nur.model.Province
 import com.example.mkat_nur.viewmodel.CountdownState
 import com.example.mkat_nur.viewmodel.PrayerUiState
 import com.example.mkat_nur.viewmodel.PrayerViewModel
+import kotlinx.coroutines.delay
 import java.util.*
 
 fun getTurkishHijriText(monthEn: String): String {
@@ -158,6 +157,26 @@ fun MainContent(
     onRefreshLocation: () -> Unit,
     onPrayerClick: (String) -> Unit
 ) {
+    var showKibleInfo by remember { mutableStateOf(false) }
+
+    if (showKibleInfo) {
+        AlertDialog(
+            onDismissRequest = { showKibleInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showKibleInfo = false }) {
+                    Text("Tamam", color = Color(0xFFFFD700))
+                }
+            },
+            title = { Text("Kıble Saati Nedir?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Kıble Saati, Güneş'in tam kıble yönünde olduğu vakittir. Bu vakitte Güneş'e doğru dönen bir kimse, aynı zamanda kıbleye dönmüş olur. Pusulaya ihtiyaç duymadan en doğru şekilde kıbleyi tayin etmenizi sağlar.")
+            },
+            containerColor = Color(0xFF1B263B),
+            titleContentColor = Color.White,
+            textContentColor = Color.White.copy(alpha = 0.8f)
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(20.dp),
@@ -181,15 +200,27 @@ fun MainContent(
         if (data.timings.kible.isNotEmpty()) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clickable { showKibleInfo = true },
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Explore, null, tint = Color(0xFFFF9800))
-                        Spacer(Modifier.width(12.dp))
-                        Text("Kıble Saati: ", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-                        Text(data.timings.kible, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Row(
+                        modifier = Modifier.padding(16.dp), 
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Explore, null, tint = Color(0xFFFF9800))
+                            Spacer(Modifier.width(12.dp))
+                            Text("Kıble Saati: ", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+                            Text(data.timings.kible, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Bilgi",
+                            tint = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -257,14 +288,26 @@ fun SlidingContentCard(content: com.example.mkat_nur.model.DailyContent, viewMod
 
 @Composable
 fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUpdateTimestamp: Long, onRefresh: () -> Unit) {
-    val updateText = remember(lastUpdateTimestamp) {
+    var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    
+    LaunchedEffect(lastUpdateTimestamp) {
+        while(true) {
+            delay(60000)
+            tick = System.currentTimeMillis()
+        }
+    }
+
+    val updateText = remember(lastUpdateTimestamp, tick) {
         if (lastUpdateTimestamp == 0L) ""
         else {
             val diff = System.currentTimeMillis() - lastUpdateTimestamp
             val mins = (diff / (1000 * 60)).toInt()
-            if (mins < 1) "(Az önce)"
-            else if (mins < 60) "($mins dk önce)"
-            else "(${mins / 60} sa önce)"
+            when {
+                mins < 1 -> "(Az önce)"
+                mins < 60 -> "($mins dk önce)"
+                mins < 1440 -> "(${mins / 60} sa önce)"
+                else -> "(${mins / 1440} gün önce)"
+            }
         }
     }
 
@@ -300,11 +343,11 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
 @Composable
 fun InfoCard(title: String, content: String, source: String, icon: ImageVector, accentColor: Color) {
     Card(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
+        modifier = Modifier.fillMaxWidth().height(200.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
         shape = RoundedCornerShape(24.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(20.dp).fillMaxHeight()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, null, tint = accentColor, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -313,13 +356,15 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
             Spacer(Modifier.height(10.dp))
             
             // Metin Kısmı
-            Text(
-                text = if (content.startsWith("“")) content else "“$content”",
-                color = Color.White, 
-                fontSize = 17.sp, 
-                fontWeight = FontWeight.Medium,
-                lineHeight = 24.sp
-            )
+            Box(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                Text(
+                    text = if (content.startsWith("“")) content else "“$content”",
+                    color = Color.White, 
+                    fontSize = 17.sp, 
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 24.sp
+                )
+            }
             
             // Kaynak Kısmı (Eğer varsa göster)
             if (source.isNotBlank()) {
@@ -339,6 +384,17 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
 
 @Composable
 fun ModernCountdown(state: CountdownState) {
+    val infiniteTransition = rememberInfiniteTransition(label = "glow")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f)),
@@ -349,13 +405,31 @@ fun ModernCountdown(state: CountdownState) {
                 Text("KERAHAT VAKTİ", color = Color.Red, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(Modifier.height(4.dp))
             }
-            Text("${state.nextPrayer.uppercase()} VAKTİNE", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            val turkishLocale = Locale("tr", "TR")
+            Text("${state.nextPrayer.uppercase(turkishLocale)} VAKTİNE", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             Text(
                 text = String.format(Locale.getDefault(), "%02d:%02d:%02d", state.hours, state.minutes, state.seconds),
                 fontSize = 44.sp, fontWeight = FontWeight.Black, color = Color.White
             )
-            Surface(color = Color.White.copy(alpha = 0.15f), shape = RoundedCornerShape(50.dp)) {
-                Text("${state.currentPrayer} Vakti", Modifier.padding(horizontal = 12.dp, vertical = 4.dp), color = Color.White, fontSize = 12.sp)
+            
+            Spacer(Modifier.height(12.dp))
+
+            // Işıldayan Kenarlı Mevcut Vakit Rozeti
+            Surface(
+                color = Color.White.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(
+                    width = 1.5.dp,
+                    color = Color(0xFFFFD700).copy(alpha = alpha) // Altın sarısı ışıldama
+                )
+            ) {
+                Text(
+                    text = "${state.currentPrayer} Vakti", 
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp), 
+                    color = Color.White, 
+                    fontSize = 15.sp, 
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

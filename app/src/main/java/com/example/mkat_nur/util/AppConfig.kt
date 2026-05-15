@@ -11,6 +11,10 @@ object AppConfig {
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
 
+    // Quran API Config
+    const val QURAN_API_BASE_URL = "https://acikkaynakkuran.diyanet.gov.tr/api/"
+    const val QURAN_API_TOKEN = "1106|r79EB70cL2Bc9Fh7mTwy7k8uZTnHGBdMAvQhQLeO46308dae"
+
     // Versiyonlama yapısı
     data class VersionHistory(
         val versionName: String,

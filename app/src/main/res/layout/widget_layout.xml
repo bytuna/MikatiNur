@@ -37,6 +37,27 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/widget_next_vakit_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_toStartOf="@id/widget_countdown"
+                android:text="İmsak'a:"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <Chronometer
+                android:id="@+id/widget_countdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_toStartOf="@id/widget_refresh"
+                android:textColor="#FFD700"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/widget_kerahat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
