@@ -154,6 +154,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _widgetTextColor = MutableStateFlow(prefs.getInt("widget_text_color", 0xFFFFFFFF.toInt()))
     val widgetTextColor: StateFlow<Int> = _widgetTextColor.asStateFlow()
 
+    private val _widgetFontSize = MutableStateFlow(prefs.getFloat("widget_font_size", 14f))
+    val widgetFontSize: StateFlow<Float> = _widgetFontSize.asStateFlow()
+
     private val _dailyContent = MutableStateFlow(DailyContent())
     val dailyContent: StateFlow<DailyContent> = _dailyContent.asStateFlow()
 
@@ -445,6 +448,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     fun setWidgetTextColor(color: Int) {
         _widgetTextColor.value = color
         prefs.edit().putInt("widget_text_color", color).apply()
+        val intent = Intent(getApplication(), com.example.mkat_nur.receiver.QuoteWidgetProvider::class.java).apply {
+            action = "REFRESH_WIDGET"
+        }
+        getApplication<Application>().sendBroadcast(intent)
+    }
+
+    fun setWidgetFontSize(size: Float) {
+        _widgetFontSize.value = size
+        prefs.edit().putFloat("widget_font_size", size).apply()
         val intent = Intent(getApplication(), com.example.mkat_nur.receiver.QuoteWidgetProvider::class.java).apply {
             action = "REFRESH_WIDGET"
         }

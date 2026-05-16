@@ -72,3 +72,26 @@ data class DailyContent(
     val name: String = "",
     val nameMeaning: String = ""
 )
+
+fun com.example.mkat_nur.network.DiyanetPrayerResponse.toPrayerData(): PrayerData {
+    return PrayerData(
+        timings = Timings(
+            fajr = Imsak,
+            sunrise = Gunes,
+            dhuhr = Ogle,
+            asr = Ikindi,
+            maghrib = Aksam,
+            isha = Yatsi,
+            kible = KibleSaati
+        ),
+        date = DateInfo(
+            readable = MiladiTarihKisa,
+            hijri = HijriInfo(
+                day = HicriTarihKisa.split(" ")[0],
+                month = MonthInfo(en = HicriTarihKisa.split(" ").getOrNull(1) ?: "")
+            ),
+            fullMiladi = MiladiTarihKisa,
+            fullHicri = HicriTarihKisa
+        )
+    )
+}

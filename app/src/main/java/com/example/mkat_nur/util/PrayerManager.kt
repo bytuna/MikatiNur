@@ -40,6 +40,10 @@ class PrayerManager(private val context: Context) {
         return prefs.getInt("widget_text_color", 0xFFFFFFFF.toInt())
     }
 
+    fun getWidgetFontSize(): Float {
+        return prefs.getFloat("widget_font_size", 14f)
+    }
+
     fun isKerahat(data: PrayerData): Boolean {
         val now = Calendar.getInstance()
         try {

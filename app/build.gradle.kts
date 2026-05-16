@@ -55,26 +55,14 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    // NAVİGASYON KÜTÜPHANESİ BURAYA:
+    
+    // NAVİGASYON
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    // Mevcut kütüphanelerin kalsın, altına şunları ekle (varsa güncelle)
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2023.08.0"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.material3:material3")
-    // NAVİGASYON (Çökme sebebi genelde budur)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    // RETROFİT (API verileri için)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    
     // COIL (Görüntüler için)
     implementation("io.coil-kt:coil-compose:2.7.0")
-    // GPS KONUM (Yeni eklendi)
+    
+    // GPS KONUM
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
     testImplementation(libs.junit)
