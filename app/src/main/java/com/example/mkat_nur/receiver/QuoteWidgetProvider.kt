@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.SystemClock
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import com.example.mkat_nur.MainActivity
@@ -145,6 +146,30 @@ class QuoteWidgetProvider : AppWidgetProvider() {
             views.setTextColor(R.id.tv_aksam, textColor)
             views.setTextColor(R.id.tv_yatsi, textColor)
             
+            // Yazı Boyutlarını Uygula
+            val fontSize = prayerManager.getWidgetFontSize()
+            views.setTextViewTextSize(R.id.widget_city, TypedValue.COMPLEX_UNIT_SP, fontSize)
+            views.setTextViewTextSize(R.id.widget_next_vakit_label, TypedValue.COMPLEX_UNIT_SP, fontSize)
+            views.setTextViewTextSize(R.id.widget_countdown, TypedValue.COMPLEX_UNIT_SP, fontSize)
+            
+            // Vakitlerin saat kısımları (biraz daha büyük olabilir)
+            val timeFontSize = fontSize + 2f
+            views.setTextViewTextSize(R.id.tv_imsak, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+            views.setTextViewTextSize(R.id.tv_gunes, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+            views.setTextViewTextSize(R.id.tv_ogle, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+            views.setTextViewTextSize(R.id.tv_ikindi, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+            views.setTextViewTextSize(R.id.tv_aksam, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+            views.setTextViewTextSize(R.id.tv_yatsi, TypedValue.COMPLEX_UNIT_SP, timeFontSize)
+
+            // Vakitlerin başlık kısımları (etiketler)
+            val labelFontSize = fontSize - 2f
+            views.setTextViewTextSize(R.id.label_imsak, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+            views.setTextViewTextSize(R.id.label_gunes, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+            views.setTextViewTextSize(R.id.label_ogle, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+            views.setTextViewTextSize(R.id.label_ikindi, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+            views.setTextViewTextSize(R.id.label_aksam, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+            views.setTextViewTextSize(R.id.label_yatsi, TypedValue.COMPLEX_UNIT_SP, labelFontSize)
+
             // İçerik Güncelleme
             views.setTextViewText(R.id.widget_title, content.type)
             views.setTextViewText(R.id.widget_text, content.text)
