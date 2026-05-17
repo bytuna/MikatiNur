@@ -24,6 +24,10 @@ data class VerseResponse(
     @SerializedName("verses") val data: List<Verse>
 )
 
+data class SingleVerseResponse(
+    @SerializedName("verse") val data: Verse
+)
+
 data class Translation(
     @SerializedName("text") val text: String?
 )
