@@ -50,6 +50,14 @@ interface QuranApiService {
         @Query("per_page") perPage: Int = 100
     ): com.example.mkat_nur.model.VerseResponse
 
+    @GET("verses/by_key/{verse_key}")
+    suspend fun getVerseByKey(
+        @Path("verse_key") verseKey: String,
+        @Query("language") language: String = "tr",
+        @Query("translations") translations: String = "77",
+        @Query("fields") fields: String = "text_uthmani"
+    ): com.example.mkat_nur.model.SingleVerseResponse
+
     companion object {
         private const val BASE_URL = AppConfig.QURAN_API_BASE_URL
 

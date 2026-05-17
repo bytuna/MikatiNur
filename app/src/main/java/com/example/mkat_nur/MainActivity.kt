@@ -159,7 +159,10 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     label = { Text("Risale-i Nur", color = Color.White) },
                     selected = false,
                     icon = { Icon(Icons.Default.AutoStories, null, tint = Color.White) },
-                    onClick = { scope.launch { drawerState.close() } },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate("risale")
+                    },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
@@ -243,8 +246,12 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
-            composable(
-                route = "tesbihat?prayer={prayer}",
+            composable("risale") {
+                com.example.mkat_nur.ui.risale.RisaleScreen(
+                    onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("tesbihat?prayer={prayer}",
                 arguments = listOf(navArgument("prayer") { 
                     type = NavType.StringType
                     defaultValue = "sabah" 
