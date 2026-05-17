@@ -12,8 +12,8 @@ object AppConfig {
     const val BUILD_DATE = "2026"
 
     // Quran API Config
-    const val QURAN_API_BASE_URL = "https://acikkaynakkuran.diyanet.gov.tr/api/"
-    const val QURAN_API_TOKEN = "1106|r79EB70cL2Bc9Fh7mTwy7k8uZTnHGBdMAvQhQLeO46308dae"
+    const val QURAN_API_BASE_URL = "https://api.quran.com/api/v4/"
+    const val QURAN_API_TOKEN = "" // Quran.com API v4 public endpoint doesn't strictly require token for basic usage
 
     // Versiyonlama yapısı
     data class VersionHistory(
