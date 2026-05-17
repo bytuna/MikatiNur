@@ -505,6 +505,28 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 InfoRow(label = "Yapım Yılı", value = AppConfig.BUILD_DATE)
                 InfoRow(label = "Son Güncelleme", value = AppConfig.getAppLastUpdateTime(context))
             }
+
+            Spacer(Modifier.height(24.dp))
+
+            // UYGULAMAYI PAYLAŞ BUTONU
+            Button(
+                onClick = {
+                    val shareText = "Mîkat-ı Nur uygulamasını buradan indirebilirsiniz: [Download Linki Gelecek]"
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Uygulamayı Paylaş"))
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+            ) {
+                Icon(Icons.Default.Share, null, tint = Color.White)
+                Spacer(Modifier.width(12.dp))
+                Text("Uygulamayı Paylaş", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+
             Spacer(Modifier.height(40.dp))
         }
     }
