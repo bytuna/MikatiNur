@@ -1,5 +1,6 @@
 package com.example.mkat_nur.ui.prayer
 
+import android.content.Intent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.mkat_nur.model.PrayerData
 import com.example.mkat_nur.model.Province
+import com.example.mkat_nur.util.AppConfig
+import com.example.mkat_nur.util.ShareUtils
 import com.example.mkat_nur.viewmodel.CountdownState
 import com.example.mkat_nur.viewmodel.PrayerUiState
 import com.example.mkat_nur.viewmodel.PrayerViewModel
@@ -198,7 +202,30 @@ fun MainContent(
 
         item { SlidingContentCard(dailyContent, viewModel) }
 
-        item { PrayerTimesGrid(data.timings, countdownState?.currentPrayer, onPrayerClick) }
+        item {
+            val context = LocalContext.current
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "NAMAZ VAKİTLERİ",
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    PrayerTimesGrid(data.timings, countdownState?.currentPrayer, onPrayerClick)
+                }
+            }
+        }
         
         if (data.timings.kible.isNotEmpty()) {
             item {
@@ -315,7 +342,7 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
     }
 
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Column(modifier = Modifier.clickable { onRefresh() }) {
+        Column(modifier = Modifier.weight(1f).clickable { onRefresh() }) {
             Text(text = cityName.uppercase(), fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = data.date.readable, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
@@ -336,7 +363,7 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
             AsyncImage(
                 model = data.moonUrl,
                 contentDescription = "Ayın Şekli",
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(50.dp),
                 contentScale = ContentScale.Fit
             )
         }
@@ -345,16 +372,32 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
 
 @Composable
 fun InfoCard(title: String, content: String, source: String, icon: ImageVector, accentColor: Color) {
+    val context = LocalContext.current
     Card(
-        modifier = Modifier.fillMaxWidth().height(200.dp),
+        modifier = Modifier.fillMaxWidth().height(220.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp).fillMaxHeight()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = accentColor, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(title, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(icon, null, tint = accentColor, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(title, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                IconButton(
+                    onClick = {
+                        ShareUtils.shareInfoAsImage(context, title, content, source)
+                    },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(Icons.Default.Share, "Paylaş", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+                }
             }
             Spacer(Modifier.height(10.dp))
             
@@ -369,17 +412,28 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
                 )
             }
             
-            // Kaynak Kısmı (Eğer varsa göster)
-            if (source.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
+            // Alt Kısım: Kaynak ve Uygulama İsmi
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
                 Text(
-                    text = source, 
-                    color = Color.White.copy(alpha = 0.5f), 
-                    fontSize = 12.sp, 
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.End),
-                    textAlign = TextAlign.End
+                    text = AppConfig.PROJECT_NAME,
+                    color = Color.White.copy(alpha = 0.2f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Light
                 )
+                
+                if (source.isNotBlank()) {
+                    Text(
+                        text = source, 
+                        color = Color.White.copy(alpha = 0.5f), 
+                        fontSize = 12.sp, 
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.End
+                    )
+                }
             }
         }
     }
@@ -404,6 +458,8 @@ fun ModernCountdown(state: CountdownState) {
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Spacer(Modifier.height(8.dp))
+
             if (state.isKerahat) {
                 Text("KERAHAT VAKTİ", color = Color.Red, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(Modifier.height(4.dp))
