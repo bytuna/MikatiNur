@@ -3,36 +3,40 @@ package com.example.mkat_nur.model
 import com.google.gson.annotations.SerializedName
 
 data class Surah(
-    @SerializedName("id", alternate = ["SureId"]) val id: Int,
-    @SerializedName("name", alternate = ["SureNameTurkish"]) val name: String,
-    @SerializedName("name_arabic", alternate = ["SureNameArabic"]) val arabicName: String?,
-    @SerializedName("verse_count", alternate = ["AyetCount"]) val verseCount: Int,
-    @SerializedName("revelation_place", alternate = ["Yer"]) val revelationPlace: String?
+    @SerializedName("id") val id: Int,
+    @SerializedName("name_arabic") val arabicName: String?,
+    @SerializedName("verses_count") val verseCount: Int,
+    @SerializedName("revelation_order") val revelationOrder: Int?,
+    @SerializedName("translated_name") val translatedName: TranslatedName?
+) {
+    val name: String? get() = translatedName?.name
+}
+
+data class TranslatedName(
+    @SerializedName("name") val name: String?
+)
+
+data class SurahResponse(
+    @SerializedName("chapters") val data: List<Surah>
+)
+
+data class VerseResponse(
+    @SerializedName("verses") val data: List<Verse>
 )
 
 data class Translation(
-    @SerializedName("text", alternate = ["translation"]) val text: String
+    @SerializedName("text") val text: String?
 )
 
 data class Verse(
     @SerializedName("id") val id: Int,
-    @SerializedName("surah_id", alternate = ["SureId"]) val surahId: Int,
-    @SerializedName("verse_no", alternate = ["AyetNo"]) val verseNumber: Int,
-    @SerializedName("content", alternate = ["arabic_script"]) val content: String,
+    @SerializedName("verse_number") val verseNumber: Int,
+    @SerializedName("verse_key") val verseKey: String?,
+    @SerializedName("text_uthmani") val arabicText: String?,
     @SerializedName("translations") val translations: List<Translation>?,
-    @SerializedName("page_number", alternate = ["sayfa_no"]) val pageNumber: Int?
-)
-
-data class SurahDetail(
-    @SerializedName("id") val id: Int,
-    @SerializedName("name") val name: String,
-    @SerializedName("verses") val verses: List<Verse>
-)
-
-data class SurahListResponse(
-    @SerializedName("data") val data: List<Surah>
-)
-
-data class SurahDetailResponse(
-    @SerializedName("data") val data: SurahDetail
-)
+    @SerializedName("page_number") val pageNumber: Int?,
+    @SerializedName("juz_number") val juzNumber: Int?
+) {
+    val translation: String? get() = translations?.firstOrNull()?.text?.replace(Regex("<[^>]*>"), "")
+    val surahId: Int get() = verseKey?.split(":")?.firstOrNull()?.toIntOrNull() ?: 0
+}
