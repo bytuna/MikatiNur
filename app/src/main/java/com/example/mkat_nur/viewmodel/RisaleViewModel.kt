@@ -10,6 +10,7 @@ import com.example.mkat_nur.model.RisaleSection
 import com.example.mkat_nur.model.Verse
 import com.example.mkat_nur.repository.RisaleRepository
 import com.example.mkat_nur.network.QuranApiService
+import com.example.mkat_nur.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,24 +61,24 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun loadBooks() {
         val books = listOf(
-            RisaleBook("sozler", "Sözler", pageCount = 800, coverColor = 0xFF1B5E20, sections = listOf(
+            RisaleBook("sozler", "Sözler", pageCount = 791, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.sozler, sections = listOf(
                 RisaleSection("Birinci Söz", 1),
                 RisaleSection("İkinci Söz", 10),
                 RisaleSection("Üçüncü Söz", 15)
             )),
-            RisaleBook("mektubat", "Mektubat", pageCount = 550, coverColor = 0xFF0D47A1),
-            RisaleBook("lemalar", "Lem'alar", pageCount = 650, coverColor = 0xFF1B5E20),
-            RisaleBook("sualar", "Şualar", pageCount = 700, coverColor = 0xFFB71C1C),
-            RisaleBook("asa-yi-musa", "Asâ-yı Musa", pageCount = 280, coverColor = 0xFFE65100),
-            RisaleBook("mesnevi-i-nuriye", "Mesnevi-i Nuriye", pageCount = 320, coverColor = 0xFF004D40),
-            RisaleBook("isaratul-icaz", "İşaratü'l-İ'caz", pageCount = 250, coverColor = 0xFF1B5E20),
-            RisaleBook("barla-lahikasi", "Barla Lahikası", pageCount = 400, coverColor = 0xFF0D47A1),
-            RisaleBook("kastamonu-lahikasi", "Kastamonu Lahikası", pageCount = 300, coverColor = 0xFF1B5E20),
-            RisaleBook("emirdag-lahikasi", "Emirdağ Lahikası", pageCount = 500, coverColor = 0xFFB71C1C),
-            RisaleBook("iman-ve-kufur-muvazeneleri", "İman ve Küfür Muvazeneleri", pageCount = 350, coverColor = 0xFFE65100),
-            RisaleBook("sikke-i-tasdik-i-gaybi", "Sikke-i Tasdik-i Gaybi", pageCount = 300, coverColor = 0xFF004D40),
-            RisaleBook("tarihce-i-hayat", "Tarihçe-i Hayat", pageCount = 700, coverColor = 0xFF1B5E20),
-            RisaleBook("muhakemat", "Muhakemat", pageCount = 200, coverColor = 0xFF0D47A1)
+            RisaleBook("mektubat", "Mektubat", pageCount = 524, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.mektubat),
+            RisaleBook("lemalar", "Lem'alar", pageCount = 447, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.lemalar),
+            RisaleBook("sualar", "Şualar", pageCount = 761, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.sualar),
+            RisaleBook("asa-yi-musa", "Asâ-yı Musa", pageCount = 269, coverColor = 0xFFE65100, coverImageRes = R.drawable.asa_yi_musa),
+            RisaleBook("mesnevi-i-nuriye", "Mesnevi-i Nuriye", pageCount = 266, coverColor = 0xFF004D40, coverImageRes = R.drawable.mesnevi_i_nuriye),
+            RisaleBook("isaratul-icaz", "İşaratü'l-İ'caz", pageCount = 229, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.isaratul_icaz),
+            RisaleBook("barla-lahikasi", "Barla Lahikası", pageCount = 382, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.barla_lahikasi),
+            RisaleBook("kastamonu-lahikasi", "Kastamonu Lahikası", pageCount = 266, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.kastamonu_lahikasi),
+            RisaleBook("emirdag-lahikasi", "Emirdağ Lahikası", pageCount = 535, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.emirdag_lahikasi),
+            RisaleBook("iman-ve-kufur-muvazeneleri", "İman ve Küfür Muvazeneleri", pageCount = 268, coverColor = 0xFFE65100, coverImageRes = R.drawable.iman_ve_kufur_muvazeneleri),
+            RisaleBook("sikke-i-tasdik-i-gaybi", "Sikke-i Tasdik-i Gaybi", pageCount = 269, coverColor = 0xFF004D40, coverImageRes = R.drawable.sikke_i_tasdik_i_gaybi),
+            RisaleBook("tarihce-i-hayat", "Tarihçe-i Hayat", pageCount = 739, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.tarihce_i_hayat),
+            RisaleBook("muhakemat", "Muhakemat", pageCount = 176, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.muhakemat)
         )
         _uiState.value = RisaleUiState.Success(books)
     }
@@ -124,7 +125,13 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun search(query: String) {
-        if (query.length < 3) return
+        if (query.isBlank()) {
+            _searchResults.value = emptyList()
+            return
+        }
+        // Eğer sayıysa uzunluk sınırı yok, metinse en az 3 karakter
+        if (query.toIntOrNull() == null && query.length < 3) return
+
         viewModelScope.launch {
             _searchResults.value = repository.searchContent(query)
         }

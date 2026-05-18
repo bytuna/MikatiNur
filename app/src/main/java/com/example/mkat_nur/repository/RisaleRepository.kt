@@ -56,11 +56,24 @@ class RisaleRepository(private val context: Context) {
     suspend fun searchContent(query: String): List<RisalePage> = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
         val results = mutableListOf<RisalePage>()
+        
+        val selection = if (query.toIntOrNull() != null) {
+            "${RisaleDbHelper.COLUMN_CONTENT} LIKE ? OR ${RisaleDbHelper.COLUMN_PAGE_NUMBER} = ?"
+        } else {
+            "${RisaleDbHelper.COLUMN_CONTENT} LIKE ?"
+        }
+        
+        val selectionArgs = if (query.toIntOrNull() != null) {
+            arrayOf("%$query%", query)
+        } else {
+            arrayOf("%$query%")
+        }
+
         val cursor = db.query(
             RisaleDbHelper.TABLE_NAME,
             null,
-            "${RisaleDbHelper.COLUMN_CONTENT} LIKE ?",
-            arrayOf("%$query%"),
+            selection,
+            selectionArgs,
             null, null, null
         )
 

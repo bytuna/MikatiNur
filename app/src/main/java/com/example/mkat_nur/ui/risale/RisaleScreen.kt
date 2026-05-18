@@ -1,5 +1,6 @@
 package com.example.mkat_nur.ui.risale
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.input.pointer.pointerInput
@@ -222,41 +225,76 @@ fun RisaleBookItem(book: RisaleBook, onClick: (RisaleBook) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(260.dp) // Biraz daha optimize edilmiş oran
             .clickable { onClick(book) },
-        colors = CardDefaults.cardColors(containerColor = Color(book.coverColor)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Column(modifier = Modifier.align(Alignment.Center)) {
-                Text(
-                    text = book.name,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (book.coverImageRes != null) {
+                Image(
+                    painter = painterResource(id = book.coverImageRes),
+                    contentDescription = book.name,
+                    contentScale = ContentScale.FillBounds, // Kapak formuna tam yayılması için
+                    modifier = Modifier.fillMaxSize()
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = book.author,
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                
+                // Resmin üzerine hafif bir derinlik katmak için degrade
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.3f)
+                                ),
+                                startY = 300f
+                            )
+                        )
                 )
+            } else {
+                // Resim yoksa eski renkli tasarım
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(book.coverColor))
+                        .padding(16.dp)
+                ) {
+                    Column(modifier = Modifier.align(Alignment.Center)) {
+                        Text(
+                            text = book.name,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = book.author,
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
             
+            // Sayfa sayısı etiketi - Daha şık görünüm
             Surface(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                color = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                color = Color.Black.copy(alpha = 0.6f),
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
                     text = "${book.pageCount} S.",
                     color = Color.White,
                     fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
@@ -276,6 +314,8 @@ fun RisaleReader(book: RisaleBook, viewModel: RisaleViewModel) {
     
     var showSettings by remember { mutableStateOf(false) }
     var showIndex by remember { mutableStateOf(false) }
+    var showJumpToPage by remember { mutableStateOf(false) }
+    var jumpToPageInput by remember { mutableStateOf("") }
     var selectedWord by remember { mutableStateOf<String?>(null) }
 
     val arabicFont = FontFamily(Font(R.font.uthman_taha))
@@ -291,6 +331,36 @@ fun RisaleReader(book: RisaleBook, viewModel: RisaleViewModel) {
 
     LaunchedEffect(pagerState.currentPage) {
         viewModel.loadPage(book.id, pagerState.currentPage + 1)
+    }
+
+    if (showJumpToPage) {
+        AlertDialog(
+            onDismissRequest = { showJumpToPage = false },
+            title = { Text("Sayfaya Git") },
+            text = {
+                OutlinedTextField(
+                    value = jumpToPageInput,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) jumpToPageInput = it },
+                    label = { Text("Sayfa Numarası (1-${book.pageCount})") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val page = jumpToPageInput.toIntOrNull()
+                    if (page != null && page in 1..book.pageCount) {
+                        scope.launch { pagerState.scrollToPage(page - 1) }
+                        showJumpToPage = false
+                        jumpToPageInput = ""
+                    }
+                }) { Text("GİT") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showJumpToPage = false }) { Text("İPTAL") }
+            }
+        )
     }
 
     if (selectedVerse != null) {
@@ -465,7 +535,12 @@ fun RisaleReader(book: RisaleBook, viewModel: RisaleViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Sayfa: ${pagerState.currentPage + 1} / ${book.pageCount}", color = Color.White, fontFamily = serifFont)
+                Text(
+                    text = "Sayfa: ${pagerState.currentPage + 1} / ${book.pageCount}",
+                    color = Color.White,
+                    fontFamily = serifFont,
+                    modifier = Modifier.clickable { showJumpToPage = true }
+                )
                 Row {
                     IconButton(onClick = { showIndex = true }) { Icon(Icons.Default.List, null, tint = Color.White) }
                     IconButton(onClick = { showSettings = true }) { Icon(Icons.Default.Settings, null, tint = Color.White) }

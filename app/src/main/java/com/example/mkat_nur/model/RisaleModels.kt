@@ -6,6 +6,7 @@ data class RisaleBook(
     val author: String = "Bediüzzaman Said Nursi",
     val pageCount: Int,
     val coverColor: Long,
+    val coverImageRes: Int? = null,
     val sections: List<RisaleSection> = emptyList()
 )
 
