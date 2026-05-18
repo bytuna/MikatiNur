@@ -28,6 +28,7 @@ class ContentManager(val context: Context) {
                 "ayet" -> "Günün Ayeti"
                 "hadis" -> "Günün Hadisi"
                 "vecize" -> "Günün Vecizesi"
+                "esma" -> "Esmaü'l Hüsna"
                 else -> "Günün Sözü"
             }
 
