@@ -1,0 +1,99 @@
+ALLAH c.c.	,	Tüm isim ve sıfatları kendinde toplayan.
+Er-Rahmân	,	Rahmetiyle muamele eden, esirgeyen.	
+Er-Rahim	,	Merhamet eden, bağışlayan.	
+El-Melik	,	Mülkün gerçek sahibi, mülk ve saltanatı devamlı olan.	
+El-Kuddûs	,	Her türlü eksiklik ve ayıplardan münezzeh olan.	
+Es-Selâm	,	Kullarını selâmete çıkaran.	
+El-Mü’min	,	Gönüllerde iman ışığı uyandıran.	
+El-Müheymin	,	Gözeten ve koruyan.	
+El-Aziz		,	Mağlup edilmesi asla mümkün olmayan.	
+El-Cebbâr	,	İstediğini mutlak yapan, dilediğine muktedir olan.	
+El-Mütekebbir	,	Her şeyde büyüklüğünü gösteren.	
+El-Hâlık	,	Her şeyi yoktan var eden.	
+El-Bârî	,	Her şeyi uygun bir tarzda ve birbirine uygun yaratan.	
+El-Musavvir	,	Her şeye bir şekil ve hususiyet verip tasvir eden.	
+El-Gaffâr	,	Kullarının günahlarını örten, günahlarını bağışlayan.	
+El-Kahhâr	,	Her şeye, her istediğini yapacak surette galip ve hakim olan.	
+El-Vehhâb	,	Çok fazla ihsan eden.	
+Er-Rezzâk	,	Bütün mahlukatın rızkını veren ve ihtiyacını karşılayan.	
+El-Fettâh	,	Her türlü zorlukları kolaylaştıran, darlıktan kurtaran.	
+El-Alîm	,	Her şeyi en ince noktasına kadar bilen, ilmi ebedi ve ezeli olan.	
+El-Kâbıd	,	Dilediğine darlık veren, sıkan, daraltan.	
+El-Bâsıt	,	Dilediğine bolluk veren, açan, genişleten.	
+El-Hâfıd	,	Yukarıdan aşağıya indiren, alçaltan.	
+Er-Râfî	,	Yukarı kaldıran, yükselten.	
+El-Muiz	,	İzzet verip ağırlayan.	
+El-Muzil	,	Zillete düşüren, hor ve hakir eden.	
+Es-Semî	,	Her şeyi işiten.	
+El-Basîr	,	Her şeyi gören.	
+El-Hakem	,	Her işte hikmet ve adaletle hükmeden.	
+El-Adl	,	Son derece adaletli olan.	
+El-Latîf	,	İşlerin bütün inceliklerini bilen.	
+El-Habîr	,	Her şeyin iç yüzünden, gizli tarafından haberdar olan.	
+El-Halîm	,	Yumuşak davranan, hilmi çok olan.	
+El-Azîm	,	Pek azametli ve büyük olan.	
+El-Gafûr	,	Çok bağışlayan, magfireti çok olan.	
+Eş-Şekûr	,	Kendi rızası için yapılan iyi işleri, ziyadesiyle mükafatlandıran.	
+El-Aliyy	,	Çok yüce. Pek yüksek olan.	
+El-Kebîr	,	Büyüklüğünde hudut olmayan.	
+El-Hafîz	,	Yapılan işleri bütün tafsilatıyla, ayrıntılarıyla tutan.	
+El-Mukît	,	Yaratılmış her şeyin azığını veren.	
+El-Hasîb	,	Herkesin hayatı boyunca yaptıklarının hesabını soran.	
+El-Celîl	,	Azamet sahibi olan, ululuk sahibi olan.	
+El-Kerîm	,	Çok ikram edici. Keremi ve mağfireti bol olan.	
+Er-Rakîb	,	Bütün varlıklar üzerine gözcü olan.	
+El-Mücîb	,	Dua edenlerin dualarını kabul eden, isteklerini veren.	
+El-Vâsî	,	Lütfu bol olan.	
+El-Hakîm	,	Emirleri, kelamı ve bütün işleri hikmetli olan.	
+El-Vedûd	,	İyi kullarını seven, sevilmeye ve dostluğa hakkıyla layık olan.	
+El-Mecîd	,	Şanı çok büyük ve çok yüksek olan.	
+El-Bâis	,	Ölüleri diriltip kabirlerinden çıkaran.	
+Eş-Şehîd	,	Her zaman ve her yerde hazır ve nazır olan.	
+El-Hakk	,	Vacib"ul vücut olan, varlığı hiç değişmeden duran.	
+El-Vekîl	,	İşlerini kendisine bırakanların işini düzelten ve her şeyin iyisini temin eden.	
+El-Kaviyy	,	Pek kuvvetli. Pek güçlü olan.	
+El-Metîn	,	Çok sağlam olan.	
+El-Veliyy	,	İyi kullarına, gerçek mü’minlere dost olan.	
+El-Hamîd	,	Her türlü hamd ve övgüye layık olan.	
+El-Muhsî	,	İstisnasız her şeyin tek tek sayısını bilen.	
+El-Mübdi	,	Bütün mahlukatı maddesiz ve örneksiz olarak ilk baştan yaratan.	
+El-Muid	,	Yaratılmışları yok ettikten sonra tekrar yaratan.	
+El-Muhyî	,	İhya eden, dirilten, can bağışlayan, sağlık veren.	
+El-Mümît	,	Ölümü yaratan, öldüren.	
+El-Hayy	,	Diri, tam ve mükemmel manasıyla hayat sahibi.	
+El-Kayyûm	,	Gökleri, yeri ve her şeyi tutan.	
+El-Vâcid	,	İstediğini, istediği vakit bulan.	
+El-Mâcid	,	Kadri büyük, keremi bol olan.	
+El-Vâhid	,	Tek olan.	
+Es-Samed	,	Sığınacak tek dayanak olan.	
+El-Kâdir	,	Her şeye gücü yeten, her istediğini yapmaya kâdir olan.	
+El-Muktedir	,	Kuvvet ve kudret sahipleri üzerinde dilediği gibi tasarruf eden.	
+El-Mukaddim	,	İstediğini ileri geçirip, öne alan.	
+El-Muahhir	,	İstediğini geri koyan, arkaya bırakan.	
+El-Evvel	,	Başlangıcı olmayan, ilk olan.	
+El-Âhir	,	Sonu olmayan, sonsuz olan.	
+Ez-Zâhir	,	Açıkca bilinen, âşikâr olan.	
+El-Bâtın	,	Gizli olan.	
+El-Vâlî	,	Her şeyi tek başına idare eden.	
+El-Müteâlî	,	Aklın mümkün gördüğü her şeyden, her hâl ve tavırdan münezzeh olan.	
+El-Berr	,	Kullarına iyilik ve ihsanı, nimetleri bol olan.	
+Et-Tevvâb	,	Tövbeleri kabul eden.	
+El-Müntakim	,	Suçluları adaletiyle cezalandırıp intikam alan.	
+El-Afüvv	,	Affı ve rahmeti çok olan, bağışlayan.	
+Er-Raûf	,	Pek acıyan, lütuf ve merhametle pek esirgeyen.	
+Mâlikü’l-Mülk	,	Mülkün ebedi sahibi olan.	
+Zü’l- Celal-i ve’l-İkram	,	Her türlü büyüklüğün, her türlü keremin sahibi olan.	
+El-Muksıt	,	Bütün işleri birbirine uygun ve denk yapan.	
+El-Câmî	,	İstediğini istediği zaman istediği yerde toplayan.	
+El-Ganîyy	,	Çok zengin olan.	
+El-Muğnî	,	İstediğini zengin eden.	
+El-Mânî	,	Bazı şeylerin meydana gelmesine müsaade etmeyen, engelleyen.	
+Ed-Dâr	,	Elem ve zarar verecek şeyleri yaratan, hüsrana ugratan.	
+En-Nâfi	,	Hayır ve menfaat verecek şeyleri yaratan.	
+En-Nûr	,	Alemleri nurlandıran.	
+El-Hâdî	,	Hidayete ve doğru yola erdiren.	
+El-Bedî	,	Örneksiz, misilsiz, hayret verici nice âlemler icad eden.	
+El-Bâki	,	Varlığının sonu bulunmayan, ebedi olan.	
+El-Vâris	,	Servetlerin gerçek sahibi olan.	
+Er-Reşid	,	Bütün işleri ezeli takdirine uygun bir nizam ve hikmet üzere sonuna ulaştıran.	
+Es-Sabûr	,	Çok sabırlı olan.

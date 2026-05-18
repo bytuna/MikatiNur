@@ -370,6 +370,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             "Vecize" -> { _showVecize.value = enabled; prefs.edit().putBoolean("show_vecize", enabled).apply() }
             "Esma" -> { _showEsma.value = enabled; prefs.edit().putBoolean("show_esma", enabled).apply() }
         }
+        fetchDailyContent() // İçeriği anında tazele
     }
 
     fun toggleNotification(prayer: String, enabled: Boolean) {
@@ -674,21 +675,13 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 val ayet = contentManager.getContentByType("ayet")
                 val hadis = contentManager.getContentByType("hadis")
                 val vecize = contentManager.getContentByType("vecize")
-
-                // Esmaü'l Hüsna hala sabit kalabilir veya onu da bir dosyaya taşıyabilirsiniz
-                val names = listOf(
-                    "Er-Rahmân" to "Dünyada bütün mahlukata rızık veren.",
-                    "Er-Rahîm" to "Ahirette müminlere sonsuz ikramda bulunan.",
-                    "El-Melik" to "Kâinatın mutlak sahibi ve yöneticisi."
-                )
-                val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-                val n = names[dayOfYear % names.size]
+                val esma = contentManager.getContentByType("esma")
 
                 _dailyContent.value = DailyContent(
                     verse = ayet.text, verseSource = ayet.source,
                     hadith = hadis.text, hadithSource = hadis.source,
                     quote = vecize.text, quoteSource = vecize.source,
-                    name = n.first, nameMeaning = n.second
+                    name = esma.text, nameMeaning = esma.source
                 )
             } catch (e: Exception) {
                 Log.e("PrayerViewModel", "İçerik yükleme hatası: ${e.message}")
