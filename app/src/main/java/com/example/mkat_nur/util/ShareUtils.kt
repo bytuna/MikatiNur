@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import androidx.core.content.FileProvider
+import com.example.mkat_nur.R
 import java.io.File
 import java.io.FileOutputStream
 
@@ -16,16 +17,35 @@ object ShareUtils {
         ROYAL("#240046", "#E0AAFF", "#3C096C", "#10002B")
     }
 
-    fun shareInfoAsImage(context: Context, title: String, content: String, source: String) {
+    private val backgroundDrawables = intArrayOf(
+        R.drawable.dua,
+        R.drawable.insan,
+        R.drawable.galaxy,
+        R.drawable.galaxy1,
+        R.drawable.kuzey_isiklari,
+
+    )
+
+    fun shareInfoAsImage(context: Context, title: String, content: String, source: String, customBackground: Bitmap? = null) {
         val theme = CardTheme.values().random()
         val width = 1080
         val height = 1350
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        drawAtmosphericBackground(canvas, width, height, theme)
+        if (customBackground != null) {
+            drawCustomBitmapBackground(canvas, width, height, customBackground)
+        } else {
+            // Arka plan resmi seç ve çiz
+            val randomBgResId = backgroundDrawables.random()
+            drawImageBackground(context, canvas, width, height, randomBgResId)
+        }
 
-        val paint = Paint().apply { isAntiAlias = true }
+        val paint = Paint().apply { 
+            isAntiAlias = true
+            // Yazıların okunabilirliği için gölge ekleyelim
+            setShadowLayer(5f, 2f, 2f, Color.BLACK)
+        }
         
         // App Name at top center
         paint.color = Color.WHITE
@@ -74,31 +94,74 @@ object ShareUtils {
         saveAndShare(context, bitmap, "mikat_nur_paylasim.png")
     }
 
+    private fun drawCustomBitmapBackground(canvas: Canvas, width: Int, height: Int, backgroundBitmap: Bitmap) {
+        // Resmi canvas'a sığdıracak şekilde çiz (Center Crop mantığı)
+        val scale: Float
+        var dx = 0f
+        var dy = 0f
+        if (backgroundBitmap.width * height > width * backgroundBitmap.height) {
+            scale = height.toFloat() / backgroundBitmap.height.toFloat()
+            dx = (width - backgroundBitmap.width * scale) * 0.5f
+        } else {
+            scale = width.toFloat() / backgroundBitmap.width.toFloat()
+            dy = (height - backgroundBitmap.height * scale) * 0.5f
+        }
+
+        val matrix = Matrix()
+        matrix.setScale(scale, scale)
+        matrix.postTranslate(dx, dy)
+        
+        canvas.drawBitmap(backgroundBitmap, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+        
+        // Okunabilirlik için üzerine hafif karartma (overlay) ekleyelim
+        val overlayPaint = Paint().apply {
+            color = Color.BLACK
+            alpha = 100 // Biraz daha koyu AI görselleri için
+        }
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), overlayPaint)
+    }
+
+    private fun drawImageBackground(context: Context, canvas: Canvas, width: Int, height: Int, resId: Int) {
+        val options = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
+        val backgroundBitmap = BitmapFactory.decodeResource(context.resources, resId, options)
+        
+        if (backgroundBitmap != null) {
+            // Resmi canvas'a sığdıracak şekilde çiz (Center Crop mantığı)
+            val scale: Float
+            var dx = 0f
+            var dy = 0f
+            if (backgroundBitmap.width * height > width * backgroundBitmap.height) {
+                scale = height.toFloat() / backgroundBitmap.height.toFloat()
+                dx = (width - backgroundBitmap.width * scale) * 0.5f
+            } else {
+                scale = width.toFloat() / backgroundBitmap.width.toFloat()
+                dy = (height - backgroundBitmap.height * scale) * 0.5f
+            }
+
+            val matrix = Matrix()
+            matrix.setScale(scale, scale)
+            matrix.postTranslate(dx, dy)
+            
+            canvas.drawBitmap(backgroundBitmap, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+            
+            // Okunabilirlik için üzerine hafif karartma (overlay) ekleyelim
+            val overlayPaint = Paint().apply {
+                color = Color.BLACK
+                alpha = 90 // %35 karartma
+            }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), overlayPaint)
+            
+            backgroundBitmap.recycle()
+        }
+    }
+
     private fun drawAtmosphericBackground(canvas: Canvas, width: Int, height: Int, theme: CardTheme) {
-        // Gradient Background
+        // Fallback or old style
         val gradient = LinearGradient(0f, 0f, 0f, height.toFloat(),
             intArrayOf(Color.parseColor(theme.bgStart), Color.parseColor(theme.bgEnd)),
             null, Shader.TileMode.CLAMP)
         val paint = Paint().apply { shader = gradient }
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-
-        // Atmospheric Circles (Glowing effect)
-        val circlePaint = Paint().apply {
-            isAntiAlias = true
-            color = Color.parseColor(theme.accentColor)
-            alpha = 15
-        }
-        canvas.drawCircle(0f, 0f, 500f, circlePaint)
-        canvas.drawCircle(width.toFloat(), height.toFloat(), 400f, circlePaint)
-        canvas.drawCircle(width / 2f, height / 2f, 300f, circlePaint)
-
-        // Border
-        paint.shader = null
-        paint.color = Color.parseColor(theme.accentColor)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 15f
-        paint.alpha = 80
-        canvas.drawRect(50f, 50f, width - 50f, height - 50f, paint)
     }
 
     private fun saveAndShare(context: Context, bitmap: Bitmap, fileName: String) {

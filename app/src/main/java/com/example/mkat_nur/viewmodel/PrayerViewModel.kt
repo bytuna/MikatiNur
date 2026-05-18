@@ -11,13 +11,11 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
-import com.example.mkat_nur.model.DailyContent
-import com.example.mkat_nur.model.PrayerData
-import com.example.mkat_nur.model.Province
-import com.example.mkat_nur.model.toPrayerData
+import com.example.mkat_nur.model.*
 import com.example.mkat_nur.receiver.PrayerNotificationReceiver
 import com.example.mkat_nur.util.NotificationHelper
 import com.google.android.gms.location.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.text.Collator
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -163,11 +163,11 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _allVakitler = MutableStateFlow<List<PrayerData>>(emptyList())
     val allVakitler: StateFlow<List<PrayerData>> = _allVakitler.asStateFlow()
 
-    private val _sehirler = MutableStateFlow<List<com.example.mkat_nur.network.SehirResponse>>(emptyList())
-    val sehirler: StateFlow<List<com.example.mkat_nur.network.SehirResponse>> = _sehirler.asStateFlow()
+    private val _sehirler = MutableStateFlow<List<Sehir>>(emptyList())
+    val sehirler: StateFlow<List<Sehir>> = _sehirler.asStateFlow()
 
-    private val _ilceler = MutableStateFlow<List<com.example.mkat_nur.network.IlceResponse>>(emptyList())
-    val ilceler: StateFlow<List<com.example.mkat_nur.network.IlceResponse>> = _ilceler.asStateFlow()
+    private val _ilceler = MutableStateFlow<List<Ilce>>(emptyList())
+    val ilceler: StateFlow<List<Ilce>> = _ilceler.asStateFlow()
 
     private val _dataSource = MutableStateFlow("Yükleniyor...")
     val dataSource: StateFlow<String> = _dataSource.asStateFlow()
@@ -220,7 +220,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 val list = RetrofitClient.diyanetInstance.getSehirler()
-                _sehirler.value = list.sortedBy { it.SehirAdi }
+                val trLocale = Locale.forLanguageTag("tr-TR")
+                val collator = Collator.getInstance(trLocale)
+                _sehirler.value = list.sortedWith { a, b -> collator.compare(a.sehirAdi, b.sehirAdi) }
             } catch (e: Exception) {
                 Log.e("PrayerViewModel", "Şehirler çekilemedi: ${e.message}")
             }
@@ -232,7 +234,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 val list = RetrofitClient.diyanetInstance.getIlceler(sehirId)
-                _ilceler.value = list.sortedBy { it.IlceAdi }
+                val trLocale = Locale.forLanguageTag("tr-TR")
+                val collator = Collator.getInstance(trLocale)
+                _ilceler.value = list.sortedWith { a, b -> collator.compare(a.ilceAdi, b.ilceAdi) }
             } catch (e: Exception) {
                 Log.e("PrayerViewModel", "İlçeler çekilemedi: ${e.message}")
             }
@@ -480,8 +484,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 
                 if (location != null) {
-                    val geocoder = Geocoder(getApplication(), Locale("tr"))
-                    val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                    val addresses = withContext(Dispatchers.IO) {
+                        try {
+                            val geocoder = Geocoder(getApplication(), Locale("tr"))
+                            geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                        } catch (e: Exception) {
+                            Log.e("PrayerViewModel", "Geocoding hatası: ${e.message}")
+                            null
+                        }
+                    }
                     
                     if (!addresses.isNullOrEmpty()) {
                         val city = addresses[0].adminArea ?: "" // Örn: İstanbul
@@ -489,18 +500,29 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                         
                         Log.d("PrayerViewModel", "GPS Konum: $city, $district")
                         
+                        val trLocale = Locale.forLanguageTag("tr-TR")
+                        val cityLower = city.lowercase(trLocale)
+                        val districtLower = district.lowercase(trLocale)
+
                         // Önce şehri bul
                         val sehirList = RetrofitClient.diyanetInstance.getSehirler()
-                        val matchedSehir = sehirList.find { it.SehirAdi.contains(city, ignoreCase = true) }
+                        val matchedSehir = sehirList.find { 
+                            it.sehirAdi.lowercase(trLocale).contains(cityLower) || cityLower.contains(it.sehirAdi.lowercase(trLocale))
+                        }
                         
                         if (matchedSehir != null) {
                             // Sonra ilçeyi bul
-                            val ilceList = RetrofitClient.diyanetInstance.getIlceler(matchedSehir.SehirID)
-                            val matchedIlce = ilceList.find { it.IlceAdi.contains(district, ignoreCase = true) }
-                                ?: ilceList.find { it.IlceAdi.contains(city, ignoreCase = true) } // İlçe bulunamazsa merkezi dene
+                            val ilceList = RetrofitClient.diyanetInstance.getIlceler(matchedSehir.sehirId)
+                            val matchedIlce = ilceList.find { 
+                                it.ilceAdi.lowercase(trLocale).contains(districtLower) || districtLower.contains(it.ilceAdi.lowercase(trLocale))
+                            } ?: ilceList.find { 
+                                it.ilceAdi.lowercase(trLocale).contains(cityLower) || cityLower.contains(it.ilceAdi.lowercase(trLocale))
+                            } // İlçe bulunamazsa merkezi dene
                             
                             if (matchedIlce != null) {
-                                onProvinceSelected(Province(matchedIlce.IlceAdi, matchedIlce.IlceID))
+                                withContext(Dispatchers.Main) {
+                                    onProvinceSelected(Province(matchedIlce.ilceAdi, matchedIlce.ilceId))
+                                }
                                 return@launch
                             }
                         }
@@ -942,6 +964,18 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+
+    private val _isAiLoading = MutableStateFlow(false)
+    val isAiLoading: StateFlow<Boolean> = _isAiLoading.asStateFlow()
+
+    fun shareWithAi(context: Context, title: String, content: String, source: String) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            val aiBitmap = com.example.mkat_nur.util.AiImageService.generateAiBackground(content)
+            _isAiLoading.value = false
+            com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, aiBitmap)
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
