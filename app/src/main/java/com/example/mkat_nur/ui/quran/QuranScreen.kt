@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +59,8 @@ fun QuranScreen(
     val currentPlayingSurahId by viewModel.currentPlayingSurahId.collectAsState()
     val selectedReciter by viewModel.selectedReciter.collectAsState()
     val selectedFont by viewModel.selectedFont.collectAsState()
+    val isAiLoading by viewModel.isAiLoading.collectAsState()
+    val context = LocalContext.current
 
     val view = LocalView.current
     DisposableEffect(isPlaying) {
@@ -242,7 +247,28 @@ fun QuranScreen(
                                 onPlayClick = { verse -> viewModel.playVerse(selectedSurah?.id ?: verse.surahId, verse.verseNumber, state.verses) },
                                 onStopClick = { viewModel.stopAudio() },
                                 onPauseClick = { viewModel.togglePauseResume() },
-                                onSpeedClick = { viewModel.setPlaybackSpeed(it) }
+                                onSpeedClick = { viewModel.setPlaybackSpeed(it) },
+                                isAiLoading = isAiLoading,
+                                onShareClick = { verse, style ->
+                                    if (style == null) {
+                                        com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(
+                                            context,
+                                            "$detailTitle - ${verse.verseNumber}. Ayet",
+                                            verse.translation ?: "",
+                                            "Mîkat-ı Nur Kur'an-ı Kerim",
+                                            arabicText = verse.arabicText
+                                        )
+                                    } else {
+                                        viewModel.shareWithAi(
+                                            context,
+                                            "$detailTitle - ${verse.verseNumber}. Ayet",
+                                            verse.translation ?: "",
+                                            "Mîkat-ı Nur Kur'an-ı Kerim",
+                                            style,
+                                            arabicText = verse.arabicText
+                                        )
+                                    }
+                                }
                             )
                         }
                         is SurahDetailUiState.Error -> ErrorBox(state.message)
@@ -415,7 +441,9 @@ fun VerseList(
     onPlayClick: (Verse) -> Unit,
     onStopClick: () -> Unit,
     onPauseClick: () -> Unit,
-    onSpeedClick: (Float) -> Unit
+    onSpeedClick: (Float) -> Unit,
+    isAiLoading: Boolean = false,
+    onShareClick: (Verse, com.example.mkat_nur.util.AiImageService.ShareStyle?) -> Unit = { _, _ -> }
 ) {
     // Otomatik Kaydırma
     LaunchedEffect(currentPlayingVerse, currentPlayingSurahId) {
@@ -491,7 +519,9 @@ fun VerseList(
                     isCurrentPlaying = currentPlayingVerse == verse.verseNumber && currentPlayingSurahId == verse.surahId,
                     selectedFont = selectedFont,
                     onPlayClick = { onPlayClick(verse) },
-                    onStopClick = onStopClick
+                    onStopClick = onStopClick,
+                    isAiLoading = isAiLoading,
+                    onShareClick = { style -> onShareClick(verse, style) }
                 )
             }
         }
@@ -568,8 +598,11 @@ fun VerseItem(
     isCurrentPlaying: Boolean,
     selectedFont: String,
     onPlayClick: () -> Unit,
-    onStopClick: () -> Unit
+    onStopClick: () -> Unit,
+    isAiLoading: Boolean = false,
+    onShareClick: (com.example.mkat_nur.util.AiImageService.ShareStyle?) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val arabicFontFamily = when(selectedFont) {
         "SansSerif" -> FontFamily.SansSerif
         "Serif" -> FontFamily.Serif
@@ -612,7 +645,68 @@ fun VerseItem(
             }
             
             // Ayet İşlemleri (Paylaş, Dinle, Kopyala vb.)
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isAiLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Color(0xFF073642).copy(alpha = 0.5f),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(12.dp))
+                } else {
+                    var showMenu by remember { mutableStateOf(false) }
+
+                    Box {
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Paylaş",
+                                tint = Color(0xFF073642).copy(alpha = 0.5f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(Color(0xFFFCF5E5))
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Hızlı Paylaş", color = Color(0xFF073642)) },
+                                leadingIcon = { Icon(Icons.Default.Share, null, tint = Color(0xFF073642).copy(alpha = 0.7f)) },
+                                onClick = {
+                                    showMenu = false
+                                    onShareClick(null)
+                                }
+                            )
+                            
+                            HorizontalDivider(color = Color(0xFF073642).copy(alpha = 0.1f))
+                            
+                            Text(
+                                "Kart Paylaş (AI)",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF073642).copy(alpha = 0.5f)
+                            )
+
+                            com.example.mkat_nur.util.AiImageService.ShareStyle.entries.forEach { style ->
+                                DropdownMenuItem(
+                                    text = { Text(style.displayName, color = Color(0xFF073642)) },
+                                    leadingIcon = { Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFFFF9800)) },
+                                    onClick = {
+                                        showMenu = false
+                                        onShareClick(style)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                }
+
                 IconButton(onClick = { 
                     if (isCurrentPlaying) onStopClick() else onPlayClick() 
                 }) {

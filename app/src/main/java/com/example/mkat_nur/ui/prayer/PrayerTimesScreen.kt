@@ -401,29 +401,56 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
                         )
                         Spacer(Modifier.width(12.dp))
                     } else {
-                        IconButton(
-                            onClick = {
-                                viewModel.shareWithAi(context, title, content, source)
-                            },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "AI ile Paylaş",
-                                tint = Color(0xFFFFD700).copy(alpha = 0.8f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(Modifier.width(4.dp))
-                    }
+                        var showMenu by remember { mutableStateOf(false) }
 
-                    IconButton(
-                        onClick = {
-                            ShareUtils.shareInfoAsImage(context, title, content, source)
-                        },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(Icons.Default.Share, "Paylaş", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Paylaş",
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.background(Color(0xFF1B263B))
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Hızlı Paylaş", color = Color.White) },
+                                    leadingIcon = { Icon(Icons.Default.Share, null, tint = Color.White.copy(alpha = 0.7f)) },
+                                    onClick = {
+                                        showMenu = false
+                                        ShareUtils.shareInfoAsImage(context, title, content, source)
+                                    }
+                                )
+                                
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                                
+                                Text(
+                                    "Kart Paylaş (AI)",
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFFFFD700).copy(alpha = 0.7f)
+                                )
+
+                                com.example.mkat_nur.util.AiImageService.ShareStyle.entries.forEach { style ->
+                                    DropdownMenuItem(
+                                        text = { Text(style.displayName, color = Color.White) },
+                                        leadingIcon = { Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFFFFD700)) },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.shareWithAi(context, title, content, source, style)
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

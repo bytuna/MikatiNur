@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import com.example.mkat_nur.ui.quran.QuranScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.qibla.QiblaScreen
+import com.example.mkat_nur.ui.share.ShareCardScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
 
@@ -185,6 +187,25 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
+                
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "PAYLAŞIM ARAÇLARI",
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFFFD700).copy(alpha = 0.7f)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Kart Paylaş (AI)", color = Color.White) },
+                    selected = false,
+                    icon = { Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFFFFD700)) },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate("share_card")
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
                 HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
                 NavigationDrawerItem(
                     label = { Text("Ayarlar", color = Color.White) },
@@ -262,6 +283,12 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     viewModel = viewModel,
                     initialPrayer = prayer,
                     onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("share_card") {
+                ShareCardScreen(
+                    prayerViewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }
