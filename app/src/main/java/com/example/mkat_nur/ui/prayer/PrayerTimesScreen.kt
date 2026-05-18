@@ -31,8 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.mkat_nur.model.PrayerData
-import com.example.mkat_nur.model.Province
+import com.example.mkat_nur.model.*
 import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.util.ShareUtils
 import com.example.mkat_nur.viewmodel.CountdownState
@@ -311,7 +310,8 @@ fun SlidingContentCard(content: com.example.mkat_nur.model.DailyContent, viewMod
                 "Günün Vecizesi" -> Icons.Default.Favorite
                 else -> Icons.Default.AutoAwesome
             },
-            accentColor = accentColor
+            accentColor = accentColor,
+            viewModel = viewModel
         )
     }
 }
@@ -371,8 +371,10 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
 }
 
 @Composable
-fun InfoCard(title: String, content: String, source: String, icon: ImageVector, accentColor: Color) {
+fun InfoCard(title: String, content: String, source: String, icon: ImageVector, accentColor: Color, viewModel: PrayerViewModel) {
     val context = LocalContext.current
+    val isAiLoading by viewModel.isAiLoading.collectAsState()
+
     Card(
         modifier = Modifier.fillMaxWidth().height(220.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
@@ -389,14 +391,40 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
                     Spacer(Modifier.width(8.dp))
                     Text(title, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
-                
-                IconButton(
-                    onClick = {
-                        ShareUtils.shareInfoAsImage(context, title, content, source)
-                    },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(Icons.Default.Share, "Paylaş", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isAiLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White.copy(alpha = 0.7f),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(12.dp))
+                    } else {
+                        IconButton(
+                            onClick = {
+                                viewModel.shareWithAi(context, title, content, source)
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "AI ile Paylaş",
+                                tint = Color(0xFFFFD700).copy(alpha = 0.8f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(4.dp))
+                    }
+
+                    IconButton(
+                        onClick = {
+                            ShareUtils.shareInfoAsImage(context, title, content, source)
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(Icons.Default.Share, "Paylaş", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             Spacer(Modifier.height(10.dp))
@@ -548,8 +576,14 @@ fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
     val sehirler by viewModel.sehirler.collectAsState()
     val ilceler by viewModel.ilceler.collectAsState()
 
-    val filteredSehirler = sehirler.filter { it.SehirAdi.contains(searchQuery, ignoreCase = true) }
-    val filteredIlceler = ilceler.filter { it.IlceAdi.contains(searchQuery, ignoreCase = true) }
+    val trLocale = remember { Locale.forLanguageTag("tr-TR") }
+    
+    val filteredSehirler = remember(sehirler, searchQuery) {
+        sehirler.filter { it.sehirAdi.contains(searchQuery, ignoreCase = true) }
+    }
+    val filteredIlceler = remember(ilceler, searchQuery) {
+        ilceler.filter { it.ilceAdi.contains(searchQuery, ignoreCase = true) }
+    }
 
     val dialogBg = Brush.verticalGradient(listOf(Color(0xFF0D1B2A), Color(0xFF1B263B)))
 
@@ -591,14 +625,14 @@ fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
                                         val s = filteredSehirler[index]
                                         TextButton(
                                             onClick = {
-                                                selectedSehirId = s.SehirID
-                                                selectedSehirName = s.SehirAdi
+                                                selectedSehirId = s.sehirId
+                                                selectedSehirName = s.sehirAdi
                                                 searchQuery = ""
-                                                viewModel.fetchIlceler(s.SehirID)
+                                                viewModel.fetchIlceler(s.sehirId)
                                             },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(s.SehirAdi.uppercase(), color = Color.White, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start, fontWeight = FontWeight.Bold)
+                                            Text(s.sehirAdi.uppercase(trLocale), color = Color.White, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start, fontWeight = FontWeight.Bold)
                                         }
                                         if (index < filteredSehirler.size - 1) HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
                                     }
@@ -614,12 +648,12 @@ fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
                                         val i = filteredIlceler[index]
                                         TextButton(
                                             onClick = {
-                                                viewModel.onProvinceSelected(Province(i.IlceAdi, i.IlceID))
+                                                viewModel.onProvinceSelected(Province(i.ilceAdi, i.ilceId))
                                                 onDismiss()
                                             },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(i.IlceAdi.uppercase(), color = Color(0xFFFF9800), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start, fontWeight = FontWeight.Bold)
+                                            Text(i.ilceAdi.uppercase(trLocale), color = Color(0xFFFF9800), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start, fontWeight = FontWeight.Bold)
                                         }
                                         if (index < filteredIlceler.size - 1) HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
                                     }

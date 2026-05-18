@@ -41,15 +41,15 @@ class LocationUpdateWorker(
                     val district = addresses[0].subAdminArea ?: addresses[0].locality ?: ""
 
                     val sehirList = RetrofitClient.diyanetInstance.getSehirler()
-                    val matchedSehir = sehirList.find { it.SehirAdi.contains(city, ignoreCase = true) }
+                    val matchedSehir = sehirList.find { it.sehirAdi.contains(city, ignoreCase = true) }
 
                     if (matchedSehir != null) {
-                        val ilceList = RetrofitClient.diyanetInstance.getIlceler(matchedSehir.SehirID)
-                        val matchedIlce = ilceList.find { it.IlceAdi.contains(district, ignoreCase = true) }
-                            ?: ilceList.find { it.IlceAdi.contains(city, ignoreCase = true) }
+                        val ilceList = RetrofitClient.diyanetInstance.getIlceler(matchedSehir.sehirId)
+                        val matchedIlce = ilceList.find { it.ilceAdi.contains(district, ignoreCase = true) }
+                            ?: ilceList.find { it.ilceAdi.contains(city, ignoreCase = true) }
 
                         if (matchedIlce != null) {
-                            val province = Province(matchedIlce.IlceAdi, matchedIlce.IlceID)
+                            val province = Province(matchedIlce.ilceAdi, matchedIlce.ilceId)
                             saveLocation(province)
                             fetchAndCachePrayerTimes(province)
                             return Result.success()
