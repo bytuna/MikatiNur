@@ -26,8 +26,8 @@ object ShareUtils {
 
     )
 
-    fun shareInfoAsImage(context: Context, title: String, content: String, source: String, customBackground: Bitmap? = null) {
-        val theme = CardTheme.values().random()
+    fun shareInfoAsImage(context: Context, title: String, content: String, source: String, customBackground: Bitmap? = null, arabicText: String? = null) {
+        val theme = CardTheme.entries.random()
         val width = 1080
         val height = 1350
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -67,18 +67,44 @@ object ShareUtils {
         paint.strokeWidth = 4f
         canvas.drawLine(width/2f - 100f, 320f, width/2f + 100f, 320f, paint)
 
+        var y = 420f
+
+        // Arabic Text
+        if (!arabicText.isNullOrBlank()) {
+            paint.color = Color.WHITE
+            paint.textSize = 80f
+            paint.alpha = 255
+            paint.textAlign = Paint.Align.CENTER
+            try {
+                paint.typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.uthman_taha)
+            } catch (e: Exception) {
+                paint.typeface = Typeface.DEFAULT_BOLD
+            }
+            
+            val padding = 100f
+            val arabicTextWidth = width - (padding * 2)
+            val arabicLines = wrapText(arabicText, paint, arabicTextWidth)
+            
+            for (line in arabicLines) {
+                canvas.drawText(line, width / 2f, y, paint)
+                y += 110f
+            }
+            y += 40f
+        }
+
         // Content
+        paint.typeface = Typeface.DEFAULT
         paint.color = Color.WHITE
         paint.textSize = 52f
         paint.isFakeBoldText = false
         paint.letterSpacing = 0f
+        paint.textAlign = Paint.Align.CENTER
         val padding = 120f
         val textWidth = width - (padding * 2)
         val lines = wrapText("“$content”", paint, textWidth)
         
-        var y = 480f
         for (line in lines) {
-            canvas.drawText(line, (width / 2f) - (paint.measureText(line) / 2f), y, paint)
+            canvas.drawText(line, width / 2f, y, paint)
             y += 85f
         }
 
@@ -87,7 +113,6 @@ object ShareUtils {
             paint.color = Color.parseColor(theme.accentColor)
             paint.textSize = 42f
             paint.alpha = 200
-            paint.textAlign = Paint.Align.CENTER
             canvas.drawText("- $source -", width / 2f, y + 100f, paint)
         }
 

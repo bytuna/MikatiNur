@@ -968,12 +968,12 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _isAiLoading = MutableStateFlow(false)
     val isAiLoading: StateFlow<Boolean> = _isAiLoading.asStateFlow()
 
-    fun shareWithAi(context: Context, title: String, content: String, source: String) {
+    fun shareWithAi(context: Context, title: String, content: String, source: String, style: com.example.mkat_nur.util.AiImageService.ShareStyle = com.example.mkat_nur.util.AiImageService.ShareStyle.MINIMALIST, arabicText: String? = null) {
         viewModelScope.launch {
             _isAiLoading.value = true
-            val aiBitmap = com.example.mkat_nur.util.AiImageService.generateAiBackground(content)
+            val aiBitmap = com.example.mkat_nur.util.AiImageService.generateAiBackground(content, style)
             _isAiLoading.value = false
-            com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, aiBitmap)
+            com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, aiBitmap, arabicText)
         }
     }
 

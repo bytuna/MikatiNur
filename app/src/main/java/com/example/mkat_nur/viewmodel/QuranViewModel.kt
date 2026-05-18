@@ -192,6 +192,47 @@ class QuranViewModel : ViewModel() {
         _currentPlayingVerse.value = null
     }
 
+    private val _isAiLoading = MutableStateFlow(false)
+    val isAiLoading: StateFlow<Boolean> = _isAiLoading
+
+    private val _randomVerse = MutableStateFlow<Verse?>(null)
+    val randomVerse: StateFlow<Verse?> = _randomVerse
+
+    private val _randomSurahName = MutableStateFlow<String?>(null)
+    val randomSurahName: StateFlow<String?> = _randomSurahName
+
+    fun fetchRandomVerse() {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                // Rastgele bir sure ve o sureden rastgele bir ayet seç
+                val surahs = (apiService.getSurahs().data)
+                if (surahs.isNotEmpty()) {
+                    val randomSurah = surahs.random()
+                    _randomSurahName.value = randomSurah.name
+                    val randomVerseNum = (1..randomSurah.verseCount).random()
+                    val verseKey = "${randomSurah.id}:$randomVerseNum"
+                    
+                    val response = apiService.getVerseByKey(verseKey)
+                    _randomVerse.value = response.data
+                }
+            } catch (e: Exception) {
+                Log.e("QuranViewModel", "Error fetching random verse", e)
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
+    }
+
+    fun shareWithAi(context: android.content.Context, title: String, content: String, source: String, style: com.example.mkat_nur.util.AiImageService.ShareStyle = com.example.mkat_nur.util.AiImageService.ShareStyle.MINIMALIST, arabicText: String? = null) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            val aiBitmap = com.example.mkat_nur.util.AiImageService.generateAiBackground(content, style)
+            _isAiLoading.value = false
+            com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, aiBitmap, arabicText)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopAudio()
