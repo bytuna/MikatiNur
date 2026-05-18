@@ -51,6 +51,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     val widgetTransparency by viewModel.widgetTransparency.collectAsState()
     val widgetTitleColor by viewModel.widgetTitleColor.collectAsState()
     val widgetTextColor by viewModel.widgetTextColor.collectAsState()
+    val widgetFontSize by viewModel.widgetFontSize.collectAsState()
     
     val context = LocalContext.current
     
@@ -65,6 +66,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
 
     val isInDarkMode = isDarkModeState ?: false
     var isAppearanceExpanded by remember { mutableStateOf(false) }
+    var isWidgetExpanded by remember { mutableStateOf(false) }
     var isNotifExpanded by remember { mutableStateOf(false) }
     var isOffsetExpanded by remember { mutableStateOf(false) }
     var isCardExpanded by remember { mutableStateOf(false) }
@@ -116,69 +118,6 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         )
 
                         Spacer(Modifier.height(16.dp))
-                        Text("Widget Şeffaflığı: %${(widgetTransparency * 100).toInt()}", color = Color.White, fontSize = 14.sp)
-                        Slider(
-                            value = widgetTransparency,
-                            onValueChange = { viewModel.setWidgetTransparency(it) },
-                            valueRange = 0f..1f,
-                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-                        Text("Widget Başlık Rengi:", color = Color.White, fontSize = 14.sp)
-                        Spacer(Modifier.height(8.dp))
-                        val widgetColorOptions = listOf(
-                            0xFFFFD700.toInt(), 0xFFFFFFFF.toInt(), 0xFF000000.toInt(), 
-                            0xFFF44336.toInt(), 0xFFE91E63.toInt(), 0xFF9C27B0.toInt(), 
-                            0xFF673AB7.toInt(), 0xFF3F51B5.toInt(), 0xFF2196F3.toInt(), 
-                            0xFF03A9F4.toInt(), 0xFF00BCD4.toInt(), 0xFF009688.toInt(), 
-                            0xFF4CAF50.toInt(), 0xFF8BC34A.toInt(), 0xFFFFEB3B.toInt(), 
-                            0xFFFFC107.toInt(), 0xFFFF9800.toInt(), 0xFF795548.toInt()
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            widgetColorOptions.forEach { colorInt ->
-                                val isSelected = widgetTitleColor == colorInt
-                                Box(
-                                    modifier = Modifier.size(34.dp).background(Color(colorInt), CircleShape)
-                                        .clickable { viewModel.setWidgetTitleColor(colorInt) }.padding(4.dp)
-                                ) {
-                                    if (isSelected) Icon(
-                                        Icons.Default.Check, 
-                                        null, 
-                                        tint = if (colorInt == 0xFFFFFFFF.toInt() || colorInt == 0xFFFFEB3B.toInt()) Color.Black else Color.White, 
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(16.dp))
-                        Text("Widget Metin Rengi:", color = Color.White, fontSize = 14.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            widgetColorOptions.forEach { colorInt ->
-                                val isSelected = widgetTextColor == colorInt
-                                Box(
-                                    modifier = Modifier.size(34.dp).background(Color(colorInt), CircleShape)
-                                        .clickable { viewModel.setWidgetTextColor(colorInt) }.padding(4.dp)
-                                ) {
-                                    if (isSelected) Icon(
-                                        Icons.Default.Check, 
-                                        null, 
-                                        tint = if (colorInt == 0xFFFFFFFF.toInt() || colorInt == 0xFFFFEB3B.toInt()) Color.Black else Color.White, 
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(16.dp))
                         HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                         Spacer(Modifier.height(16.dp))
 
@@ -207,6 +146,128 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                         null, 
                                         tint = if (colorInt == 0xFFFFFFFF.toInt() || colorInt == 0xFFFFEB3B.toInt()) Color.Black else Color.White, 
                                         modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // WIDGET AYARLARI (AÇILIR-KAPANIR)
+            SettingsCard(
+                title = "Widget Ayarları",
+                icon = Icons.Default.Widgets,
+                isExpandable = true,
+                isExpanded = isWidgetExpanded,
+                onExpandClick = { isWidgetExpanded = !isWidgetExpanded }
+            ) {
+                AnimatedVisibility(visible = isWidgetExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                    Column {
+                        Text("Widget Şeffaflığı: %${(widgetTransparency * 100).toInt()}", color = Color.White, fontSize = 14.sp)
+                        Slider(
+                            value = widgetTransparency,
+                            onValueChange = { viewModel.setWidgetTransparency(it) },
+                            valueRange = 0f..1f,
+                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+                        Text("Widget Başlık Rengi:", color = Color.White, fontSize = 14.sp)
+                        Spacer(Modifier.height(8.dp))
+                        val widgetColorOptions = listOf(
+                            0xFFFFD700.toInt(), 0xFFFFFFFF.toInt(), 0xFF000000.toInt(),
+                            0xFFF44336.toInt(), 0xFFE91E63.toInt(), 0xFF9C27B0.toInt(),
+                            0xFF673AB7.toInt(), 0xFF3F51B5.toInt(), 0xFF2196F3.toInt(),
+                            0xFF03A9F4.toInt(), 0xFF00BCD4.toInt(), 0xFF009688.toInt(),
+                            0xFF4CAF50.toInt(), 0xFF8BC34A.toInt(), 0xFFFFEB3B.toInt(),
+                            0xFFFFC107.toInt(), 0xFFFF9800.toInt(), 0xFF795548.toInt()
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            widgetColorOptions.forEach { colorInt ->
+                                val isSelected = widgetTitleColor == colorInt
+                                Box(
+                                    modifier = Modifier.size(34.dp).background(Color(colorInt), CircleShape)
+                                        .clickable { viewModel.setWidgetTitleColor(colorInt) }.padding(4.dp)
+                                ) {
+                                    if (isSelected) Icon(
+                                        Icons.Default.Check,
+                                        null,
+                                        tint = if (colorInt == 0xFFFFFFFF.toInt() || colorInt == 0xFFFFEB3B.toInt()) Color.Black else Color.White,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+                        Text("Widget Metin Rengi:", color = Color.White, fontSize = 14.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            widgetColorOptions.forEach { colorInt ->
+                                val isSelected = widgetTextColor == colorInt
+                                Box(
+                                    modifier = Modifier.size(34.dp).background(Color(colorInt), CircleShape)
+                                        .clickable { viewModel.setWidgetTextColor(colorInt) }.padding(4.dp)
+                                ) {
+                                    if (isSelected) Icon(
+                                        Icons.Default.Check,
+                                        null,
+                                        tint = if (colorInt == 0xFFFFFFFF.toInt() || colorInt == 0xFFFFEB3B.toInt()) Color.Black else Color.White,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+                        Text("Widget Yazı Boyutu:", color = Color.White, fontSize = 14.sp)
+                        Spacer(Modifier.height(8.dp))
+                        var isFontSizeExpanded by remember { mutableStateOf(false) }
+                        val fontSizeOptions = listOf(
+                            10f to "Çok Küçük",
+                            12f to "Küçük",
+                            14f to "Normal",
+                            16f to "Büyük",
+                            18f to "Çok Büyük"
+                        )
+                        val currentSizeLabel = fontSizeOptions.find { it.first == widgetFontSize }?.second ?: "Özel"
+
+                        Box {
+                            Button(
+                                onClick = { isFontSizeExpanded = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(currentSizeLabel, color = Color.White)
+                                    Icon(Icons.Default.ArrowDropDown, null, tint = Color.White)
+                                }
+                            }
+                            DropdownMenu(
+                                expanded = isFontSizeExpanded,
+                                onDismissRequest = { isFontSizeExpanded = false },
+                                modifier = Modifier.background(Color(0xFF1E1E1E)).fillMaxWidth(0.8f)
+                            ) {
+                                fontSizeOptions.forEach { (size, label) ->
+                                    DropdownMenuItem(
+                                        text = { Text(label, color = Color.White) },
+                                        onClick = {
+                                            viewModel.setWidgetFontSize(size)
+                                            isFontSizeExpanded = false
+                                        }
                                     )
                                 }
                             }
@@ -444,6 +505,28 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 InfoRow(label = "Yapım Yılı", value = AppConfig.BUILD_DATE)
                 InfoRow(label = "Son Güncelleme", value = AppConfig.getAppLastUpdateTime(context))
             }
+
+            Spacer(Modifier.height(24.dp))
+
+            // UYGULAMAYI PAYLAŞ BUTONU
+            Button(
+                onClick = {
+                    val shareText = "Mîkat-ı Nur uygulamasını buradan indirebilirsiniz: [Download Linki Gelecek]"
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Uygulamayı Paylaş"))
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+            ) {
+                Icon(Icons.Default.Share, null, tint = Color.White)
+                Spacer(Modifier.width(12.dp))
+                Text("Uygulamayı Paylaş", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+
             Spacer(Modifier.height(40.dp))
         }
     }

@@ -72,3 +72,47 @@ data class DailyContent(
     val name: String = "",
     val nameMeaning: String = ""
 )
+
+fun com.example.mkat_nur.network.DiyanetPrayerResponse.toPrayerData(): PrayerData {
+    val cleanHicri = HicriTarihKisa
+        .replace("Hicri", "", ignoreCase = true)
+        .replace("Tarih", "", ignoreCase = true)
+        .replace(":", "")
+        .trim()
+    
+    val day: String
+    val month: String
+    
+    if (cleanHicri.contains(".")) {
+        // Format: "30.11.1447"
+        val parts = cleanHicri.split(".")
+        day = parts.getOrNull(0) ?: ""
+        month = parts.getOrNull(1) ?: ""
+    } else {
+        // Format: "12 Zilhicce 1445"
+        val parts = cleanHicri.split(" ")
+        day = parts.getOrNull(0) ?: ""
+        month = parts.getOrNull(1) ?: ""
+    }
+    
+    return PrayerData(
+        timings = Timings(
+            fajr = Imsak,
+            sunrise = Gunes,
+            dhuhr = Ogle,
+            asr = Ikindi,
+            maghrib = Aksam,
+            isha = Yatsi,
+            kible = KibleSaati
+        ),
+        date = DateInfo(
+            readable = MiladiTarihKisa,
+            hijri = HijriInfo(
+                day = day,
+                month = MonthInfo(en = month)
+            ),
+            fullMiladi = MiladiTarihKisa,
+            fullHicri = HicriTarihKisa
+        )
+    )
+}

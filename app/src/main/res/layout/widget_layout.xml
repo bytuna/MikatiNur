@@ -19,65 +19,74 @@
         android:padding="12dp">
 
         <!-- Header: City and Refresh -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp">
 
             <TextView
                 android:id="@+id/widget_city"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
+                android:layout_weight="1"
                 android:text="İstanbul"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/widget_next_vakit_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_toStartOf="@id/widget_countdown"
-                android:text="İmsak'a:"
-                android:textColor="#AAAAAA"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <Chronometer
-                android:id="@+id/widget_countdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_toStartOf="@id/widget_refresh"
-                android:textColor="#FFD700"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
             <TextView
                 android:id="@+id/widget_kerahat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
+                android:layout_marginHorizontal="4dp"
                 android:text="KERAHAT VAKTİ"
                 android:textColor="#FF4444"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <ImageButton
-                android:id="@+id/widget_refresh"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_alignParentEnd="true"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Yenile"
-                android:src="@drawable/ic_refresh_custom"
-                android:tint="#FFFFFF" />
-        </RelativeLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+
+                <TextView
+                    android:id="@+id/widget_next_vakit_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:text="İmsak'a:"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:maxLines="1" />
+
+                <Chronometer
+                    android:id="@+id/widget_countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:textColor="#FFD700"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/widget_refresh"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Yenile"
+                    android:src="@drawable/ic_refresh_custom"
+                    android:tint="#FFFFFF" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Prayer Times Grid -->
         <LinearLayout
@@ -91,28 +100,28 @@
             android:baselineAligned="false">
 
             <LinearLayout android:id="@+id/container_imsak" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="İmsak" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_imsak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_imsak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="İmsak" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_imsak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
             <LinearLayout android:id="@+id/container_gunes" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Güneş" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_gunes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_gunes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Güneş" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_gunes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
             <LinearLayout android:id="@+id/container_ogle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Öğle" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_ogle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_ogle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Öğle" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_ogle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
             <LinearLayout android:id="@+id/container_ikindi" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="İkindi" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_ikindi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_ikindi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="İkindi" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_ikindi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
             <LinearLayout android:id="@+id/container_aksam" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Akşam" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_aksam" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_aksam" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Akşam" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_aksam" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
             <LinearLayout android:id="@+id/container_yatsi" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:padding="2dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yatsı" android:textColor="#AAAAAA" android:textSize="11sp"/>
-                <TextView android:id="@+id/tv_yatsi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:id="@+id/label_yatsi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yatsı" android:textColor="#AAAAAA" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/tv_yatsi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:maxLines="1"/>
             </LinearLayout>
         </LinearLayout>
 

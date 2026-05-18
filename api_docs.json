@@ -1,0 +1,684 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Kuran API Dokümantasyonu",
+        "description": "Kuran ayetleri ve sureleri için API servisleri.",
+        "contact": {
+            "email": "community@diyanet.gov.tr"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://t061.diyanet.gov.tr/apigateway/acikkaynakkuran",
+            "description": ""
+        }
+    ],
+    "paths": {
+        "/api/v1/verses/page/{page_number}": {
+            "get": {
+                "tags": [
+                    "Ayetler"
+                ],
+                "summary": "Belirtilen sayfadaki ayetleri getirir",
+                "description": "Belirtilen sayfa numarasına göre ayetleri, çevirilerini ve isteğe bağlı Arapça metinlerini döndürür.",
+                "operationId": "getVersesByPage",
+                "parameters": [
+                    {
+                        "name": "page_number",
+                        "in": "path",
+                        "description": "Görüntülenmek istenen sayfa numarası (1-604).",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "maximum": 604,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "language_id",
+                        "in": "query",
+                        "description": "Çeviri için dil ID'si. Belirtilmezse varsayılan (örn: Türkçe) kullanılır.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "arabic_text_group_id",
+                        "in": "query",
+                        "description": "Arapça metin grubu ID'si. (Bu parametre şu an yanıtta meta olarak dönüyor, doğrudan filtreleme için kullanılmıyor.)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı yanıt. Ayet listesini veya boş bir listeyi döndürür.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VerseResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "requested_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "requested_translation_language_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "requested_arabic_text_group_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "success": {
+                                            "description": "İsteğin başarılı olup olmadığını belirtir (veri olmasa bile).",
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Belirtilen kriterlere uygun ayet bulunamadı.",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Geçersiz istek (örn: sayfa numarası formatı yanlış).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Geçersiz sayfa numarası. Lütfen 1 ile 604 arasında bir sayı girin."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz (Token eksik veya geçersiz)."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/chapters": {
+            "get": {
+                "tags": [
+                    "Sureler"
+                ],
+                "summary": "Tüm sureleri listeler",
+                "description": "Veritabanındaki tüm sureleri ve ilgili temel bilgilerini döndürür.",
+                "operationId": "getAllChapters",
+                "parameters": [
+                    {
+                        "name": "language",
+                        "in": "query",
+                        "description": "Sure isimlerinin hangi dilde geleceği (örn: 'tr', 'en'). Yanıtta meta olarak döner.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "tr"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı yanıt. Sure listesini döndürür.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChapterResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "requested_language": {
+                                                    "type": "string",
+                                                    "example": "tr"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz (Token eksik veya geçersiz)."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/chapters/{chapter_id}": {
+            "get": {
+                "tags": [
+                    "Ayetler",
+                    "Sureler"
+                ],
+                "summary": "Belirtilen suredeki tüm ayetleri getirir",
+                "description": "Belirtilen sure ID'sine göre o sureye ait tüm ayetleri, çevirilerini ve isteğe bağlı Arapça metinlerini döndürür.",
+                "operationId": "getVersesByChapter",
+                "parameters": [
+                    {
+                        "name": "chapter_id",
+                        "in": "path",
+                        "description": "Ayetleri listelenecek surenin ID'si (1-114).",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "maximum": 114,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "language_id",
+                        "in": "query",
+                        "description": "Çeviri için dil ID'si. Belirtilmezse varsayılan kullanılır.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "arabic_text_group_id",
+                        "in": "query",
+                        "description": "Arapça metin grubu ID'si. Belirtilmezse varsayılan kullanılır.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı yanıt. Sureye ait ayet listesini döndürür.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/VerseResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Geçersiz sure ID'si veya parametre formatı.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Geçersiz chapter_id. Lütfen 1 ile 114 arasında bir sayı girin."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Bu sureye ait ayet bulunamadı.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Bu sureye ait ayet bulunamadı."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz (Token eksik veya geçersiz)."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/juz/{juz_id}": {
+            "get": {
+                "tags": [
+                    "Cüzler",
+                    "Ayetler"
+                ],
+                "summary": "Belirtilen cüzdeki tüm ayetleri getirir",
+                "description": "Belirtilen cüz ID'sine göre, o cüzün başlangıç ve bitiş sayfaları arasındaki tüm ayetleri döndürür.",
+                "operationId": "getVersesByJuz",
+                "parameters": [
+                    {
+                        "name": "juz_id",
+                        "in": "path",
+                        "description": "Ayetleri listelenecek cüzün ID'si (1-30).",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "maximum": 30,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "language_id",
+                        "in": "query",
+                        "description": "Çeviri için dil ID'si. Belirtilmezse varsayılan kullanılır.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı yanıt. Cüze ait tüm ayetlerin listesini döndürür.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/VerseResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Geçersiz cüz ID'si."
+                    },
+                    "404": {
+                        "description": "Belirtilen cüz bulunamadı."
+                    },
+                    "401": {
+                        "description": "Yetkisiz (Token eksik veya geçersiz)."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/fonts": {
+            "get": {
+                "tags": [
+                    "Yazı Tipleri"
+                ],
+                "summary": "Tüm yazı tiplerini listeler",
+                "description": "Sistemde kayıtlı tüm yazı tiplerini döndürür.",
+                "operationId": "getFontsList",
+                "responses": {
+                    "200": {
+                        "description": "Başarılı işlem",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/FontResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/fonts/{font_id}": {
+            "get": {
+                "tags": [
+                    "Yazı Tipleri"
+                ],
+                "summary": "Belirli bir yazı tipini getirir",
+                "description": "Verilen ID'ye sahip yazı tipinin detaylarını döndürür.",
+                "operationId": "getFontById",
+                "parameters": [
+                    {
+                        "name": "font_id",
+                        "in": "path",
+                        "description": "Yazı tipi ID'si",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı işlem",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FontResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz"
+                    },
+                    "404": {
+                        "description": "Kaynak bulunamadı",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Font bulunamadı."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/fonts/{font_id}/download": {
+            "get": {
+                "tags": [
+                    "Yazı Tipleri"
+                ],
+                "summary": "Belirli bir yazı tipini indirir",
+                "description": "Verilen ID'ye sahip yazı tipinin dosyasını indirmek için stream yanıtı döndürür.",
+                "operationId": "downloadFontById",
+                "parameters": [
+                    {
+                        "name": "font_id",
+                        "in": "path",
+                        "description": "Yazı tipi ID'si",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Başarılı indirme. Yanıt gövdesi font dosyasıdır.",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Yetkisiz"
+                    },
+                    "404": {
+                        "description": "Kaynak bulunamadı",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Font dosyası bulunamadı."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChapterResource": {
+                "title": "Sure Kaynağı",
+                "description": "Bir surenin detaylarını içeren kaynak.",
+                "properties": {
+                    "id": {
+                        "description": "Sure ID'si",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name_turkish": {
+                        "description": "Surenin Türkçe adı",
+                        "type": "string",
+                        "example": "Fâtiha"
+                    },
+                    "name_arabic": {
+                        "description": "Surenin Arapça adı",
+                        "type": "string",
+                        "example": "الفاتحة"
+                    },
+                    "verse_count": {
+                        "description": "Suredeki ayet sayısı",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "revelation_order": {
+                        "description": "İniş sırası",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "first_page": {
+                        "description": "Surenin başladığı sayfa numarası",
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "FontResource": {
+                "title": "Yazı Tipi Kaynağı",
+                "description": "Yazı tipi detaylarını ve indirme bağlantısını içeren kaynak.",
+                "properties": {
+                    "id": {
+                        "description": "Yazı tipi ID'si",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "Yazı tipinin adı",
+                        "type": "string",
+                        "example": "KFGQPC Uthman Taha Naskh"
+                    },
+                    "file_name": {
+                        "description": "Dosya adı",
+                        "type": "string",
+                        "example": "uthman_taha_naskh.otf"
+                    },
+                    "mime_type": {
+                        "description": "MIME türü",
+                        "type": "string",
+                        "example": "font/otf"
+                    },
+                    "size": {
+                        "description": "Dosya boyutu (byte)",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 150204
+                    },
+                    "download_url": {
+                        "description": "Yazı tipini indirme URL'si",
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://t061.diyanet.gov.tr/apigateway/kuran/api/v1/fonts/1/download"
+                    }
+                },
+                "type": "object"
+            },
+            "VerseResource": {
+                "title": "Ayet Kaynağı",
+                "description": "Bir ayetin detaylarını içeren kaynak.",
+                "properties": {
+                    "id": {
+                        "description": "Ayetin veritabanı ID'si",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "surah_number": {
+                        "description": "Sure numarası",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "verse_number": {
+                        "description": "Ayet numarası (sure içindeki sıra)",
+                        "type": "integer",
+                        "example": 186
+                    },
+                    "text": {
+                        "description": "Ayetin çeviri metni",
+                        "type": "string",
+                        "example": "Kullarım, beni senden sorarlarsa, (bilsinler ki), gerçekten ben (onlara çok) yakınım. Bana dua edince, dua edenin duasına cevap veririm."
+                    },
+                    "arabic_text": {
+                        "description": "Ayetin Arapça metni (istenirse)",
+                        "type": "string",
+                        "example": "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ",
+                        "nullable": true
+                    },
+                    "juz_number": {
+                        "description": "Cüz numarası",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "page_number": {
+                        "description": "Sayfa numarası",
+                        "type": "integer",
+                        "example": 28
+                    },
+                    "surah_name_turkish": {
+                        "description": "Surenin Türkçe adı",
+                        "type": "string",
+                        "example": "Bakara Suresi"
+                    },
+                    "surah_name_arabic": {
+                        "description": "Surenin Arapça adı",
+                        "type": "string",
+                        "example": "سورة البقرة"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Giriş yaptıktan sonra alınan token'ı buraya girin.",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Ayetler",
+            "description": "Ayetlerle ilgili işlemler"
+        },
+        {
+            "name": "Sureler",
+            "description": "Surelerle ilgili işlemler"
+        },
+        {
+            "name": "Cüzler",
+            "description": "Cüzlerle ilgili işlemler"
+        },
+        {
+            "name": "Yazı Tipleri",
+            "description": "Yazı Tipleri"
+        }
+    ]
+}
