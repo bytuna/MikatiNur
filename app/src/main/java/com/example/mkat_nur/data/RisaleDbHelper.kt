@@ -9,7 +9,7 @@ class RisaleDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "risale_manual.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
         
         const val TABLE_NAME = "risale_pages"
         const val COLUMN_ID = "id"
@@ -17,16 +17,28 @@ class RisaleDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COLUMN_PAGE_NUMBER = "pageNumber"
         const val COLUMN_CONTENT = "content"
         const val COLUMN_IS_BOOKMARKED = "isBookmarked"
+
+        const val TABLE_NOTES = "risale_notes"
+        const val COLUMN_NOTE_TEXT = "noteText"
+        const val COLUMN_TIMESTAMP = "timestamp"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        val createTable = ("CREATE TABLE $TABLE_NAME (" +
+        val createPagesTable = ("CREATE TABLE $TABLE_NAME (" +
                 "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "$COLUMN_BOOK_ID TEXT," +
                 "$COLUMN_PAGE_NUMBER INTEGER," +
                 "$COLUMN_CONTENT TEXT," +
                 "$COLUMN_IS_BOOKMARKED INTEGER DEFAULT 0)")
-        db.execSQL(createTable)
+        db.execSQL(createPagesTable)
+
+        val createNotesTable = ("CREATE TABLE $TABLE_NOTES (" +
+                "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_BOOK_ID TEXT," +
+                "$COLUMN_PAGE_NUMBER INTEGER," +
+                "$COLUMN_NOTE_TEXT TEXT," +
+                "$COLUMN_TIMESTAMP LONG)")
+        db.execSQL(createNotesTable)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -101,5 +113,42 @@ class RisaleDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
         cursor.close()
         return results
+    }
+
+    // Notes Methods
+    fun addNote(bookId: String, pageNumber: Int, text: String) {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_BOOK_ID, bookId)
+            put(COLUMN_PAGE_NUMBER, pageNumber)
+            put(COLUMN_NOTE_TEXT, text)
+            put(COLUMN_TIMESTAMP, System.currentTimeMillis())
+        }
+        db.insert(TABLE_NOTES, null, values)
+    }
+
+    fun getNotes(bookId: String, pageNumber: Int): List<String> {
+        val db = this.readableDatabase
+        val cursor = db.query(
+            TABLE_NOTES,
+            arrayOf(COLUMN_NOTE_TEXT),
+            "$COLUMN_BOOK_ID = ? AND $COLUMN_PAGE_NUMBER = ?",
+            arrayOf(bookId, pageNumber.toString()),
+            null, null, "$COLUMN_TIMESTAMP DESC"
+        )
+        val notes = mutableListOf<String>()
+        if (cursor.moveToFirst()) {
+            do {
+                notes.add(cursor.getString(0))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return notes
+    }
+
+    fun deleteNote(bookId: String, pageNumber: Int, text: String) {
+        val db = this.writableDatabase
+        db.delete(TABLE_NOTES, "$COLUMN_BOOK_ID = ? AND $COLUMN_PAGE_NUMBER = ? AND $COLUMN_NOTE_TEXT = ?", 
+            arrayOf(bookId, pageNumber.toString(), text))
     }
 }

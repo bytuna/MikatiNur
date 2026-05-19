@@ -42,8 +42,14 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     private val _fontSize = MutableStateFlow(prefs.getFloat("risale_font_size", 18f))
     val fontSize: StateFlow<Float> = _fontSize.asStateFlow()
 
+    private val _lineSpacing = MutableStateFlow(prefs.getFloat("risale_line_spacing", 1.5f))
+    val lineSpacing: StateFlow<Float> = _lineSpacing.asStateFlow()
+
     private val _themeMode = MutableStateFlow(prefs.getString("risale_theme", "Sepia") ?: "Sepia")
     val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
+    private val _notes = MutableStateFlow<List<String>>(emptyList())
+    val notes: StateFlow<List<String>> = _notes.asStateFlow()
 
     private val _searchResults = MutableStateFlow<List<RisalePage>>(emptyList())
     val searchResults: StateFlow<List<RisalePage>> = _searchResults.asStateFlow()
@@ -57,28 +63,38 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     init {
         loadBooks()
         loadAllBookmarks()
+        indexAllBooksInBackground()
+    }
+
+    private fun indexAllBooksInBackground() {
+        viewModelScope.launch {
+            if (uiState.value is RisaleUiState.Success) {
+                val books = (uiState.value as RisaleUiState.Success).books
+                books.forEach { book ->
+                    if (!repository.isBookIndexed(book.id)) {
+                        repository.indexBook(book.id)
+                    }
+                }
+            }
+        }
     }
 
     private fun loadBooks() {
         val books = listOf(
-            RisaleBook("sozler", "Sözler", pageCount = 791, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.sozler, sections = listOf(
-                RisaleSection("Birinci Söz", 1),
-                RisaleSection("İkinci Söz", 10),
-                RisaleSection("Üçüncü Söz", 15)
-            )),
-            RisaleBook("mektubat", "Mektubat", pageCount = 524, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.mektubat),
-            RisaleBook("lemalar", "Lem'alar", pageCount = 447, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.lemalar),
-            RisaleBook("sualar", "Şualar", pageCount = 761, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.sualar),
-            RisaleBook("asa-yi-musa", "Asâ-yı Musa", pageCount = 269, coverColor = 0xFFE65100, coverImageRes = R.drawable.asa_yi_musa),
-            RisaleBook("mesnevi-i-nuriye", "Mesnevi-i Nuriye", pageCount = 266, coverColor = 0xFF004D40, coverImageRes = R.drawable.mesnevi_i_nuriye),
-            RisaleBook("isaratul-icaz", "İşaratü'l-İ'caz", pageCount = 229, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.isaratul_icaz),
-            RisaleBook("barla-lahikasi", "Barla Lahikası", pageCount = 382, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.barla_lahikasi),
-            RisaleBook("kastamonu-lahikasi", "Kastamonu Lahikası", pageCount = 266, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.kastamonu_lahikasi),
-            RisaleBook("emirdag-lahikasi", "Emirdağ Lahikası", pageCount = 535, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.emirdag_lahikasi),
-            RisaleBook("iman-ve-kufur-muvazeneleri", "İman ve Küfür Muvazeneleri", pageCount = 268, coverColor = 0xFFE65100, coverImageRes = R.drawable.iman_ve_kufur_muvazeneleri),
-            RisaleBook("sikke-i-tasdik-i-gaybi", "Sikke-i Tasdik-i Gaybi", pageCount = 269, coverColor = 0xFF004D40, coverImageRes = R.drawable.sikke_i_tasdik_i_gaybi),
-            RisaleBook("tarihce-i-hayat", "Tarihçe-i Hayat", pageCount = 739, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.tarihce_i_hayat),
-            RisaleBook("muhakemat", "Muhakemat", pageCount = 176, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.muhakemat)
+            RisaleBook("sozler", "Sözler", pageCount = 1015, firstPage = 27, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.sozler),
+            RisaleBook("mektubat", "Mektubat", pageCount = 688, firstPage = 25, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.mektubat),
+            RisaleBook("lemalar", "Lem'alar", pageCount = 638, firstPage = 26, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.lemalar),
+            RisaleBook("sualar", "Şualar", pageCount = 901, firstPage = 23, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.sualar),
+            RisaleBook("asa-yi-musa", "Asâ-yı Musa", pageCount = 327, firstPage = 17, coverColor = 0xFFE65100, coverImageRes = R.drawable.asa_yi_musa),
+            RisaleBook("mesnevi-i-nuriye", "Mesnevi-i Nuriye", pageCount = 323, firstPage = 15, coverColor = 0xFF004D40, coverImageRes = R.drawable.mesnevi_i_nuriye),
+            RisaleBook("isaratul-icaz", "İşaratü'l-İ'caz", pageCount = 369, firstPage = 16, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.isaratul_icaz),
+            RisaleBook("barla-lahikasi", "Barla Lahikası", pageCount = 495, firstPage = 33, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.barla_lahikasi),
+            RisaleBook("kastamonu-lahikasi", "Kastamonu Lahikası", pageCount = 311, firstPage = 19, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.kastamonu_lahikasi),
+            RisaleBook("emirdag-lahikasi", "Emirdağ Lahikası", pageCount = 614, firstPage = 25, coverColor = 0xFFB71C1C, coverImageRes = R.drawable.emirdag_lahikasi),
+            RisaleBook("iman-ve-kufur-muvazeneleri", "İman ve Küfür Muvazeneleri", pageCount = 237, firstPage = 17, coverColor = 0xFFE65100, coverImageRes = R.drawable.iman_ve_kufur_muvazeneleri),
+            RisaleBook("sikke-i-tasdik-i-gaybi", "Sikke-i Tasdik-i Gaybi", pageCount = 349, firstPage = 15, coverColor = 0xFF004D40, coverImageRes = R.drawable.sikke_i_tasdik_i_gaybi),
+            RisaleBook("tarihce-i-hayat", "Tarihçe-i Hayat", pageCount = 902, firstPage = 17, coverColor = 0xFF1B5E20, coverImageRes = R.drawable.tarihce_i_hayat),
+            RisaleBook("muhakemat", "Muhakemat", pageCount = 170, firstPage = 15, coverColor = 0xFF0D47A1, coverImageRes = R.drawable.muhakemat)
         )
         _uiState.value = RisaleUiState.Success(books)
     }
@@ -86,9 +102,16 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     fun selectBook(book: RisaleBook?) {
         _selectedBook.value = book
         if (book != null) {
-            val lastPage = prefs.getInt("last_page_${book.id}", 1)
+            val lastPage = prefs.getInt("last_page_${book.id}", book.firstPage)
             loadPage(book.id, lastPage)
         }
+    }
+
+    fun goToPage(pageNumber: Int) {
+        val book = _selectedBook.value ?: return
+        val lastPage = book.firstPage + book.pageCount - 1
+        val validatedPage = pageNumber.coerceIn(book.firstPage, lastPage)
+        loadPage(book.id, validatedPage)
     }
 
     fun loadPage(bookId: String, pageNumber: Int) {
@@ -96,6 +119,7 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().putInt("last_page_$bookId", pageNumber).apply()
         viewModelScope.launch {
             _currentPageData.value = repository.getPage(bookId, pageNumber)
+            _notes.value = repository.getNotesForPage(bookId, pageNumber)
         }
     }
 
@@ -108,6 +132,22 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun addNote(text: String) {
+        val current = _currentPageData.value ?: return
+        viewModelScope.launch {
+            repository.saveNote(current.bookId, current.pageNumber, text)
+            _notes.value = repository.getNotesForPage(current.bookId, current.pageNumber)
+        }
+    }
+
+    fun deleteNote(text: String) {
+        val current = _currentPageData.value ?: return
+        viewModelScope.launch {
+            repository.removeNote(current.bookId, current.pageNumber, text)
+            _notes.value = repository.getNotesForPage(current.bookId, current.pageNumber)
+        }
+    }
+
     private fun loadAllBookmarks() {
         viewModelScope.launch {
             _bookmarks.value = repository.getAllBookmarks()
@@ -117,6 +157,11 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     fun setFontSize(size: Float) {
         _fontSize.value = size
         prefs.edit().putFloat("risale_font_size", size).apply()
+    }
+
+    fun setLineSpacing(spacing: Float) {
+        _lineSpacing.value = spacing
+        prefs.edit().putFloat("risale_line_spacing", spacing).apply()
     }
 
     fun setTheme(theme: String) {
@@ -153,24 +198,24 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun getWordMeaning(word: String): String {
-        val dictionary = mapOf(
-            "mübarek" to "Bereketli, hayırlı, kutsal.",
-            "nişan" to "Alâmet, işaret, iz.",
-            "mevcut" to "Var olan, bulunan.",
-            "zebun" to "Güçsüz, zayıf, aciz.",
-            "asâ" to "Baston, değnek.",
-            "mikyas" to "Ölçü, kıstas."
-        )
-        val cleanWord = word.lowercase().trim().replace(Regex("[^a-zA-ZğüşıöçĞÜŞİÖÇ]"), "")
-        
+        // Gelişmiş temizleme: Noktalama işaretlerini ve ekleri temizle
+        var cleanWord = word.lowercase().trim()
+            .replace(Regex("[.,!?;:()\\[\\]\"]"), "") 
+            
+        if (cleanWord.contains("'")) {
+            cleanWord = cleanWord.split("'")[0] 
+        }
+
+        // 1. Ayet kontrolü
         if (word.contains(":")) {
             val parts = word.split(":")
             if (parts.size == 2 && parts[0].toIntOrNull() != null && parts[1].toIntOrNull() != null) {
                 fetchVerseMeaning(word)
-                return "Ayet yükleniyor..."
+                return "VERSE_MODE"
             }
         }
 
-        return dictionary[cleanWord] ?: "Bu kelimenin anlamı lügatte bulunamadı."
+        // 2. Repository üzerinden geniş veritabanında arama
+        return repository.getMeaningFromDictionary(cleanWord)
     }
 }
