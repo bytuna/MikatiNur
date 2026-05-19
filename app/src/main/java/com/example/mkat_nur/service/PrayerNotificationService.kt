@@ -166,11 +166,12 @@ class PrayerNotificationService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // DecoratedCustomViewStyle'ı kaldırıyoruz, bazı cihazlarda inflation hatasına sebep olabiliyor
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_mosque)
                 .setCustomContentView(remoteViews)
                 .setCustomBigContentView(remoteViews)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
