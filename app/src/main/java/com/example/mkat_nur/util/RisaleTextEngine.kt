@@ -30,10 +30,10 @@ object RisaleTextEngine {
     private val AUTO_HEADER_PATTERN = Regex("^(Birinci|İkinci|Üçüncü|Dördüncü|Beşinci|Altıncı|Yedinci|Sekizinci|Dokuzuncu|Onuncu|On Birinci|On İkinci|On Üçüncü|On Dördüncü|On Beşinci|On Altıncı|On Yedinci|On Sekizinci|On Dokuzuncu|Yirminci|Otuzuncu|BİRİNCİ|İKİNCİ|ÜÇÜNCÜ|DÖRDÜNCÜ|BEŞİNCİ|ALTINCI|YEDİNCİ|SEKİZİNCİ|DOKUZUNCU|ONUNCU) (Söz|Mektub|Lem'a|Şua|Nükte|Mesele|Zeyl|Makam|Sır|Kelime|Hakikat|Sual|Cevap|İşaret|Vecih|İhtar|Münacat).*", RegexOption.IGNORE_CASE)
 
     // Alt başlıkları yakalamak için pattern (Kırmızı yapılacaklar - Metin içindekiler)
-    private val SUB_HEADER_PATTERN = Regex("(?i)(Birinci|İkinci|Üçüncü|Dördüncü|Beşinci|Altıncı|Yedinci|Sekizinci|Dokuzuncu|Onuncu) (Makam|Sır|Nükte|Mesele|Rükün|Esas|Lem'a|Dal|Işık|Şua|Mertebe|Kelime|Fıkra|Hakikat|Basamak|Sual|Cevap|İşaret|Remiz|Telvih|İma|Vecih|İhtar)")
+    private val SUB_HEADER_PATTERN = Regex("(?i)(Birinci|İkinci|Üçüncü|Dördüncü|Beşinci|Altıncı|Yedinci|Sekizinci|Dokuzuncu|Onuncu) (Makam|Sır|Lem'a|Dal|Işık|Şua|Mertebe|Kelime|Fıkra|Hakikat|Basamak|İşaret|Remiz|Telvih|İma|Rükün|Esas)")
 
-    // Soru-Cevap ve Özel İsim vurguları (Siyah ve Kalın yapılacaklar)
-    private val BLACK_BOLD_PATTERN = Regex("(?i)\\b(SUAL|CEVAP|ELCEVAP|Soru|Cevab|Said Nursi|Bediüzzaman|Üstad|Risale-i Nur|Müellif)\\b[:.]?")
+    // Siyah ve Kalın yapılacaklar (Soru-Cevap, Özel İsimler, Nükte, Vecih, Mesele)
+    private val BLACK_BOLD_PATTERN = Regex("(?i)\\b(SUAL|CEVAP|ELCEVAP|Soru|Cevab|Said Nursi|Bediüzzaman|Üstad|Risale-i Nur|Müellif|Nükte|Vecih|Mesele|İhtar|Münacat)\\b[:.]?|(?i)(Birinci|İkinci|Üçüncü|Dördüncü|Beşinci|Altıncı|Yedinci|Sekizinci|Dokuzuncu|Onuncu) (Nükte|Vecih|Mesele|İhtar|Münacat)")
 
     fun buildPremiumText(
         content: String,
@@ -53,7 +53,11 @@ object RisaleTextEngine {
                 if (trimmed == "ba" || trimmed.isEmpty()) return@forEach
 
                 val isExplicitHeader = paragraph.contains("<h1>")
-                val isAutoHeader = AUTO_HEADER_PATTERN.matches(trimmed)
+                // Bir satırın başlık sayılabilmesi için:
+                // 1. Pattern'e uymalı
+                // 2. Çok uzun olmamalı (maks 60 karakter) - Bu, paragraf başlarını korur
+                // 3. İçinde iki nokta üst üste (:) barındırmamalı (Eğer varsa bu genelde paragraf başlangıcıdır)
+                val isAutoHeader = AUTO_HEADER_PATTERN.matches(trimmed) && trimmed.length < 60 && !trimmed.contains(":")
                 val isCenter = paragraph.contains("<center>")
                 
                 val alignment = when {
