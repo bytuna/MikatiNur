@@ -20,6 +20,12 @@ data class VakitResponse(
     @SerializedName("AyinSekliURL") val ayinSekliURL: String?
 )
 
+data class DiniGunResponse(
+    @SerializedName("Adi", alternate = ["Ad", "DiniGunAdi", "adi", "Aciklama"]) val ad: String?,
+    @SerializedName("MiladiTarih", alternate = ["Tarih", "tarih", "MiladiTarihKisa", "GirisTarihi"]) val tarih: String?,
+    @SerializedName("HicriTarih", alternate = ["hicriTarih"]) val hicriTarih: String?
+)
+
 /**
  * Mevcut yapıyı bozmamak için Diyanet verisini eski modele dönüştüren yardımcı fonksiyon
  */
