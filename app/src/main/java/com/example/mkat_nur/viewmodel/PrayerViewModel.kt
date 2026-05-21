@@ -34,6 +34,14 @@ sealed class PrayerUiState {
     data class Error(val message: String) : PrayerUiState()
 }
 
+sealed class UpdateStatus {
+    object Idle : UpdateStatus()
+    object Checking : UpdateStatus()
+    object UpToDate : UpdateStatus()
+    data class UpdateAvailable(val release: com.example.mkat_nur.network.GitHubRelease) : UpdateStatus()
+    data class Error(val message: String) : UpdateStatus()
+}
+
 data class CountdownState(
     val hours: Int, val minutes: Int, val seconds: Int,
     val nextPrayer: String, val currentPrayer: String,
@@ -148,16 +156,26 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _latestVersion = MutableStateFlow<com.example.mkat_nur.network.GitHubRelease?>(null)
     val latestVersion: StateFlow<com.example.mkat_nur.network.GitHubRelease?> = _latestVersion.asStateFlow()
 
+    private val _updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
+    val updateStatus: StateFlow<UpdateStatus> = _updateStatus.asStateFlow()
+
     fun checkForUpdates() {
         viewModelScope.launch {
+            _updateStatus.value = UpdateStatus.Checking
             try {
                 val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestRelease(
                     com.example.mkat_nur.util.AppConfig.GITHUB_USERNAME,
                     com.example.mkat_nur.util.AppConfig.GITHUB_REPO_NAME
                 )
                 _latestVersion.value = release
+                if (com.example.mkat_nur.util.AppConfig.isNewerVersion(release.tagName)) {
+                    _updateStatus.value = UpdateStatus.UpdateAvailable(release)
+                } else {
+                    _updateStatus.value = UpdateStatus.UpToDate
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+                _updateStatus.value = UpdateStatus.Error(e.message ?: "Güncelleme kontrolü başarısız.")
             }
         }
     }

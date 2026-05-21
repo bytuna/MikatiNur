@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.viewmodel.PrayerViewModel
+import com.example.mkat_nur.viewmodel.UpdateStatus
 
 @Composable
 fun SettingsScreen(viewModel: PrayerViewModel) {
@@ -53,7 +55,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     val widgetTextColor by viewModel.widgetTextColor.collectAsState()
     val widgetFontSize by viewModel.widgetFontSize.collectAsState()
     
-    val latestVersion by viewModel.latestVersion.collectAsState()
+    val updateStatus by viewModel.updateStatus.collectAsState()
 
     val context = LocalContext.current
 
@@ -100,15 +102,33 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             Text("AYARLAR", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(vertical = 20.dp))
 
             // GÜNCELLEME KARTI
-            latestVersion?.let { release ->
-                if (AppConfig.isNewerVersion(release.tagName)) {
-                    SettingsCard(
-                        title = "Yeni Güncelleme Mevcut!",
-                        icon = Icons.Default.SystemUpdate,
-                        isExpandable = false
-                    ) {
-                        Column {
-                            Text("Sürüm: ${release.tagName}", color = Color.White, fontWeight = FontWeight.Bold)
+            SettingsCard(
+                title = "Uygulama Güncelleme",
+                icon = Icons.Default.SystemUpdate,
+                isExpandable = false
+            ) {
+                Column {
+                    when (val status = updateStatus) {
+                        is UpdateStatus.Idle -> {
+                            Text("Güncellemeler kontrol edilmedi.", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+                        }
+                        is UpdateStatus.Checking -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFFF9800), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Kontrol ediliyor...", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+                            }
+                        }
+                        is UpdateStatus.UpToDate -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Uygulama güncel.", color = Color(0xFF4CAF50), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        is UpdateStatus.UpdateAvailable -> {
+                            val release = status.release
+                            Text("Yeni Sürüm: ${release.tagName}", color = Color.White, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(4.dp))
                             Text(release.body, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, maxLines = 3)
                             Spacer(Modifier.height(12.dp))
@@ -125,10 +145,27 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 Text("Şimdi Güncelle", color = Color.White)
                             }
                         }
+                        is UpdateStatus.Error -> {
+                            Text("Hata: ${status.message}", color = Color(0xFFF44336), fontSize = 12.sp)
+                        }
                     }
-                    Spacer(Modifier.height(16.dp))
+
+                    if (updateStatus !is UpdateStatus.Checking && updateStatus !is UpdateStatus.UpdateAvailable) {
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = { viewModel.checkForUpdates() },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(Color.White.copy(alpha = 0.3f)))
+                        ) {
+                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Güncellemeleri Denetle")
+                        }
+                    }
                 }
             }
+            Spacer(Modifier.height(16.dp))
 
             // GÖRÜNÜM AYARLARI (AÇILIR-KAPANIR)
             SettingsCard(

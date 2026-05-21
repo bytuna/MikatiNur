@@ -23,9 +23,17 @@ object AppConfig {
     const val DOWNLOAD_URL = "$GITHUB_URL/releases/latest"
 
     fun isNewerVersion(latestVersionName: String): Boolean {
-        val current = VERSION_NAME.removePrefix("v")
-        val latest = latestVersionName.removePrefix("v")
-        return latest > current // Basit bir string karşılaştırması, v1.0.1 > v1.0.0
+        val currentParts = VERSION_NAME.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
+        val latestParts = latestVersionName.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
+        
+        val maxLength = maxOf(currentParts.size, latestParts.size)
+        for (i in 0 until maxLength) {
+            val currentVal = currentParts.getOrNull(i) ?: 0
+            val latestVal = latestParts.getOrNull(i) ?: 0
+            if (latestVal > currentVal) return true
+            if (latestVal < currentVal) return false
+        }
+        return false
     }
 
     // Quran API Config
