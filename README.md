@@ -6,17 +6,17 @@
 
 ---
 # 🌙 Mîkat-ı Nur
----
 Maneviyat Yolculuğunuzda Dijital Rehberiniz
 
 GitHub release (latest by date) Android Kotlin Compose
 
-Mîkat-ı Nur, modern teknolojinin imkanlarını manevi değerlerle buluşturan, kullanıcı dostu ve kapsamlı bir İslamî yaşam asistanıdır. Geleneksel içerikleri, yapay zeka desteği ve modern arayüz tasarımıyla (Jetpack Compose) birleştirir.
+Mîkat-ı Nur, modern teknolojinin imkanlarını manevi değerlerle buluşturan, kullanıcı dostu ve kapsamlı bir İslamî yaşam asistanıdır. 
+
+Geleneksel içerikleri, yapay zeka desteği ve modern arayüz tasarımıyla (Jetpack Compose) birleştirir.
 
 ---
 
 ## 🚀 Temel Özellikler
-
 *   **📍 Vakit Takibi:** Diyanet İşleri Başkanlığı ile uyumlu hassas namaz vakitleri.
 *   **📖 Kur'an-ı Kerim & Risale-i Nur:** Dijital kütüphane ile her an okuma imkanı.
 *   **🤖 AI Kart Paylaşımı:** Gemini AI desteğiyle ayet ve vecizeleri görselleştirip paylaşma.
@@ -28,14 +28,12 @@ Mîkat-ı Nur, modern teknolojinin imkanlarını manevi değerlerle buluşturan,
 
 ---
 ## 🤖 Yapay Zeka Destekli Paylaşım (AI Card)
-
 * Gemini AI Entegrasyonu: Ayet, Hadis veya Risale-i Nur vecizelerini, yapay zekaya saniyeler içinde benzersiz görseller hazırlatarak paylaşın.
 
 * Özelleştirilebilir Kartlar: Minimalist, Manevi veya Sanatsal tarzlarda paylaşım görselleri oluşturun.
 
 ---
 ## 📖 Dijital Kütüphane & İbadet
-
 * Tam Külliyat: Risale-i Nur ve Kur'an-ı Kerim okuma modları.
 
 * Kaza Takibi: Geçmiş namazlarınızı kolayca takip edebileceğiniz kullanıcı dostu arayüz.
@@ -63,7 +61,6 @@ Mîkat-ı Nur, modern teknolojinin imkanlarını manevi değerlerle buluşturan,
 
 ---
 ## 🛠 Teknik Alt Yapı (Tech Stack)
----
 Bu proje, en güncel Android geliştirme standartları kullanılarak inşa edilmiştir:
 
 * Jetpack Compose: Tamamen deklaratif ve modern kullanıcı arayüzü.
@@ -82,12 +79,9 @@ Bu proje, en güncel Android geliştirme standartları kullanılarak inşa edilm
 
 ---
 ## 📥 Kurulum ve İndirme
----
-
 Uygulamanın en güncel ve kararlı sürümünü (APK) aşağıdaki bağlantıdan indirebilirsiniz:
 
 #### [Mikat-ı Nur Download](https://github.com/bytuna/MikatiNur/releases/latest)
----
 ### ⚠️ Önemli Hatırlatma
 
 > **Dikkat:** Uygulamayı yüklerken "Riskli olabilir" uyarısı alabilirsiniz. Bu, uygulama Google Play Store dışında bir yerden (GitHub gibi) yüklendiği için Android'in verdiği standart bir uyarıdır.
@@ -119,7 +113,6 @@ Uygulamanın en güncel ve kararlı sürümünü (APK) aşağıdaki bağlantıda
 ---
 
 ## 🤝 İletişim & Destek
-
 Uygulama hakkındaki görüşleriniz, hata bildirimleriniz veya özellik önerileriniz için:
 
 * 👳‍♂️ Geliştirici: ByTuna
