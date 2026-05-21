@@ -32,13 +32,12 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
-import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
-import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
+import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.ui.quran.QuranScreen
+import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
-import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
@@ -168,6 +167,16 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
+                    label = { Text("Dini Günler", color = Color.White) },
+                    selected = false,
+                    icon = { Icon(Icons.Default.Event, null, tint = Color.White) },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate("religious_days")
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+                NavigationDrawerItem(
                     label = { Text("Tesbihat", color = Color.White) },
                     selected = false,
                     icon = { Icon(Icons.Default.Favorite, null, tint = Color.White) },
@@ -265,6 +274,11 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
             composable("women_special") {
                 WomenSpecialScreen(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("religious_days") {
+                ReligiousDaysScreen(
+                    onMenuClick = { scope.launch { drawerState.open() } }
                 )
             }
             composable("risale") {
