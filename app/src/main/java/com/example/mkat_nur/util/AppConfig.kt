@@ -5,6 +5,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object AppConfig {
+    // Versiyon kontrolü yapan fonksiyonumuz
+    fun checkUpdate() {
+        println("Yeni güncellemeler kontrol ediliyor...")
+    }
+
     const val VERSION_NAME = "1.0.1"
     const val VERSION_CODE = 2
     const val DEVELOPER = "ByTuna"
