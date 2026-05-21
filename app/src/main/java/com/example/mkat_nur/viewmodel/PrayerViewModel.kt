@@ -145,6 +145,23 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _isWomenSpecial = MutableStateFlow(prefs.getBoolean("is_women_special", false))
     val isWomenSpecial: StateFlow<Boolean> = _isWomenSpecial.asStateFlow()
 
+    private val _latestVersion = MutableStateFlow<com.example.mkat_nur.network.GitHubRelease?>(null)
+    val latestVersion: StateFlow<com.example.mkat_nur.network.GitHubRelease?> = _latestVersion.asStateFlow()
+
+    fun checkForUpdates() {
+        viewModelScope.launch {
+            try {
+                val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestRelease(
+                    com.example.mkat_nur.util.AppConfig.GITHUB_USERNAME,
+                    com.example.mkat_nur.util.AppConfig.GITHUB_REPO_NAME
+                )
+                _latestVersion.value = release
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     private val _widgetTransparency = MutableStateFlow(prefs.getFloat("widget_transparency", 0.9f))
     val widgetTransparency: StateFlow<Float> = _widgetTransparency.asStateFlow()
 

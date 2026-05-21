@@ -53,7 +53,13 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     val widgetTextColor by viewModel.widgetTextColor.collectAsState()
     val widgetFontSize by viewModel.widgetFontSize.collectAsState()
     
+    val latestVersion by viewModel.latestVersion.collectAsState()
+
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.checkForUpdates()
+    }
     
     // Vakit bildirim durumları
     val notifyImsak by viewModel.notifyImsak.collectAsState()
@@ -92,6 +98,37 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 .verticalScroll(rememberScrollState())
         ) {
             Text("AYARLAR", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(vertical = 20.dp))
+
+            // GÜNCELLEME KARTI
+            latestVersion?.let { release ->
+                if (AppConfig.isNewerVersion(release.tagName)) {
+                    SettingsCard(
+                        title = "Yeni Güncelleme Mevcut!",
+                        icon = Icons.Default.SystemUpdate,
+                        isExpandable = false
+                    ) {
+                        Column {
+                            Text("Sürüm: ${release.tagName}", color = Color.White, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Text(release.body, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, maxLines = 3)
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(release.htmlUrl))
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                            ) {
+                                Icon(Icons.Default.Download, null, tint = Color.White)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Şimdi Güncelle", color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
 
             // GÖRÜNÜM AYARLARI (AÇILIR-KAPANIR)
             SettingsCard(
@@ -511,7 +548,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             // UYGULAMAYI PAYLAŞ BUTONU
             Button(
                 onClick = {
-                    val shareText = "Mîkat-ı Nur uygulamasını buradan indirebilirsiniz: [Download Linki Gelecek]"
+                    val shareText = "Mîkat-ı Nur uygulamasını buradan indirebilirsiniz:\n\n${AppConfig.DOWNLOAD_URL}\n\nSelam ve dua ile..."
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareText)
