@@ -58,6 +58,9 @@ Geleneksel içerikleri, yapay zeka desteği ve modern arayüz tasarımıyla (Jet
 <img width="150" height="320" alt="Screenshot_20260521_111942" src="https://github.com/user-attachments/assets/bc0350d0-1cb5-4644-92a6-5023590bef7d" />
 <img width="150" height="320" alt="Screenshot_20260521_112828" src="https://github.com/user-attachments/assets/01f98468-edce-4899-9b22-069ac1aa5466" />
 <img width="150" height="320" alt="Screenshot_20260521_111948" src="https://github.com/user-attachments/assets/9a0794fe-2cc9-4725-99e9-85f8df364d7b" />
+<img width="150" height="320" alt="Screenshot_20260521_134032" src="https://github.com/user-attachments/assets/d9b2be12-1901-4e74-b78c-4e2cd34b2533" />
+<img width="150" height="320" alt="Screenshot_20260521_134147_One UI Home" src="https://github.com/user-attachments/assets/3d0d1525-69ad-4bfd-8c86-a8a148e6a2f8" />
+<img width="250" height="150" alt="Screenshot_20260521_134125_One_UI_Home 1" src="https://github.com/user-attachments/assets/60a51642-9874-4dcb-88d4-9147b65481df" />
 
 ---
 ## 🛠 Teknik Alt Yapı (Tech Stack)
