@@ -39,6 +39,11 @@ import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
+import androidx.compose.ui.platform.LocalContext
+import com.example.mkat_nur.ui.library.LibraryIndexScreen
+import com.example.mkat_nur.ui.library.LibraryReaderScreen
+import com.example.mkat_nur.viewmodel.LibraryViewModel
+import com.example.mkat_nur.viewmodel.LibraryViewModelFactory
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
 
@@ -66,15 +71,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
+                val application = (LocalContext.current.applicationContext as MkatNurApp)
                 val prayerViewModel: PrayerViewModel = viewModel()
-                MkatNurApp(prayerViewModel)
+                val libraryViewModel: LibraryViewModel = viewModel(
+                    factory = LibraryViewModelFactory(application.libraryRepository)
+                )
+                MkatNurApp(prayerViewModel, libraryViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MkatNurApp(viewModel: PrayerViewModel) {
+fun MkatNurApp(viewModel: PrayerViewModel, libraryViewModel: LibraryViewModel) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -162,7 +171,7 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                     icon = { Icon(Icons.Default.AutoStories, null, tint = Color.White) },
                     onClick = {
                         scope.launch { drawerState.close() }
-                        navController.navigate("risale")
+                        navController.navigate("library_index")
                     },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
@@ -284,6 +293,31 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
             composable("risale") {
                 com.example.mkat_nur.ui.risale.RisaleScreen(
                     onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("library_index") {
+                LibraryIndexScreen(
+                    viewModel = libraryViewModel,
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    onNavigateToReader = { bookSlug, page ->
+                        navController.navigate("library_reader/$bookSlug/$page")
+                    }
+                )
+            }
+            composable(
+                "library_reader/{bookSlug}/{page}",
+                arguments = listOf(
+                    navArgument("bookSlug") { type = NavType.StringType },
+                    navArgument("page") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val bookSlug = backStackEntry.arguments?.getString("bookSlug") ?: ""
+                val page = backStackEntry.arguments?.getInt("page") ?: 1
+                LibraryReaderScreen(
+                    viewModel = libraryViewModel,
+                    bookSlug = bookSlug,
+                    initialPage = page,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable("tesbihat?prayer={prayer}",

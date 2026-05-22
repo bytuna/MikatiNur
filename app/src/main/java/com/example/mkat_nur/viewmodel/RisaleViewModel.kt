@@ -22,6 +22,7 @@ sealed class RisaleUiState {
     data class Error(val message: String) : RisaleUiState()
 }
 
+@Deprecated("Yeni kütüphane yapısına (LibraryViewModel) geçildi.")
 class RisaleViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = RisaleRepository(application)
     private val prefs = application.getSharedPreferences("risale_prefs", Context.MODE_PRIVATE)
