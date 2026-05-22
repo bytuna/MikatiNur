@@ -45,6 +45,7 @@ import com.example.mkat_nur.viewmodel.RisaleUiState
 import com.example.mkat_nur.viewmodel.RisaleViewModel
 import kotlinx.coroutines.launch
 
+@Deprecated("Yeni kütüphane yapısına (LibraryIndexScreen) geçildi.")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RisaleScreen(

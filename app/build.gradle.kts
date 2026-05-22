@@ -2,19 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.kotlin.ksp)
 }
 android {
     namespace = "com.example.mkat_nur"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.mkat_nur"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 2
         versionName = "1.0.1"
 
@@ -65,6 +62,11 @@ dependencies {
     
     // NAVİGASYON
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    
+    // ROOM
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
     
     // COIL (Görüntüler için)
     implementation("io.coil-kt:coil-compose:2.7.0")
