@@ -19,7 +19,7 @@ import android.util.Log
 
 @Database(
     entities = [Book::class, Page::class, Dictionary::class, Section::class],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,15 +39,15 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "sozler_kitap_v11.db" // v11 - Kesin çözüm
+                    "nur_hazinesi_v4.db" // Sürüm 4 - Temiz Geçiş
                 )
                     .createFromAsset("database/sozler_kitap.db", object : PrepackagedDatabaseCallback() {
                         override fun onOpenPrepackagedDatabase(db: SupportSQLiteDatabase) {
-                            Log.d(TAG, "Senior Dönüşüm başlıyor (v11)...")
+                            Log.i(TAG, "Senior Dönüşüm başlıyor (v2)...")
                             try {
-                                // Kitaplar
-                                db.execSQL("CREATE TABLE IF NOT EXISTS kitaplar_new (id TEXT NOT NULL PRIMARY KEY, title TEXT, slug TEXT, page_count INTEGER)")
-                                db.execSQL("INSERT OR REPLACE INTO kitaplar_new (id, title, slug, page_count) SELECT TRIM(CAST(id AS TEXT)), TRIM(CAST(title AS TEXT)), LOWER(TRIM(CAST(slug AS TEXT))), CAST(page_count AS INTEGER) FROM kitaplar WHERE id IS NOT NULL")
+                                // Kitaplar - Yeni kolon: last_read_page
+                                db.execSQL("CREATE TABLE IF NOT EXISTS kitaplar_new (id TEXT NOT NULL PRIMARY KEY, title TEXT, slug TEXT, page_count INTEGER, last_read_page INTEGER)")
+                                db.execSQL("INSERT OR REPLACE INTO kitaplar_new (id, title, slug, page_count, last_read_page) SELECT COALESCE(TRIM(CAST(id AS TEXT)), '0'), TRIM(CAST(title AS TEXT)), LOWER(TRIM(CAST(slug AS TEXT))), CAST(page_count AS INTEGER), 27 FROM kitaplar WHERE id IS NOT NULL")
                                 db.execSQL("DROP TABLE IF EXISTS kitaplar")
                                 db.execSQL("ALTER TABLE kitaplar_new RENAME TO kitaplar")
 
@@ -69,8 +69,8 @@ abstract class AppDatabase : RoomDatabase() {
                                 db.execSQL("ALTER TABLE sayfalar_new RENAME TO sayfalar")
 
                                 // Fihrist
-                                db.execSQL("CREATE TABLE IF NOT EXISTS fihrist_new (id INTEGER NOT NULL PRIMARY KEY, book_slug TEXT, title TEXT, slug TEXT, page_start INTEGER, page_count INTEGER, depth INTEGER, parent_id INTEGER)")
-                                db.execSQL("INSERT OR REPLACE INTO fihrist_new (id, book_slug, title, slug, page_start, page_count, depth, parent_id) SELECT CAST(id AS INTEGER), LOWER(TRIM(CAST(book_slug AS TEXT))), TRIM(CAST(title AS TEXT)), TRIM(CAST(slug AS TEXT)), CAST(page_start AS INTEGER), CAST(page_count AS INTEGER), CAST(depth AS INTEGER), CAST(parent_id AS INTEGER) FROM fihrist WHERE id IS NOT NULL")
+                                db.execSQL("CREATE TABLE IF NOT EXISTS fihrist_new (id TEXT NOT NULL PRIMARY KEY, book_slug TEXT, title TEXT, slug TEXT, page_start INTEGER, page_count INTEGER, depth INTEGER, parent_id TEXT)")
+                                db.execSQL("INSERT OR REPLACE INTO fihrist_new (id, book_slug, title, slug, page_start, page_count, depth, parent_id) SELECT TRIM(CAST(id AS TEXT)), LOWER(TRIM(CAST(book_slug AS TEXT))), TRIM(CAST(title AS TEXT)), TRIM(CAST(slug AS TEXT)), CAST(page_start AS INTEGER), CAST(page_count AS INTEGER), CAST(depth AS INTEGER), TRIM(CAST(parent_id AS TEXT)) FROM fihrist WHERE id IS NOT NULL")
                                 db.execSQL("DROP TABLE IF EXISTS fihrist")
                                 db.execSQL("ALTER TABLE fihrist_new RENAME TO fihrist")
 
@@ -80,7 +80,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 db.execSQL("DROP TABLE IF EXISTS sozluk")
                                 db.execSQL("ALTER TABLE sozluk_new RENAME TO sozluk")
 
-                                Log.d(TAG, "Dönüşüm tamamlandı.")
+                                Log.i(TAG, "Dönüşüm v1 tamamlandı.")
                             } catch (e: Exception) {
                                 Log.e(TAG, "Dönüşüm hatası!", e)
                             }

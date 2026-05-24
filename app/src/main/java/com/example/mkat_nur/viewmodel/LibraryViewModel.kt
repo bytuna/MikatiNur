@@ -35,7 +35,10 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
     val wordMeaning: StateFlow<Dictionary?> = _wordMeaning.asStateFlow()
 
     init {
-        loadAllBooks()
+        viewModelScope.launch {
+            repository.initializeBooksIfNeeded()
+            loadAllBooks()
+        }
     }
 
     /**
@@ -45,6 +48,33 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
         viewModelScope.launch {
             repository.getAllBooks().collect {
                 _books.value = it
+                Log.d(TAG, "Kitaplar yüklendi: ${it.map { b -> b.slug }}")
+            }
+        }
+        
+        // Debug: Fihrist tablosundaki tüm benzersiz slug'ları logla
+        viewModelScope.launch {
+            try {
+                val tables = repository.getAllTables()
+                Log.d(TAG, "DEBUG: Veritabanındaki tüm tablolar: $tables")
+
+                for (table in tables) {
+                    Log.d(TAG, "DEBUG: Tablo bulundu: $table")
+                }
+
+                val uniqueSlugs = repository.getAllUniqueFihristSlugs()
+                Log.d(TAG, "DEBUG: Fihrist tablosundaki tüm sluglar (Benzersiz): $uniqueSlugs")
+                
+                if (uniqueSlugs.size <= 1) {
+                    Log.w(TAG, "Fihrist çok az! Sadece ${uniqueSlugs} var. JSON kitaplar için temel fihrist oluşturulabilir.")
+                }
+                
+                // Kitaplar tablosunu kontrol et
+                repository.getAllBooks().collect { bookList ->
+                    Log.d(TAG, "DEBUG: Kitaplar tablosundaki tüm sluglar: ${bookList.map { it.slug }}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Debug hatası", e)
             }
         }
     }
@@ -53,9 +83,21 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
      * Bir kitabın fihrist (içindekiler) bilgisini yükler.
      */
     fun loadSections(bookSlug: String) {
+        Log.d(TAG, "Fihrist yükleniyor: slug=$bookSlug")
         viewModelScope.launch {
-            repository.getSectionsByBook(bookSlug).collect {
-                _sections.value = it
+            repository.getSectionsByBook(bookSlug).collect { list ->
+                Log.d(TAG, "VERİTABANINDAN GELEN LİSTE BOYUTU: ${list.size}")
+                if (list.isNotEmpty()) {
+                    Log.d(TAG, "İLK MADDE: ${list[0].title} (Sayfa: ${list[0].pageStart})")
+                }
+                
+                if (list.size <= 1) {
+                    Log.w(TAG, "Slug '$bookSlug' için az fihrist bulundu. Alternatifler aranıyor...")
+                    val allUnique = repository.getAllUniqueFihristSlugs()
+                    Log.d(TAG, "VERİTABANINDAKİ TÜM SLUGLAR: $allUnique")
+                }
+                
+                _sections.value = list
             }
         }
     }
@@ -67,15 +109,30 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
         Log.d(TAG, "Sayfa yükleniyor: slug=$bookSlug, num=$pageNumber")
         viewModelScope.launch {
             try {
-                val page = repository.getPage(bookSlug, pageNumber)
+                var page = repository.getPage(bookSlug, pageNumber)
+                
+                // Eğer sayfa bulunamadıysa (örneğin 1043 gibi uçuk bir rakam geldiyse)
                 if (page == null) {
-                    Log.e(TAG, "SAYFA BULUNAMADI! DB'de bu kriterlere uygun kayıt yok: $bookSlug, $pageNumber")
+                    Log.w(TAG, "Sayfa $pageNumber bulunamadı, kitabın ilk sayfasını deniyorum...")
+                    // Kitabın mevcut olan herhangi bir sayfasını (genelde ilk) getirmeyi dene
+                    page = repository.getPage(bookSlug, 27) // Önce 27. sayfayı dene (Risale standardı)
+                    if (page == null) {
+                        page = repository.getPage(bookSlug, 1) // O da yoksa 1. sayfayı dene
+                    }
+                }
+
+                if (page == null) {
+                    Log.e(TAG, "SAYFA HİÇBİR ŞEKİLDE BULUNAMADI! Parametreler: slug='$bookSlug', page=$pageNumber")
+                    _currentPage.value = Page("error", bookSlug, pageNumber, "İçerik bulunamadı (Slug: $bookSlug, S: $pageNumber). Lütfen kütüphaneden başka bir kitap seçin.", null, null)
                 } else {
                     Log.d(TAG, "Sayfa başarıyla yüklendi: ID=${page.pageId}")
+                    _currentPage.value = page
+                    // Son okunan sayfayı veritabanına kaydet
+                    repository.updateLastReadPage(bookSlug, page.pageNumber ?: pageNumber)
                 }
-                _currentPage.value = page
             } catch (e: Exception) {
                 Log.e(TAG, "Sayfa yüklenirken hata oluştu", e)
+                _currentPage.value = Page("error", bookSlug, pageNumber, "Hata: ${e.message}", null, null)
             }
         }
     }
@@ -85,10 +142,31 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
      */
     fun nextPage() {
         val current = _currentPage.value ?: return
-        current.nextPage?.let { nextPageId ->
-            viewModelScope.launch {
-                val nextPage = repository.getPageById(nextPageId.toString())
-                _currentPage.value = nextPage
+        val currentSlug = current.bookSlug ?: return
+        val currentPageNum = current.pageNumber ?: 0
+
+        viewModelScope.launch {
+            try {
+                var nextPage: Page? = null
+                
+                // 1. Yol: ID bazlı geçişi dene (Veritabanı zinciri)
+                current.nextPage?.let { nextPageId ->
+                    nextPage = repository.getPageById(nextPageId.toString())
+                }
+                
+                // 2. Yol: Eğer zincir kopmuşsa sayfa numarasını 1 artırarak bulmayı dene
+                if (nextPage == null) {
+                    nextPage = repository.getPage(currentSlug, currentPageNum + 1)
+                }
+                
+                nextPage?.let { next ->
+                    _currentPage.value = next
+                    repository.updateLastReadPage(currentSlug, next.pageNumber ?: (currentPageNum + 1))
+                } ?: run {
+                    Log.e(TAG, "Sonraki sayfa bulunamadı!")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Geçiş hatası", e)
             }
         }
     }
@@ -98,10 +176,29 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
      */
     fun prevPage() {
         val current = _currentPage.value ?: return
-        current.prevPage?.let { prevPageId ->
-            viewModelScope.launch {
-                val prevPage = repository.getPageById(prevPageId.toString())
-                _currentPage.value = prevPage
+        val currentSlug = current.bookSlug ?: return
+        val currentPageNum = current.pageNumber ?: 0
+
+        viewModelScope.launch {
+            try {
+                var prevPage: Page? = null
+                
+                // 1. Yol: ID bazlı geçiş
+                current.prevPage?.let { prevPageId ->
+                    prevPage = repository.getPageById(prevPageId.toString())
+                }
+                
+                // 2. Yol: Sayfa numarasını 1 eksilterek bul
+                if (prevPage == null && currentPageNum > 1) {
+                    prevPage = repository.getPage(currentSlug, currentPageNum - 1)
+                }
+                
+                prevPage?.let { prev ->
+                    _currentPage.value = prev
+                    repository.updateLastReadPage(currentSlug, prev.pageNumber ?: (currentPageNum - 1))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Geri gitme hatası", e)
             }
         }
     }
@@ -110,8 +207,11 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
      * Tıklanan kelimenin anlamını sözlükten bulur.
      */
     fun searchWordMeaning(word: String) {
+        val cleanWord = word.trim().lowercase()
+            .replace("[\".?,!]".toRegex(), "") // Noktalama işaretlerini temizle
+        
         viewModelScope.launch {
-            val meaning = repository.getWordMeaning(word)
+            val meaning = repository.getWordMeaning(cleanWord)
             _wordMeaning.value = meaning
         }
     }

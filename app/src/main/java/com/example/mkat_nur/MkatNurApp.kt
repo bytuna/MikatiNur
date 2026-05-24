@@ -10,6 +10,7 @@ class MkatNurApp : Application() {
     
     val libraryRepository by lazy { 
         LibraryRepository(
+            this,
             database.bookDao(),
             database.pageDao(),
             database.sectionDao(),

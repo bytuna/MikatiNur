@@ -9,5 +9,6 @@ data class Book(
     @PrimaryKey val id: String,
     val title: String?,
     val slug: String?,
-    @ColumnInfo(name = "page_count") val pageCount: Int?
+    @ColumnInfo(name = "page_count") val pageCount: Int?,
+    @ColumnInfo(name = "last_read_page") val lastReadPage: Int? = 27
 )

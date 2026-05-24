@@ -568,7 +568,7 @@ fun RisaleReader(book: RisaleBook, viewModel: RisaleViewModel) {
                         Icon(Icons.Default.KeyboardArrowUp, null)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${book.name} - ${pagerState.currentPage + 1}/${book.pageCount}", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("${book.name} - ${pagerState.currentPage + book.firstPage}/${book.pageCount + book.firstPage - 1}", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Text("Mîkat-ı Nur Okuyucu", fontSize = 10.sp, color = Color.Gray)
                     }
                     IconButton(onClick = { viewModel.toggleBookmark() }) {
