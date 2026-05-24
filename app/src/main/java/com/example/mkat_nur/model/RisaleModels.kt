@@ -5,7 +5,7 @@ data class RisaleBook(
     val name: String,
     val author: String = "Bediüzzaman Said Nursi",
     val pageCount: Int, // Bu artık toplam geçerli sayfa sayısı olacak
-    val firstPage: Int = 1, // Gerçek ilk sayfa numarası (örn: 15)
+    val firstPage: Int = 27, // Gerçek ilk sayfa numarası (örn: 27)
     val coverColor: Long,
     val coverImageRes: Int? = null,
     val sections: List<RisaleSection> = emptyList()

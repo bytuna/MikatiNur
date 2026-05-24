@@ -108,7 +108,7 @@ class PrayerNotificationService : Service() {
         val countdown = calculateCountdown(data)
 
         try {
-            val remoteViews = RemoteViews(packageName, R.layout.notification_prayer)
+            val remoteViews = RemoteViews(applicationContext.packageName, R.layout.notification_prayer)
             remoteViews.setTextViewText(R.id.notif_city, province)
             
             val turkishMonth = getTurkishHijri(data.date.hijri.month.en)
@@ -170,7 +170,6 @@ class PrayerNotificationService : Service() {
                 .setSmallIcon(R.drawable.ic_launcher_mosque)
                 .setCustomContentView(remoteViews)
                 .setCustomBigContentView(remoteViews)
-                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)

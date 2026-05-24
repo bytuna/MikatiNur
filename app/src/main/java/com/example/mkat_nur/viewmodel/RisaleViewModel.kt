@@ -37,7 +37,7 @@ class RisaleViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentPageData = MutableStateFlow<RisalePage?>(null)
     val currentPageData: StateFlow<RisalePage?> = _currentPageData.asStateFlow()
 
-    private val _currentPage = MutableStateFlow(1)
+    private val _currentPage = MutableStateFlow(27)
     val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
 
     private val _fontSize = MutableStateFlow(prefs.getFloat("risale_font_size", 18f))

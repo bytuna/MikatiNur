@@ -312,7 +312,7 @@ fun MkatNurApp(viewModel: PrayerViewModel, libraryViewModel: LibraryViewModel) {
                 )
             ) { backStackEntry ->
                 val bookSlug = backStackEntry.arguments?.getString("bookSlug") ?: ""
-                val page = backStackEntry.arguments?.getInt("page") ?: 1
+                val page = backStackEntry.arguments?.getInt("page") ?: 27
                 LibraryReaderScreen(
                     viewModel = libraryViewModel,
                     bookSlug = bookSlug,
