@@ -2,17 +2,22 @@ package com.example.mkat_nur.ui.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.List
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mkat_nur.viewmodel.LibraryViewModel
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,11 +40,10 @@ fun LibraryReaderScreen(
     onBack: () -> Unit
 ) {
     val currentPage by viewModel.currentPage.collectAsState()
-    val wordMeaning by viewModel.wordMeaning.collectAsState()
+    val lugatMap by viewModel.lugatMap.collectAsState()
     val sections by viewModel.sections.collectAsState()
     val scrollState = rememberScrollState()
     val sheetState = rememberModalBottomSheetState()
-    var showSheet by remember { mutableStateOf(false) }
     
     // Fihrist için state
     var showFihrist by remember { mutableStateOf(false) }
@@ -46,18 +51,14 @@ fun LibraryReaderScreen(
     // Sayfaya git diyaloğu için state'ler
     var showGoToPageDialog by remember { mutableStateOf(false) }
     var goToPageInput by remember { mutableStateOf("") }
+    
+    // Yazı boyutu state'i
+    var fontScale by remember { mutableStateOf(1f) }
 
     // Sayfa ilk açıldığında veya değiştiğinde veriyi yükle
     LaunchedEffect(bookSlug, initialPage) {
         viewModel.loadPage(bookSlug, initialPage)
         viewModel.loadSections(bookSlug)
-    }
-
-    // Kelime anlamı değiştiğinde bottom sheet'i göster
-    LaunchedEffect(wordMeaning) {
-        if (wordMeaning != null) {
-            showSheet = true
-        }
     }
 
     // Sayfa değiştiğinde en başa kaydır
@@ -83,6 +84,12 @@ fun LibraryReaderScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { if (fontScale > 0.7f) fontScale -= 0.1f }) {
+                        Text("A-", fontWeight = FontWeight.Bold)
+                    }
+                    IconButton(onClick = { if (fontScale < 3f) fontScale += 0.1f }) {
+                        Text("A+", fontWeight = FontWeight.Bold)
+                    }
                     IconButton(onClick = { showFihrist = true }) {
                         Icon(Icons.Default.List, contentDescription = "Fihrist")
                     }
@@ -147,7 +154,24 @@ fun LibraryReaderScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color(0xFFFCF5E5)) // Sepya benzeri kağıt rengi
+                .background(Color(0xFFFCF5E5))
+                .pointerInput(Unit) {
+                    var totalX = 0f
+                    detectDragGestures(
+                        onDrag = { change, dragAmount ->
+                            // Sadece çok net yatay hareketleri sayfa çevirme olarak algıla
+                            if (abs(dragAmount.x) > abs(dragAmount.y) * 3) {
+                                totalX += dragAmount.x
+                                change.consume()
+                            }
+                        },
+                        onDragEnd = {
+                            if (totalX > 100) viewModel.prevPage()
+                            else if (totalX < -100) viewModel.nextPage()
+                            totalX = 0f
+                        }
+                    )
+                }
         ) {
             currentPage?.let { page ->
                 Column(
@@ -165,23 +189,21 @@ fun LibraryReaderScreen(
                             )
                         }
                     } else {
-                        val annotatedString = remember(page.contentHtml) {
-                            HtmlTextHelper.parseHtmlWithDictionary(page.contentHtml ?: "")
+                        val plainText = remember(page.contentHtml) {
+                            android.text.Html.fromHtml(page.contentHtml ?: "", android.text.Html.FROM_HTML_MODE_COMPACT).toString()
                         }
-                        ClickableText(
-                            text = annotatedString,
-                            style = TextStyle(
+                        
+                        LugatTextComponent(
+                            kitapMetni = plainText,
+                            lugatMap = lugatMap,
+                            fontScale = fontScale,
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = TextStyle(
                                 fontSize = 18.sp,
                                 lineHeight = 28.sp,
                                 textAlign = TextAlign.Justify,
                                 color = Color.Black
-                            ),
-                            onClick = { offset ->
-                                annotatedString.getStringAnnotations(tag = "DICTIONARY", start = offset, end = offset)
-                                    .firstOrNull()?.let { annotation ->
-                                        viewModel.searchWordMeaning(annotation.item)
-                                    }
-                            }
+                            )
                         )
                     }
                     Spacer(modifier = Modifier.height(100.dp))
@@ -222,35 +244,6 @@ fun LibraryReaderScreen(
             )
         }
 
-        if (showSheet && wordMeaning != null) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showSheet = false
-                    viewModel.clearWordMeaning()
-                },
-                sheetState = sheetState
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(start = 24.dp, end = 24.dp, bottom = 48.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = wordMeaning?.kelime ?: "",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color(0xFFB71C1C),
-                        fontWeight = FontWeight.Bold
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(
-                        text = wordMeaning?.anlam ?: "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        lineHeight = 24.sp
-                    )
-                }
-            }
-        }
-
         if (showFihrist) {
             ModalBottomSheet(
                 onDismissRequest = { showFihrist = false }
@@ -268,27 +261,63 @@ fun LibraryReaderScreen(
                         modifier = Modifier.padding(16.dp)
                     )
                     HorizontalDivider()
+                    val expandedIds = remember { mutableStateMapOf<String, Boolean>() }
+                    
                     LazyColumn {
-                        items(sections) { section ->
+                        // Sadece parent'ı genişletilmiş olanları veya root olanları filtrele
+                        val visibleSections = sections.filter { section ->
+                            var currentParentId = section.parentId
+                            var isVisible = true
+                            while (currentParentId != null) {
+                                if (expandedIds[currentParentId] != true) {
+                                    isVisible = false
+                                    break
+                                }
+                                currentParentId = sections.find { it.id == currentParentId }?.parentId
+                            }
+                            isVisible
+                        }
+
+                        items(visibleSections) { section ->
+                            val hasChildren = sections.any { it.parentId == section.id }
+                            val isExpanded = expandedIds[section.id] ?: false
+
                             ListItem(
                                 headlineContent = { 
                                     Text(
                                         text = section.title ?: "",
                                         fontWeight = if ((section.depth ?: 0) == 0) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = if ((section.depth ?: 0) == 0) 16.sp else 14.sp
+                                        fontSize = if ((section.depth ?: 0) == 0) 16.sp else 14.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
                                     ) 
                                 },
-                                supportingContent = { Text("Sayfa ${section.pageStart ?: ""}") },
+                                supportingContent = { Text("Sayfa ${section.pageStart ?: ""}", fontSize = 12.sp) },
+                                leadingContent = {
+                                    if (hasChildren) {
+                                        Icon(
+                                            if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                                            contentDescription = null,
+                                            modifier = Modifier.clickable {
+                                                expandedIds[section.id] = !isExpanded
+                                            }
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(24.dp))
+                                    }
+                                },
                                 modifier = Modifier
-                                    .padding(start = ((section.depth ?: 0) * 16).dp)
+                                    .padding(start = ((section.depth ?: 0) * 12).dp)
                                     .clickable {
-                                        showFihrist = false
-                                        viewModel.loadPage(bookSlug, section.pageStart ?: 27)
+                                        if (hasChildren) {
+                                            expandedIds[section.id] = !isExpanded
+                                        } else {
+                                            showFihrist = false
+                                            viewModel.loadPage(bookSlug, section.pageStart ?: 27)
+                                        }
                                     }
                             )
-                            if ((section.depth ?: 0) == 0) {
-                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-                            }
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                         }
                     }
                 }

@@ -51,20 +51,24 @@ fun LibraryIndexScreen(
         Box(modifier = Modifier.padding(padding)) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(books) { book ->
-                    val lastPage = book.lastReadPage ?: 27
+                    val lastPage = book.lastReadPage
                     ListItem(
                         headlineContent = { Text(book.title ?: "", fontWeight = FontWeight.Bold) },
                         supportingContent = { 
-                            Text(
-                                if (lastPage > 27) "Okumaya Devam Et: Sayfa $lastPage" else "${book.pageCount ?: 0} Sayfa",
-                                fontSize = 12.sp,
-                                color = if (lastPage > 27) Color(0xFF4CAF50) else Color.Gray // Okunan kitaplar yeşil görünsün
-                            ) 
+                            if (lastPage != null) {
+                                Text(
+                                    "Okumaya Devam Et: Sayfa $lastPage",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF4CAF50) // Okunmuş kitap yeşil
+                                )
+                            } else {
+                                Text("${book.pageCount ?: 0} Sayfa", fontSize = 12.sp, color = Color.Gray)
+                            }
                         },
                         trailingContent = { Icon(Icons.Default.ChevronRight, null) },
                         modifier = Modifier.clickable {
-                            // Kaydedilen son sayfadan (yoksa 27'den) başlat
-                            onNavigateToReader(book.slug ?: "", lastPage)
+                            // Eğer daha önce okunduysa kaldığı yerden, okunmadıysa 0 (akıllı tespit) ile başlat
+                            onNavigateToReader(book.slug ?: "", lastPage ?: 0)
                         }
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.Gray.copy(alpha = 0.2f))
