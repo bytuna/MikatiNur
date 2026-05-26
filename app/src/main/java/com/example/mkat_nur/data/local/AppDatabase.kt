@@ -39,15 +39,15 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "nur_hazinesi_v4.db" // Sürüm 4 - Temiz Geçiş
+                    "nur_hazinesi_v5.db" // Sürüm 5 - Tam Temizlik
                 )
                     .createFromAsset("database/sozler_kitap.db", object : PrepackagedDatabaseCallback() {
                         override fun onOpenPrepackagedDatabase(db: SupportSQLiteDatabase) {
-                            Log.i(TAG, "Senior Dönüşüm başlıyor (v2)...")
+                            Log.i(TAG, "Senior Dönüşüm başlıyor (v3 - Dinamik Başlangıç)...")
                             try {
-                                // Kitaplar - Yeni kolon: last_read_page
-                                db.execSQL("CREATE TABLE IF NOT EXISTS kitaplar_new (id TEXT NOT NULL PRIMARY KEY, title TEXT, slug TEXT, page_count INTEGER, last_read_page INTEGER)")
-                                db.execSQL("INSERT OR REPLACE INTO kitaplar_new (id, title, slug, page_count, last_read_page) SELECT COALESCE(TRIM(CAST(id AS TEXT)), '0'), TRIM(CAST(title AS TEXT)), LOWER(TRIM(CAST(slug AS TEXT))), CAST(page_count AS INTEGER), 27 FROM kitaplar WHERE id IS NOT NULL")
+                                // Kitaplar - last_read_page artık NULL olarak başlar
+                                db.execSQL("CREATE TABLE IF NOT EXISTS kitaplar_new (id TEXT NOT NULL PRIMARY KEY, title TEXT, slug TEXT, page_count INTEGER, last_read_page INTEGER DEFAULT NULL)")
+                                db.execSQL("INSERT OR REPLACE INTO kitaplar_new (id, title, slug, page_count, last_read_page) SELECT COALESCE(TRIM(CAST(id AS TEXT)), '0'), TRIM(CAST(title AS TEXT)), LOWER(TRIM(CAST(slug AS TEXT))), CAST(page_count AS INTEGER), NULL FROM kitaplar WHERE id IS NOT NULL")
                                 db.execSQL("DROP TABLE IF EXISTS kitaplar")
                                 db.execSQL("ALTER TABLE kitaplar_new RENAME TO kitaplar")
 

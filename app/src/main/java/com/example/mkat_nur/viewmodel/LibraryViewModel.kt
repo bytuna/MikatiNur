@@ -1,5 +1,6 @@
 package com.example.mkat_nur.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -8,12 +9,14 @@ import com.example.mkat_nur.data.local.entity.Dictionary
 import com.example.mkat_nur.data.local.entity.Page
 import com.example.mkat_nur.data.local.entity.Section
 import com.example.mkat_nur.repository.LibraryRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-
-import android.util.Log
 
 class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() {
 
@@ -31,6 +34,9 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
     private val _currentPage = MutableStateFlow<Page?>(null)
     val currentPage: StateFlow<Page?> = _currentPage.asStateFlow()
 
+    private val _lugatMap = MutableStateFlow<Map<String, String>>(emptyMap())
+    val lugatMap: StateFlow<Map<String, String>> = _lugatMap.asStateFlow()
+
     private val _wordMeaning = MutableStateFlow<Dictionary?>(null)
     val wordMeaning: StateFlow<Dictionary?> = _wordMeaning.asStateFlow()
 
@@ -38,6 +44,23 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
         viewModelScope.launch {
             repository.initializeBooksIfNeeded()
             loadAllBooks()
+            loadLugatMap()
+        }
+    }
+
+    private fun loadLugatMap() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val lugatFile = "database/lugat/kulliyat_lugat.txt"
+                val jsonString = repository.getAssetFileContent(lugatFile)
+                if (jsonString != null) {
+                    val type = object : TypeToken<Map<String, String>>() {}.type
+                    val map: Map<String, String> = Gson().fromJson(jsonString, type)
+                    _lugatMap.value = map
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Lügat yüklenirken hata oluştu", e)
+            }
         }
     }
 
@@ -109,26 +132,32 @@ class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() 
         Log.d(TAG, "Sayfa yükleniyor: slug=$bookSlug, num=$pageNumber")
         viewModelScope.launch {
             try {
-                var page = repository.getPage(bookSlug, pageNumber)
+                // Eğer sayfa numarası belirtilmemişse (varsayılan 1 gibi geldiyse ve aslında null ise) 
+                // akıllı başlangıcı bul.
+                val targetPageNum = if (pageNumber <= 1) {
+                    repository.getStartPageForBook(bookSlug)
+                } else {
+                    pageNumber
+                }
+
+                var page = repository.getPage(bookSlug, targetPageNum)
                 
-                // Eğer sayfa bulunamadıysa (örneğin 1043 gibi uçuk bir rakam geldiyse)
+                // Eğer sayfa bulunamadıysa (örn: 1. sayfa veride yoksa)
                 if (page == null) {
-                    Log.w(TAG, "Sayfa $pageNumber bulunamadı, kitabın ilk sayfasını deniyorum...")
-                    // Kitabın mevcut olan herhangi bir sayfasını (genelde ilk) getirmeyi dene
-                    page = repository.getPage(bookSlug, 27) // Önce 27. sayfayı dene (Risale standardı)
-                    if (page == null) {
-                        page = repository.getPage(bookSlug, 1) // O da yoksa 1. sayfayı dene
-                    }
+                    Log.w(TAG, "Sayfa $targetPageNum bulunamadı, mevcut olan ilk sayfayı arıyorum...")
+                    // Kitaba ait mevcut olan herhangi bir sayfayı (en küçük numaralı) getirmeyi dene
+                    val firstAvailablePage = repository.getPagesByBook(bookSlug).first().minByOrNull { it.pageNumber ?: 9999 }
+                    page = firstAvailablePage
                 }
 
                 if (page == null) {
-                    Log.e(TAG, "SAYFA HİÇBİR ŞEKİLDE BULUNAMADI! Parametreler: slug='$bookSlug', page=$pageNumber")
-                    _currentPage.value = Page("error", bookSlug, pageNumber, "İçerik bulunamadı (Slug: $bookSlug, S: $pageNumber). Lütfen kütüphaneden başka bir kitap seçin.", null, null)
+                    Log.e(TAG, "SAYFA HİÇBİR ŞEKİLDE BULUNAMADI! Parametreler: slug='$bookSlug', page=$targetPageNum")
+                    _currentPage.value = Page("error", bookSlug, targetPageNum, "İçerik bulunamadı (Slug: $bookSlug, S: $targetPageNum). Lütfen kütüphaneden başka bir kitap seçin.", null, null)
                 } else {
                     Log.d(TAG, "Sayfa başarıyla yüklendi: ID=${page.pageId}")
                     _currentPage.value = page
                     // Son okunan sayfayı veritabanına kaydet
-                    repository.updateLastReadPage(bookSlug, page.pageNumber ?: pageNumber)
+                    repository.updateLastReadPage(bookSlug, page.pageNumber ?: targetPageNum)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Sayfa yüklenirken hata oluştu", e)

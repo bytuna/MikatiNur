@@ -23,4 +23,7 @@ interface SectionDao {
 
     @Query("SELECT DISTINCT book_slug FROM fihrist")
     fun getAllUniqueSlugs(): List<String>
+
+    @Query("DELETE FROM fihrist WHERE LOWER(book_slug) = LOWER(:bookSlug)")
+    fun deleteSectionsByBook(bookSlug: String)
 }
