@@ -444,14 +444,18 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isCardExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Text("Kayma Süresi: ${slidingDuration.toInt()} sn", color = Color.White, fontSize = 14.sp)
-                        Slider(
-                            value = slidingDuration,
-                            onValueChange = { viewModel.setSlidingDuration(it) },
-                            valueRange = 1f..10f,
-                            steps = 9,
-                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
-                        )
+                        Text("Kayma Süresi:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        val durations = listOf(5f to "5 Sn", 10f to "10 Sn", 15f to "15 Sn", 30f to "30 Sn")
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            durations.forEach { (duration, label) ->
+                                FilterChip(
+                                    selected = slidingDuration == duration,
+                                    onClick = { viewModel.setSlidingDuration(duration) },
+                                    label = { Text(label, color = Color.White, fontSize = 10.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFFFF9800))
+                                )
+                            }
+                        }
 
                         Spacer(Modifier.height(8.dp))
                         Text("Gösterilecek İçerikler:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
@@ -469,9 +473,9 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ÖZEL AYARLAR
+            // KADIN ÖZEL
             SettingsCard(
-                title = "Özel Ayarlar",
+                title = "Kadın Özel",
                 icon = Icons.Default.AutoAwesome,
                 isExpandable = true,
                 isExpanded = isSpecialExpanded,

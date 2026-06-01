@@ -71,7 +71,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     val isDarkMode: StateFlow<Boolean?> = _isDarkMode.asStateFlow()
 
     private val _reminderMinutes = MutableStateFlow(
-        prefs.getStringSet("reminder_minutes_set", setOf("15"))?.map { it.toInt() }?.toSet() ?: setOf(15)
+        prefs.getStringSet("reminder_minutes_set", setOf("0", "15"))?.map { it.toInt() }?.toSet() ?: setOf(0, 15)
     )
     val reminderMinutes: StateFlow<Set<Int>> = _reminderMinutes.asStateFlow()
 
@@ -108,7 +108,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _highlightColor = MutableStateFlow(prefs.getInt("highlight_color", 0xFFFF9800.toInt()))
     val highlightColor: StateFlow<Int> = _highlightColor.asStateFlow()
 
-    private val _slidingDuration = MutableStateFlow(prefs.getFloat("sliding_duration", 3f))
+    private val _slidingDuration = MutableStateFlow(prefs.getFloat("sliding_duration", 10f))
     val slidingDuration: StateFlow<Float> = _slidingDuration.asStateFlow()
 
     private val _showAyet = MutableStateFlow(prefs.getBoolean("show_ayet", true))
@@ -147,7 +147,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _lastUpdateTimestamp = MutableStateFlow(prefs.getLong("last_update_timestamp", 0L))
     val lastUpdateTimestamp: StateFlow<Long> = _lastUpdateTimestamp.asStateFlow()
 
-    private val _autoLocationInterval = MutableStateFlow(prefs.getInt("auto_location_interval", 0))
+    private val _autoLocationInterval = MutableStateFlow(prefs.getInt("auto_location_interval", 1))
     val autoLocationInterval: StateFlow<Int> = _autoLocationInterval.asStateFlow()
 
     private val _isWomenSpecial = MutableStateFlow(prefs.getBoolean("is_women_special", false))
