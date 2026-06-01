@@ -105,11 +105,22 @@ class QuoteWidgetProvider : AppWidgetProvider() {
     companion object {
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val thisWidget = ComponentName(context, QuoteWidgetProvider::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget)
-            for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId)
-            }
+            
+            // Mevcut 4x2 Widget
+            val quoteWidget = ComponentName(context, QuoteWidgetProvider::class.java)
+            appWidgetManager.getAppWidgetIds(quoteWidget).forEach { updateAppWidget(context, appWidgetManager, it) }
+            
+            // Yeni Mini Widget
+            val miniWidget = ComponentName(context, MiniWidgetProvider::class.java)
+            appWidgetManager.getAppWidgetIds(miniWidget).forEach { MiniWidgetProvider.updateAppWidget(context, appWidgetManager, it) }
+            
+            // Yeni Strip Widget
+            val stripWidget = ComponentName(context, StripWidgetProvider::class.java)
+            appWidgetManager.getAppWidgetIds(stripWidget).forEach { StripWidgetProvider.updateAppWidget(context, appWidgetManager, it) }
+            
+            // Yeni Daily Quote Widget
+            val dailyQuoteWidget = ComponentName(context, DailyQuoteWidgetProvider::class.java)
+            appWidgetManager.getAppWidgetIds(dailyQuoteWidget).forEach { DailyQuoteWidgetProvider.updateAppWidget(context, appWidgetManager, it) }
         }
 
         fun updateAppWidget(

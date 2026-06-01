@@ -189,7 +189,7 @@ object ShareUtils {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
 
-    private fun saveAndShare(context: Context, bitmap: Bitmap, fileName: String) {
+    fun saveAndShare(context: Context, bitmap: Bitmap, fileName: String) {
         try {
             val cachePath = File(context.cacheDir, "images")
             cachePath.mkdirs()
