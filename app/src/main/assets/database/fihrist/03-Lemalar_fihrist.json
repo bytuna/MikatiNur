@@ -1,0 +1,1002 @@
+[
+  {
+    "seviye": 1,
+    "baslik": "LEM’ALAR",
+    "sayfa_no": 5
+  },
+  {
+    "seviye": 2,
+    "baslik": "Birinci Lem’a",
+    "sayfa_no": 6
+  },
+  {
+    "seviye": 2,
+    "baslik": "İkinci Lem’a",
+    "sayfa_no": 10
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 10
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 12
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 13
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Nükte",
+    "sayfa_no": 13
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Nükte",
+    "sayfa_no": 15
+  },
+  {
+    "seviye": 4,
+    "baslik": "Hâtime",
+    "sayfa_no": 17
+  },
+  {
+    "seviye": 2,
+    "baslik": "Üçüncü Lem’a",
+    "sayfa_no": 19
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 19
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 21
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 22
+  },
+  {
+    "seviye": 2,
+    "baslik": "Dördüncü Lem’a",
+    "sayfa_no": 27
+  },
+  {
+    "seviye": 3,
+    "baslik": "Birinci Makam",
+    "sayfa_no": 27
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 27
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 28
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 29
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Nükte",
+    "sayfa_no": 31
+  },
+  {
+    "seviye": 3,
+    "baslik": "İkinci Makam",
+    "sayfa_no": 37
+  },
+  {
+    "seviye": 2,
+    "baslik": "Beşinci Lem’a",
+    "sayfa_no": 38
+  },
+  {
+    "seviye": 2,
+    "baslik": "Altıncı Lem’a",
+    "sayfa_no": 39
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yedinci Lem’a",
+    "sayfa_no": 40
+  },
+  {
+    "seviye": 4,
+    "baslik": "BİR TETİMME",
+    "sayfa_no": 46
+  },
+  {
+    "seviye": 4,
+    "baslik": "BU TETİMMEYE İKİNCİ BİR İZAH [^hâşiye1]",
+    "sayfa_no": 48
+  },
+  {
+    "seviye": 3,
+    "baslik": "Hâtime",
+    "sayfa_no": 50
+  },
+  {
+    "seviye": 2,
+    "baslik": "Sekizinci Lem’a",
+    "sayfa_no": 53
+  },
+  {
+    "seviye": 2,
+    "baslik": "Dokuzuncu Lem’a",
+    "sayfa_no": 54
+  },
+  {
+    "seviye": 2,
+    "baslik": "Onuncu Lem’a",
+    "sayfa_no": 55
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Birinci Lem’a",
+    "sayfa_no": 68
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 68
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 69
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 69
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Nükte",
+    "sayfa_no": 70
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Nükte",
+    "sayfa_no": 72
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Nükte",
+    "sayfa_no": 73
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Nükte",
+    "sayfa_no": 75
+  },
+  {
+    "seviye": 4,
+    "baslik": "Sekizinci Nükte",
+    "sayfa_no": 76
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dokuzuncu Nükte",
+    "sayfa_no": 77
+  },
+  {
+    "seviye": 4,
+    "baslik": "Onuncu Nükte",
+    "sayfa_no": 78
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Birinci Nükte",
+    "sayfa_no": 82
+  },
+  {
+    "seviye": 2,
+    "baslik": "On İkinci Lem’a",
+    "sayfa_no": 85
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Üçüncü Lem’a",
+    "sayfa_no": 97
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci İşaret",
+    "sayfa_no": 97
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci İşaret",
+    "sayfa_no": 98
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü İşaret",
+    "sayfa_no": 99
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü İşaret",
+    "sayfa_no": 101
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci İşaret",
+    "sayfa_no": 102
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı İşaret",
+    "sayfa_no": 104
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci İşaret",
+    "sayfa_no": 106
+  },
+  {
+    "seviye": 4,
+    "baslik": "Sekizinci İşaret",
+    "sayfa_no": 109
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dokuzuncu İşaret",
+    "sayfa_no": 112
+  },
+  {
+    "seviye": 4,
+    "baslik": "Onuncu İşaret",
+    "sayfa_no": 114
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Birinci İşaret",
+    "sayfa_no": 116
+  },
+  {
+    "seviye": 4,
+    "baslik": "On İkinci İşaret",
+    "sayfa_no": 118
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Üçüncü İşaret",
+    "sayfa_no": 121
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Dördüncü Lem’a",
+    "sayfa_no": 126
+  },
+  {
+    "seviye": 3,
+    "baslik": "Birinci Makamı",
+    "sayfa_no": 126
+  },
+  {
+    "seviye": 3,
+    "baslik": "İkinci Makam",
+    "sayfa_no": 132
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Sır",
+    "sayfa_no": 133
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Sır",
+    "sayfa_no": 134
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Sır",
+    "sayfa_no": 134
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Sır",
+    "sayfa_no": 137
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Sır",
+    "sayfa_no": 139
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Sır",
+    "sayfa_no": 140
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Beşinci Lem’a",
+    "sayfa_no": 143
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Altıncı Lem’a",
+    "sayfa_no": 144
+  },
+  {
+    "seviye": 3,
+    "baslik": "Hâtime",
+    "sayfa_no": 147
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Yedinci Lem’a",
+    "sayfa_no": 158
+  },
+  {
+    "seviye": 4,
+    "baslik": "Mukaddime",
+    "sayfa_no": 158
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nota",
+    "sayfa_no": 158
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nota",
+    "sayfa_no": 159
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nota",
+    "sayfa_no": 159
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Nota",
+    "sayfa_no": 160
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Nota",
+    "sayfa_no": 161
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Nota",
+    "sayfa_no": 169
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Nota",
+    "sayfa_no": 171
+  },
+  {
+    "seviye": 4,
+    "baslik": "Sekizinci Nota",
+    "sayfa_no": 173
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dokuzuncu Nota",
+    "sayfa_no": 179
+  },
+  {
+    "seviye": 4,
+    "baslik": "Onuncu Nota",
+    "sayfa_no": 181
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Birinci Nota",
+    "sayfa_no": 182
+  },
+  {
+    "seviye": 4,
+    "baslik": "On İkinci Nota",
+    "sayfa_no": 183
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Üçüncü Nota",
+    "sayfa_no": 185
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Dördüncü Nota",
+    "sayfa_no": 192
+  },
+  {
+    "seviye": 4,
+    "baslik": "ON BEŞİNCİ NOTA",
+    "sayfa_no": 196
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Sekizinci Lem’a",
+    "sayfa_no": 199
+  },
+  {
+    "seviye": 2,
+    "baslik": "On Dokuzuncu Lem’a",
+    "sayfa_no": 200
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 200
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 200
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 202
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Nükte",
+    "sayfa_no": 203
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Nükte",
+    "sayfa_no": 205
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Nükte",
+    "sayfa_no": 207
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Nükte",
+    "sayfa_no": 208
+  },
+  {
+    "seviye": 4,
+    "baslik": "Cây-ı hayret ve medar-ı ibret bir tevafuk:",
+    "sayfa_no": 211
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirminci Lem’a",
+    "sayfa_no": 214
+  },
+  {
+    "seviye": 4,
+    "baslik": "BİRİNCİ NOKTA",
+    "sayfa_no": 214
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birincisi",
+    "sayfa_no": 215
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Sebep",
+    "sayfa_no": 216
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Sebep",
+    "sayfa_no": 217
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Sebep",
+    "sayfa_no": 219
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Sebep",
+    "sayfa_no": 220
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Sebep",
+    "sayfa_no": 222
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Sebep",
+    "sayfa_no": 223
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Birinci Lem’a",
+    "sayfa_no": 230
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Düsturunuz",
+    "sayfa_no": 231
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Düsturunuz",
+    "sayfa_no": 232
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Düsturunuz",
+    "sayfa_no": 233
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Düsturunuz",
+    "sayfa_no": 234
+  },
+  {
+    "seviye": 4,
+    "baslik": "Bir kısım kardeşlerime hususi bir mektuptur",
+    "sayfa_no": 240
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi İkinci Lem’a",
+    "sayfa_no": 243
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci İşaret",
+    "sayfa_no": 243
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci İşaret",
+    "sayfa_no": 245
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü İşaret",
+    "sayfa_no": 248
+  },
+  {
+    "seviye": 4,
+    "baslik": "Hâtime",
+    "sayfa_no": 251
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Üçüncü Lem’a",
+    "sayfa_no": 253
+  },
+  {
+    "seviye": 4,
+    "baslik": "İhtar",
+    "sayfa_no": 253
+  },
+  {
+    "seviye": 5,
+    "baslik": "Şu sırrı izahtan evvel bir ihtar",
+    "sayfa_no": 253
+  },
+  {
+    "seviye": 4,
+    "baslik": "Amma Birinci Yol ki:",
+    "sayfa_no": 254
+  },
+  {
+    "seviye": 4,
+    "baslik": "Amma İkinci Mesele:",
+    "sayfa_no": 257
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Kelime",
+    "sayfa_no": 260
+  },
+  {
+    "seviye": 4,
+    "baslik": "Hâtime",
+    "sayfa_no": 271
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Dördüncü Lem’a",
+    "sayfa_no": 280
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Hikmet",
+    "sayfa_no": 280
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Hikmet",
+    "sayfa_no": 282
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Hikmet",
+    "sayfa_no": 283
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Hikmet",
+    "sayfa_no": 284
+  },
+  {
+    "seviye": 4,
+    "baslik": "Ehl-i İman Âhiret Hemşirelerim Olan Kadınlar Taifesi İle Bir Muhaveredir",
+    "sayfa_no": 285
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Beşinci Lem’a",
+    "sayfa_no": 293
+  },
+  {
+    "seviye": 5,
+    "baslik": "İhtar ve İ’tizar",
+    "sayfa_no": 293
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Deva",
+    "sayfa_no": 293
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Deva",
+    "sayfa_no": 294
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Deva",
+    "sayfa_no": 294
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Deva",
+    "sayfa_no": 295
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Deva",
+    "sayfa_no": 296
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Deva",
+    "sayfa_no": 297
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Deva [^hâşiye2]",
+    "sayfa_no": 297
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Deva",
+    "sayfa_no": 298
+  },
+  {
+    "seviye": 4,
+    "baslik": "Sekizinci Deva",
+    "sayfa_no": 299
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dokuzuncu Deva",
+    "sayfa_no": 300
+  },
+  {
+    "seviye": 4,
+    "baslik": "Onuncu Deva",
+    "sayfa_no": 301
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Birinci Deva",
+    "sayfa_no": 301
+  },
+  {
+    "seviye": 4,
+    "baslik": "On İkinci Deva",
+    "sayfa_no": 302
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Üçüncü Deva",
+    "sayfa_no": 303
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Dördüncü Deva",
+    "sayfa_no": 304
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Beşinci Deva",
+    "sayfa_no": 305
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Altıncı Deva",
+    "sayfa_no": 306
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Yedinci Deva",
+    "sayfa_no": 307
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Sekizinci Deva",
+    "sayfa_no": 308
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Dokuzuncu Deva",
+    "sayfa_no": 309
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirminci Deva",
+    "sayfa_no": 311
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirmi Birinci Deva",
+    "sayfa_no": 312
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirmi İkinci Deva",
+    "sayfa_no": 313
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirmi Üçüncü Deva",
+    "sayfa_no": 314
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirmi Dördüncü Deva",
+    "sayfa_no": 314
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yirmi Beşinci Deva",
+    "sayfa_no": 315
+  },
+  {
+    "seviye": 3,
+    "baslik": "Yirmi Beşinci Lem’a’nın Zeyli",
+    "sayfa_no": 317
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Altıncı Lem’a",
+    "sayfa_no": 318
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Rica",
+    "sayfa_no": 318
+  },
+  {
+    "seviye": 4,
+    "baslik": "İkinci Rica",
+    "sayfa_no": 319
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Rica",
+    "sayfa_no": 319
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dördüncü Rica",
+    "sayfa_no": 321
+  },
+  {
+    "seviye": 4,
+    "baslik": "Beşinci Rica",
+    "sayfa_no": 322
+  },
+  {
+    "seviye": 4,
+    "baslik": "Altıncı Rica",
+    "sayfa_no": 324
+  },
+  {
+    "seviye": 4,
+    "baslik": "Yedinci Rica",
+    "sayfa_no": 325
+  },
+  {
+    "seviye": 4,
+    "baslik": "Sekizinci Rica",
+    "sayfa_no": 329
+  },
+  {
+    "seviye": 4,
+    "baslik": "Dokuzuncu Rica",
+    "sayfa_no": 334
+  },
+  {
+    "seviye": 4,
+    "baslik": "Onuncu Rica",
+    "sayfa_no": 337
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Birinci Rica",
+    "sayfa_no": 340
+  },
+  {
+    "seviye": 4,
+    "baslik": "On İkinci Rica",
+    "sayfa_no": 348
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Üçüncü Rica [^hâşiye9]",
+    "sayfa_no": 353
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Dördüncü Rica",
+    "sayfa_no": 362
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Beşinci Rica [^hâşiye11]",
+    "sayfa_no": 369
+  },
+  {
+    "seviye": 4,
+    "baslik": "On Altıncı Rica",
+    "sayfa_no": 377
+  },
+  {
+    "seviye": 3,
+    "baslik": "Yirmi Altıncı Lem’a’nın Zeyli",
+    "sayfa_no": 384
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Yedinci Lem’a",
+    "sayfa_no": 387
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Sekizinci Lem’a",
+    "sayfa_no": 388
+  },
+  {
+    "seviye": 3,
+    "baslik": "İkinci Nükte",
+    "sayfa_no": 388
+  },
+  {
+    "seviye": 5,
+    "baslik": "Bir Suale Cevap",
+    "sayfa_no": 394
+  },
+  {
+    "seviye": 5,
+    "baslik": "Manidar Bir Tevafuk-u Latîfe",
+    "sayfa_no": 397
+  },
+  {
+    "seviye": 5,
+    "baslik": "Zekâi’nin Rüyası",
+    "sayfa_no": 400
+  },
+  {
+    "seviye": 5,
+    "baslik": "Tarafgirane ve Risale-i Nur’a rakibane söylenen sözlere mukabildir.",
+    "sayfa_no": 400
+  },
+  {
+    "seviye": 3,
+    "baslik": "Yirmi Sekizinci Lem’a’nın Yirmi Sekizinci Nüktesi",
+    "sayfa_no": 401
+  },
+  {
+    "seviye": 2,
+    "baslik": "Yirmi Dokuzuncu Lem’a",
+    "sayfa_no": 408
+  },
+  {
+    "seviye": 5,
+    "baslik": "İfade-i Meram",
+    "sayfa_no": 408
+  },
+  {
+    "seviye": 2,
+    "baslik": "Otuzuncu Lem’a",
+    "sayfa_no": 419
+  },
+  {
+    "seviye": 4,
+    "baslik": "Birinci Nükte",
+    "sayfa_no": 419
+  },
+  {
+    "seviye": 4,
+    "baslik": "Otuzuncu Lem’a’nın İkinci Nüktesi",
+    "sayfa_no": 424
+  },
+  {
+    "seviye": 4,
+    "baslik": "Üçüncü Nükte",
+    "sayfa_no": 428
+  },
+  {
+    "seviye": 4,
+    "baslik": "Otuzuncu Lem’a’nın Dördüncü Nüktesi",
+    "sayfa_no": 438
+  },
+  {
+    "seviye": 4,
+    "baslik": "Otuzuncu Lem’a’nın Beşinci Nüktesi",
+    "sayfa_no": 455
+  },
+  {
+    "seviye": 4,
+    "baslik": "Otuzuncu Lem’a’nın Altıncı Nüktesi",
+    "sayfa_no": 471
+  },
+  {
+    "seviye": 5,
+    "baslik": "Mühim bir suale kat’î bir cevap",
+    "sayfa_no": 486
+  },
+  {
+    "seviye": 2,
+    "baslik": "Otuz Birinci Lem’a",
+    "sayfa_no": 497
+  },
+  {
+    "seviye": 2,
+    "baslik": "Otuz İkinci Lem’a",
+    "sayfa_no": 498
+  },
+  {
+    "seviye": 2,
+    "baslik": "Otuz Üçüncü Lem’a",
+    "sayfa_no": 499
+  },
+  {
+    "seviye": 2,
+    "baslik": "Münâcat",
+    "sayfa_no": 500
+  },
+  {
+    "seviye": 2,
+    "baslik": "Fihrist",
+    "sayfa_no": 522
+  },
+  {
+    "seviye": 3,
+    "baslik": "Sekizinci Lem’a’nın Fihristesinden Bir Parça",
+    "sayfa_no": 591
+  },
+  {
+    "seviye": 3,
+    "baslik": "Yirmi Sekizinci Lem’a’nın Fihristesinden Bir Parça",
+    "sayfa_no": 594
+  }
+]

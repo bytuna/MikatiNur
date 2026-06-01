@@ -3,22 +3,21 @@ package com.example.mkat_nur.model
 data class RisaleBook(
     val id: String,
     val name: String,
-    val author: String = "Bediüzzaman Said Nursi",
-    val pageCount: Int, // Bu artık toplam geçerli sayfa sayısı olacak
-    val firstPage: Int = 27, // Gerçek ilk sayfa numarası (örn: 27)
+    val pageCount: Int,
+    val firstPage: Int,
     val coverColor: Long,
-    val coverImageRes: Int? = null,
-    val sections: List<RisaleSection> = emptyList()
-)
-
-data class RisaleSection(
-    val title: String,
-    val pageNumber: Int
+    val coverImageRes: Int
 )
 
 data class RisalePage(
     val bookId: String,
     val pageNumber: Int,
-    val content: String,
-    var isBookmarked: Boolean = false
+    val content: String = "",
+    val isBookmarked: Boolean = false
+)
+
+data class RisaleSection(
+    val id: String,
+    val title: String,
+    val startPage: Int
 )
