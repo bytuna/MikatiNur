@@ -134,6 +134,6 @@ Selam ve dua ile...
 
 ---
 <p align="center">
-  Mîkat-ı Nur ile manevi bir yolculuğa çıkın. <br>
+  Mîkat-ı Nur ile manevi bir yolculuğa çıkın. <br />
   <b>2026 - ByTuna Software Development</b>
 </p>
