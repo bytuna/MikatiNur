@@ -45,22 +45,27 @@ Geleneksel içerikleri, yapay zeka desteği ve modern arayüz tasarımıyla (Jet
 ---
 
 ## 📸 Ekran Görüntüleri
-
+<div>
 <img width="150" height="320" alt="Screenshot_20260521_111812" src="https://github.com/user-attachments/assets/4f5abf81-1941-4c15-9f6f-c5785a97a2c7" />
 <img width="150" height="320" alt="Screenshot_20260521_112600" src="https://github.com/user-attachments/assets/f0f2415a-9ba5-42c9-9b7d-767bbd71a1c3" />
 <img width="150" height="320" alt="Screenshot_20260521_111824" src="https://github.com/user-attachments/assets/97283c47-9bea-40f1-9ad0-ddca4e42381c" />
 <img width="150" height="320" alt="Screenshot_20260521_111837" src="https://github.com/user-attachments/assets/24325b74-c997-4ac3-965d-8a5d6a435b31" />
 <img width="150" height="320" alt="Screenshot_20260521_111848" src="https://github.com/user-attachments/assets/80623f5b-649d-4861-8974-58dd63e80d37" />
 <img width="150" height="320" alt="Screenshot_20260521_111856" src="https://github.com/user-attachments/assets/9dfe3d84-24d0-4a53-8424-fcb9cdb134b5" />
+</div>
+<div>
 <img width="150" height="320" alt="Screenshot_20260521_111903" src="https://github.com/user-attachments/assets/12168b66-73e6-47ae-a846-5d92c0e2cf8e" />
 <img width="150" height="320" alt="Screenshot_20260521_111912" src="https://github.com/user-attachments/assets/0b0ef25c-01d0-4b1f-b626-890202640b41" />
 <img width="150" height="320" alt="Screenshot_20260521_111923" src="https://github.com/user-attachments/assets/47119f25-455e-42cf-bcd5-49f9279a4238" />
 <img width="150" height="320" alt="Screenshot_20260521_111942" src="https://github.com/user-attachments/assets/bc0350d0-1cb5-4644-92a6-5023590bef7d" />
 <img width="150" height="320" alt="Screenshot_20260521_112828" src="https://github.com/user-attachments/assets/01f98468-edce-4899-9b22-069ac1aa5466" />
 <img width="150" height="320" alt="Screenshot_20260521_111948" src="https://github.com/user-attachments/assets/9a0794fe-2cc9-4725-99e9-85f8df364d7b" />
+</div>
+<div>
 <img width="150" height="320" alt="Screenshot_20260521_134032" src="https://github.com/user-attachments/assets/d9b2be12-1901-4e74-b78c-4e2cd34b2533" />
 <img width="150" height="320" alt="Screenshot_20260521_134147_One UI Home" src="https://github.com/user-attachments/assets/3d0d1525-69ad-4bfd-8c86-a8a148e6a2f8" />
 <img width="250" height="150" alt="Screenshot_20260521_134125_One_UI_Home 1" src="https://github.com/user-attachments/assets/60a51642-9874-4dcb-88d4-9147b65481df" />
+</div>
 
 ---
 ## 🛠 Teknik Alt Yapı (Tech Stack)
