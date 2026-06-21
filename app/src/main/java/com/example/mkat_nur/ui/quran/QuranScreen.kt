@@ -2,12 +2,27 @@ package com.example.mkat_nur.ui.quran
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.foundation.shape.CircleShape
@@ -24,10 +39,12 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
@@ -82,7 +99,35 @@ fun QuranScreen(
     val surahListState = rememberLazyListState()
     val juzListState = rememberLazyListState()
     val pageListState = rememberLazyListState()
-    val verseListState = rememberLazyListState()
+
+    val scrollPositionKey = remember(selectedSurah?.id, selectedJuz, selectedPage) {
+        when {
+            selectedSurah != null -> "surah" to selectedSurah!!.id
+            selectedJuz != null -> "juz" to selectedJuz!!
+            selectedPage != null -> "page" to selectedPage!!
+            else -> "none" to 0
+        }
+    }
+
+    val verseListState = remember(scrollPositionKey) {
+        androidx.compose.foundation.lazy.LazyListState(
+            firstVisibleItemIndex = viewModel.getSavedScrollPosition(scrollPositionKey.first, scrollPositionKey.second)
+        )
+    }
+
+    // Son kalınan yeri otomatik kaydet
+    LaunchedEffect(verseListState, scrollPositionKey) {
+        snapshotFlow { verseListState.firstVisibleItemIndex }
+            .collect { index ->
+                if (scrollPositionKey.first != "none") {
+                    viewModel.saveScrollPosition(
+                        scrollPositionKey.first,
+                        scrollPositionKey.second,
+                        index
+                    )
+                }
+            }
+    }
 
     val bgColors = listOf(Color(0xFF002B36), Color(0xFF073642)) // Koyu petrol/mavi tema
 
@@ -312,6 +357,32 @@ fun SurahList(surahs: List<Surah>, state: androidx.compose.foundation.lazy.LazyL
 }
 
 @Composable
+fun DecorativeNumber(number: String, modifier: Modifier = Modifier) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier.size(44.dp)) {
+        // Sekiz köşeli yıldız motifi (Islamic Star)
+        Icon(
+            imageVector = Icons.Default.AutoAwesome,
+            contentDescription = null,
+            modifier = Modifier.size(44.dp).graphicsLayer(rotationZ = 45f),
+            tint = Color(0xFFFFD700).copy(alpha = 0.2f)
+        )
+        Icon(
+            imageVector = Icons.Default.AutoAwesome,
+            contentDescription = null,
+            modifier = Modifier.size(38.dp),
+            tint = Color(0xFFFFD700).copy(alpha = 0.2f)
+        )
+        Text(
+            text = number,
+            color = Color.White,
+            fontWeight = FontWeight.Black,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
 fun SurahItem(surah: Surah, onClick: (Surah) -> Unit) {
     Row(
         modifier = Modifier
@@ -320,16 +391,7 @@ fun SurahItem(surah: Surah, onClick: (Surah) -> Unit) {
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
-            // Basit bir çerçeve ikonu yerine yıldız kullandık
-            Icon(
-                imageVector = Icons.Default.PlayArrow, // Geçici simge
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = Color(0xFFFFD700).copy(alpha = 0.3f)
-            )
-            Text(surah.id.toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-        }
+        DecorativeNumber(surah.id.toString())
         
         Spacer(Modifier.width(16.dp))
         
@@ -378,7 +440,12 @@ fun JuzList(searchQuery: String, state: androidx.compose.foundation.lazy.LazyLis
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         items(juzs) { juz ->
-            SimpleListItem(number = juz, title = "${juz}. Cüz", subtitle = "Cüz") { onJuzClick(juz) }
+            val range = com.example.mkat_nur.util.QuranUtils.getJuzPageRange(juz)
+            SimpleListItem(
+                number = juz, 
+                title = "${juz}. Cüz", 
+                subtitle = "SAYFA ${range.first} — ${range.second}"
+            ) { onJuzClick(juz) }
             HorizontalDivider(color = Color.White.copy(alpha = 0.05f), thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
         }
     }
@@ -393,7 +460,12 @@ fun PageList(searchQuery: String, state: androidx.compose.foundation.lazy.LazyLi
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         items(pages) { page ->
-            SimpleListItem(number = page, title = "${page}. Sayfa", subtitle = "Sayfa") { onPageClick(page) }
+            val juz = com.example.mkat_nur.util.QuranUtils.getJuzByPage(page)
+            SimpleListItem(
+                number = page, 
+                title = "${page}. Sayfa", 
+                subtitle = "${juz}. Cüz"
+            ) { onPageClick(page) }
             HorizontalDivider(color = Color.White.copy(alpha = 0.05f), thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
         }
     }
@@ -408,15 +480,7 @@ fun SimpleListItem(number: Int, title: String, subtitle: String, onClick: () -> 
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = Color(0xFFFFD700).copy(alpha = 0.3f)
-            )
-            Text(number.toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-        }
+        DecorativeNumber(number.toString())
         Spacer(Modifier.width(16.dp))
         Column {
             Text(text = title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -456,6 +520,22 @@ fun VerseList(
         }
     }
 
+    val currentPageShown by remember {
+        derivedStateOf {
+            val visibleIndex = listState.firstVisibleItemIndex
+            // İlk öğe Card (Header) olduğu için index 0'ı atlıyoruz
+            if (visibleIndex > 0 && (visibleIndex - 1) < verses.size) {
+                verses[visibleIndex - 1].pageNumber
+            } else {
+                verses.firstOrNull()?.pageNumber
+            }
+        }
+    }
+
+    val lastPageInJuz = remember(verses) {
+        verses.lastOrNull()?.pageNumber ?: 0
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
@@ -476,6 +556,27 @@ fun VerseList(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = title, color = Color(0xFFFFD700), fontSize = 24.sp, fontWeight = FontWeight.Black)
+                        
+                        // Sayfa Bilgisi Eklendi
+                        if (verses.isNotEmpty()) {
+                            val startPage = verses.firstOrNull()?.pageNumber
+                            val endPage = verses.lastOrNull()?.pageNumber
+                            val pageText = if (startPage == endPage) "SAYFA $startPage" else "SAYFA $startPage — $endPage"
+                            Surface(
+                                color = Color(0xFFFFD700).copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text(
+                                    text = pageText,
+                                    color = Color(0xFFFFD700),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
                         Text(text = subtitle, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
                         
                         Spacer(Modifier.height(20.dp))
@@ -513,7 +614,12 @@ fun VerseList(
                 }
             }
             
-            items(verses) { verse ->
+            itemsIndexed(verses) { index, verse ->
+                val prevVerse = if (index > 0) verses[index - 1] else null
+                if (prevVerse != null && prevVerse.pageNumber != verse.pageNumber) {
+                    PageDivider(verse.pageNumber ?: 0)
+                }
+
                 VerseItem(
                     verse = verse,
                     isCurrentPlaying = currentPlayingVerse == verse.verseNumber && currentPlayingSurahId == verse.surahId,
@@ -523,6 +629,31 @@ fun VerseList(
                     isAiLoading = isAiLoading,
                     onShareClick = { style -> onShareClick(verse, style) }
                 )
+            }
+        }
+
+        // Kayan Sayfa Göstergesi (Floating Page Badge)
+        if (currentPageShown != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Surface(
+                    color = Color(0xFF073642).copy(alpha = 0.8f),
+                    contentColor = Color(0xFFFFD700),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.3f)),
+                    shadowElevation = 4.dp
+                ) {
+                    Text(
+                        text = "$currentPageShown / $lastPageInJuz",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
         }
 
@@ -593,6 +724,34 @@ fun VerseList(
 }
 
 @Composable
+fun PageDivider(pageNumber: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFFFD700).copy(alpha = 0.2f))
+        Surface(
+            color = Color(0xFFFFD700).copy(alpha = 0.1f),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.3f))
+        ) {
+            Text(
+                text = "SAYFA $pageNumber",
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFFFFD700),
+                letterSpacing = 1.sp
+            )
+        }
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFFFD700).copy(alpha = 0.2f))
+    }
+}
+
+@Composable
 fun VerseItem(
     verse: Verse,
     isCurrentPlaying: Boolean,
@@ -617,7 +776,7 @@ fun VerseItem(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (isCurrentPlaying) Color(0xFFFFD700).copy(alpha = 0.1f) else Color(0xFFFCF5E5), 
+                if (isCurrentPlaying) Color(0xFFFFF9C4) else Color(0xFFFCF5E5), // Kararmayı önlemek için aktif ayete açık sarı sabit renk verildi
                 RoundedCornerShape(16.dp)
             )
             .padding(20.dp)
@@ -759,89 +918,190 @@ fun SettingsDialog(
     onFontChange: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    
     val reciters = listOf(
+        "Yasir el-Dawsari" to "Yasser_Ad-Dussary_128kbps",
         "Mishary Rashid Alafasy" to "Alafasy_128kbps",
         "Abdurrahman As-Sudais" to "Abdurrahmaan_As-Sudais_192kbps",
         "Abdulbasit Abdussamed" to "Abdul_Basit_Murattal_64kbps",
         "Maher Al-Muaiqly" to "Maher_AlMuaiqly_64kbps",
         "Saad Al-Ghamdi" to "Ghamadi_40kbps",
-        "Yasir el-Dawsari" to "Yasser_Ad-Dussary_128kbps",
         "Nasser Al-Qatami" to "Nasser_Alqatami_128kbps",
         "Salah Al-Budair" to "Salah_Al_Budair_128kbps"
     )
     
-    val fonts = listOf("Default", "Uthman Taha", "SansSerif", "Serif", "Monospace", "Cursive", "Amiri")
+    val fonts = listOf("Uthman Taha", "Amiri", "Default", "SansSerif", "Serif", "Monospace", "Cursive")
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Görünüm ve Okuyucu Ayarları", fontWeight = FontWeight.Bold) },
+        title = { 
+            Text(
+                "AYARLAR", 
+                fontWeight = FontWeight.Black, 
+                letterSpacing = 1.sp,
+                fontSize = 18.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = Color(0xFFFFD700)
+            ) 
+        },
         text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState()) // Tüm pencereyi kaydırılabilir yapar
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text("Okuyucu Seçin:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Column {
-                    reciters.forEach { (name, key) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onReciterChange(key) }
-                                .padding(vertical = 4.dp)
-                        ) {
-                            RadioButton(
-                                selected = currentReciter == key, 
-                                onClick = { onReciterChange(key) },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFFD700), unselectedColor = Color.White.copy(0.6f))
-                            )
-                            Text(name, modifier = Modifier.padding(start = 8.dp), color = Color.White)
-                        }
-                    }
-                }
-                
-                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
-                
-                Text("Arapça Yazı Tipi:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()) // Yazı tiplerini sağa-sola kaydırır
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    fonts.forEach { font ->
-                        FilterChip(
-                            selected = currentFont == font,
-                            onClick = { onFontChange(font) },
-                            label = { Text(font, fontSize = 12.sp) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFFFFD700),
-                                selectedLabelColor = Color(0xFF002B36),
-                                containerColor = Color.Transparent,
-                                labelColor = Color.White
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = currentFont == font,
-                                borderColor = Color.White.copy(alpha = 0.3f),
-                                selectedBorderColor = Color(0xFFFFD700),
-                                borderWidth = 1.dp
-                            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    containerColor = Color.Transparent,
+                    contentColor = Color(0xFFFFD700),
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                            color = Color(0xFFFFD700)
                         )
+                    },
+                    divider = {}
+                ) {
+                    Tab(
+                        selected = selectedTabIndex == 0,
+                        onClick = { selectedTabIndex = 0 },
+                        text = { Text("OKUYUCU", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                    )
+                    Tab(
+                        selected = selectedTabIndex == 1,
+                        onClick = { selectedTabIndex = 1 },
+                        text = { Text("GÖRÜNÜM", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                    if (selectedTabIndex == 0) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        ) {
+                            items(reciters) { (name, key) ->
+                                val isSelected = currentReciter == key
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onReciterChange(key) },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) Color(0xFFFFD700).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.5f)) else null
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(12.dp)
+                                    ) {
+                                        RadioButton(
+                                            selected = isSelected,
+                                            onClick = { onReciterChange(key) },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = Color(0xFFFFD700),
+                                                unselectedColor = Color.White.copy(0.4f)
+                                            )
+                                        )
+                                        Text(
+                                            name,
+                                            modifier = Modifier.padding(start = 8.dp),
+                                            color = if (isSelected) Color(0xFFFFD700) else Color.White,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 4.dp)
+                        ) {
+                            Text(
+                                "Arapça Yazı Tipi Seçin",
+                                color = Color.White.copy(0.6f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            
+                            @OptIn(ExperimentalLayoutApi::class)
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                fonts.forEach { font ->
+                                    val isSelected = currentFont == font
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { onFontChange(font) },
+                                        label = { Text(font, fontSize = 12.sp) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = Color(0xFFFFD700),
+                                            selectedLabelColor = Color(0xFF002B36),
+                                            containerColor = Color.White.copy(alpha = 0.05f),
+                                            labelColor = Color.White
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = isSelected,
+                                            borderColor = Color.White.copy(alpha = 0.1f),
+                                            selectedBorderColor = Color(0xFFFFD700),
+                                            borderWidth = 1.dp
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(24.dp))
+                            
+                            // Önizleme Alanı
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.2f)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("ÖNİZLEME", fontSize = 10.sp, color = Color(0xFFFFD700), fontWeight = FontWeight.Black)
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّح۪يمِ",
+                                        fontSize = 24.sp,
+                                        color = Color.White,
+                                        fontFamily = when(currentFont) {
+                                            "Uthman Taha" -> FontFamily(Font(R.font.uthman_taha))
+                                            "Amiri" -> FontFamily.Serif
+                                            "SansSerif" -> FontFamily.SansSerif
+                                            "Serif" -> FontFamily.Serif
+                                            "Monospace" -> FontFamily.Monospace
+                                            "Cursive" -> FontFamily.Cursive
+                                            else -> FontFamily.Default
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { 
-                Text("KAPAT", color = Color(0xFFFFD700), fontWeight = FontWeight.Bold) 
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            ) { 
+                Text("TAMAM", color = Color(0xFF002B36), fontWeight = FontWeight.Black) 
             }
         },
         containerColor = Color(0xFF073642),
-        titleContentColor = Color(0xFFFFD700),
-        textContentColor = Color.White
+        textContentColor = Color.White,
+        shape = RoundedCornerShape(24.dp)
     )
 }

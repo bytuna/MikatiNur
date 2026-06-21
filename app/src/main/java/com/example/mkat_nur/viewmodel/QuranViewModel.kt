@@ -1,9 +1,13 @@
 package com.example.mkat_nur.viewmodel
 
+import android.app.Application
 import android.media.AudioAttributes
+import android.media.MediaMetadata
 import android.media.MediaPlayer
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mkat_nur.model.Surah
 import com.example.mkat_nur.model.Verse
@@ -25,9 +29,11 @@ sealed class SurahDetailUiState {
     data class Error(val message: String) : SurahDetailUiState()
 }
 
-class QuranViewModel : ViewModel() {
+class QuranViewModel(application: Application) : AndroidViewModel(application) {
+    private val prefs = application.getSharedPreferences("mkat_nur_prefs", android.content.Context.MODE_PRIVATE)
     private val apiService = QuranApiService.create()
     private var mediaPlayer: MediaPlayer? = null
+    private var mediaSession: MediaSession? = null
 
     private val _uiState = MutableStateFlow<QuranUiState>(QuranUiState.Loading)
     val uiState: StateFlow<QuranUiState> = _uiState
@@ -44,16 +50,87 @@ class QuranViewModel : ViewModel() {
     private val _currentPlayingSurahId = MutableStateFlow<Int?>(null)
     val currentPlayingSurahId: StateFlow<Int?> = _currentPlayingSurahId
 
-    init {
-        fetchSurahs()
-    }
-
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused
 
     private var playlist: List<Verse> = emptyList()
     private var currentVerseIndex: Int = -1
     private var currentSurahId: Int = -1
+
+    private val _playbackSpeed = MutableStateFlow(1.0f)
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed
+
+    private val _selectedReciter = MutableStateFlow(prefs.getString("quran_reciter", "Yasser_Ad-Dussary_128kbps") ?: "Yasser_Ad-Dussary_128kbps")
+    val selectedReciter: StateFlow<String> = _selectedReciter
+
+    private val _selectedFont = MutableStateFlow(prefs.getString("quran_font", "Uthman Taha") ?: "Uthman Taha")
+    val selectedFont: StateFlow<String> = _selectedFont
+
+    init {
+        fetchSurahs()
+        setupMediaSession()
+    }
+
+    private fun setupMediaSession() {
+        mediaSession = MediaSession(getApplication(), "QuranMediaSession").apply {
+            setCallback(object : MediaSession.Callback() {
+                override fun onPlay() {
+                    togglePauseResume()
+                }
+
+                override fun onPause() {
+                    togglePauseResume()
+                }
+
+                override fun onStop() {
+                    stopAudio()
+                }
+
+                override fun onSkipToNext() {
+                    playNextVerse()
+                }
+
+                override fun onSkipToPrevious() {
+                    playPreviousVerse()
+                }
+            })
+            isActive = true
+        }
+        updatePlaybackState(PlaybackState.STATE_STOPPED)
+    }
+
+    private fun updatePlaybackState(state: Int) {
+        val speed = _playbackSpeed.value
+        val position = mediaPlayer?.currentPosition?.toLong() ?: 0L
+        val playbackState = PlaybackState.Builder()
+            .setActions(
+                PlaybackState.ACTION_PLAY or
+                PlaybackState.ACTION_PAUSE or
+                PlaybackState.ACTION_PLAY_PAUSE or
+                PlaybackState.ACTION_STOP or
+                PlaybackState.ACTION_SKIP_TO_NEXT or
+                PlaybackState.ACTION_SKIP_TO_PREVIOUS
+            )
+            .setState(state, position, speed)
+            .build()
+        mediaSession?.setPlaybackState(playbackState)
+    }
+
+    private fun playNextVerse() {
+        if (playlist.isNotEmpty() && currentVerseIndex < playlist.size - 1) {
+            currentVerseIndex++
+            val nextVerse = playlist[currentVerseIndex]
+            playCurrentIndex(nextVerse.surahId, nextVerse.verseNumber)
+        }
+    }
+
+    private fun playPreviousVerse() {
+        if (playlist.isNotEmpty() && currentVerseIndex > 0) {
+            currentVerseIndex--
+            val prevVerse = playlist[currentVerseIndex]
+            playCurrentIndex(prevVerse.surahId, prevVerse.verseNumber)
+        }
+    }
 
     fun playVerse(surahId: Int, verseNumber: Int, verses: List<Verse> = emptyList()) {
         if (_currentPlayingVerse.value == verseNumber && _currentPlayingSurahId.value == surahId && (_isPlaying.value || _isPaused.value)) {
@@ -66,7 +143,6 @@ class QuranViewModel : ViewModel() {
         currentSurahId = surahId
         playlist = verses
         currentVerseIndex = if (verses.isNotEmpty()) {
-            // Hem sure ID hem de ayet numarasına bakarak doğru sırayı buluyoruz
             verses.indexOfFirst { it.surahId == surahId && it.verseNumber == verseNumber }
         } else {
             -1
@@ -74,15 +150,6 @@ class QuranViewModel : ViewModel() {
 
         playCurrentIndex(surahId, verseNumber)
     }
-
-    private val _playbackSpeed = MutableStateFlow(1.0f)
-    val playbackSpeed: StateFlow<Float> = _playbackSpeed
-
-    private val _selectedReciter = MutableStateFlow("Alafasy_128kbps")
-    val selectedReciter: StateFlow<String> = _selectedReciter
-
-    private val _selectedFont = MutableStateFlow("System")
-    val selectedFont: StateFlow<String> = _selectedFont
 
     fun setPlaybackSpeed(speed: Float) {
         _playbackSpeed.value = speed
@@ -103,6 +170,7 @@ class QuranViewModel : ViewModel() {
         val currentSurah = currentSurahId
         
         _selectedReciter.value = reciterKey
+        prefs.edit().putString("quran_reciter", reciterKey).apply()
         
         if (wasPlaying && currentVerse != null) {
             playVerse(currentSurah, currentVerse, playlist)
@@ -111,6 +179,16 @@ class QuranViewModel : ViewModel() {
 
     fun setFont(fontName: String) {
         _selectedFont.value = fontName
+        prefs.edit().putString("quran_font", fontName).apply()
+    }
+
+    private fun updateMetadata(surahId: Int, verseNumber: Int) {
+        val metadata = MediaMetadata.Builder()
+            .putString(MediaMetadata.METADATA_KEY_TITLE, "$verseNumber. Ayet")
+            .putString(MediaMetadata.METADATA_KEY_ARTIST, "Sure: $surahId")
+            .putString(MediaMetadata.METADATA_KEY_ALBUM, "Mîkat-ı Nur Kur'an")
+            .build()
+        mediaSession?.setMetadata(metadata)
     }
 
     private fun playCurrentIndex(surahId: Int, verseNumber: Int) {
@@ -118,6 +196,7 @@ class QuranViewModel : ViewModel() {
         val verseStr = verseNumber.toString().padStart(3, '0')
         val url = "https://everyayah.com/data/${_selectedReciter.value}/$surahStr$verseStr.mp3"
 
+        mediaPlayer?.release()
         mediaPlayer = MediaPlayer().apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -138,6 +217,8 @@ class QuranViewModel : ViewModel() {
                     _isPaused.value = false
                     _currentPlayingSurahId.value = surahId
                     _currentPlayingVerse.value = verseNumber
+                    updatePlaybackState(PlaybackState.STATE_PLAYING)
+                    updateMetadata(surahId, verseNumber)
                 }
                 setOnCompletionListener { 
                     _isPlaying.value = false
@@ -146,9 +227,7 @@ class QuranViewModel : ViewModel() {
                     if (playlist.isNotEmpty() && currentVerseIndex < playlist.size - 1) {
                         currentVerseIndex++
                         val nextVerse = playlist[currentVerseIndex]
-                        // Surenin değişip değişmediğini kontrol et
-                        val nextSurahId = nextVerse.surahId
-                        playCurrentIndex(nextSurahId, nextVerse.verseNumber)
+                        playCurrentIndex(nextVerse.surahId, nextVerse.verseNumber)
                     } else {
                         stopAudio()
                     }
@@ -159,6 +238,7 @@ class QuranViewModel : ViewModel() {
                     false
                 }
                 prepareAsync()
+                updatePlaybackState(PlaybackState.STATE_BUFFERING)
             } catch (e: Exception) {
                 Log.e("QuranViewModel", "Error setting data source", e)
                 stopAudio()
@@ -172,10 +252,12 @@ class QuranViewModel : ViewModel() {
                 it.pause()
                 _isPlaying.value = false
                 _isPaused.value = true
+                updatePlaybackState(PlaybackState.STATE_PAUSED)
             } else {
                 it.start()
                 _isPlaying.value = true
                 _isPaused.value = false
+                updatePlaybackState(PlaybackState.STATE_PLAYING)
             }
         }
     }
@@ -190,6 +272,7 @@ class QuranViewModel : ViewModel() {
         _isPaused.value = false
         _currentPlayingSurahId.value = null
         _currentPlayingVerse.value = null
+        updatePlaybackState(PlaybackState.STATE_STOPPED)
     }
 
     private val _isAiLoading = MutableStateFlow(false)
@@ -205,16 +288,16 @@ class QuranViewModel : ViewModel() {
         viewModelScope.launch {
             _isAiLoading.value = true
             try {
-                // Rastgele bir sure ve o sureden rastgele bir ayet seç
-                val surahs = (apiService.getSurahs().data)
+                val response = apiService.getSurahs()
+                val surahs = response.data
                 if (surahs.isNotEmpty()) {
                     val randomSurah = surahs.random()
                     _randomSurahName.value = randomSurah.name
                     val randomVerseNum = (1..randomSurah.verseCount).random()
                     val verseKey = "${randomSurah.id}:$randomVerseNum"
                     
-                    val response = apiService.getVerseByKey(verseKey)
-                    _randomVerse.value = response.data
+                    val resVerse = apiService.getVerseByKey(verseKey)
+                    _randomVerse.value = resVerse.data
                 }
             } catch (e: Exception) {
                 Log.e("QuranViewModel", "Error fetching random verse", e)
@@ -236,19 +319,17 @@ class QuranViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         stopAudio()
+        mediaSession?.release()
+        mediaSession = null
     }
 
     fun fetchSurahs() {
         viewModelScope.launch {
             _uiState.value = QuranUiState.Loading
             try {
-                Log.d("QuranViewModel", "Fetching surahs")
                 val response = apiService.getSurahs()
-                val surahs = response.data
-                Log.d("QuranViewModel", "Surahs fetched successfully: ${surahs.size} surahs")
-                _uiState.value = QuranUiState.Success(surahs)
+                _uiState.value = QuranUiState.Success(response.data)
             } catch (e: Exception) {
-                Log.e("QuranViewModel", "Error fetching surahs", e)
                 _uiState.value = QuranUiState.Error(e.message ?: "Bir hata oluştu")
             }
         }
@@ -266,15 +347,21 @@ class QuranViewModel : ViewModel() {
         fetchVerses { apiService.getVersesByPage(pageId) }
     }
 
+    fun saveScrollPosition(type: String, id: Int, index: Int) {
+        prefs.edit().putInt("quran_scroll_${type}_$id", index).apply()
+    }
+
+    fun getSavedScrollPosition(type: String, id: Int): Int {
+        return prefs.getInt("quran_scroll_${type}_$id", 0)
+    }
+
     private fun fetchVerses(call: suspend () -> com.example.mkat_nur.model.VerseResponse) {
         viewModelScope.launch {
             _detailUiState.value = SurahDetailUiState.Loading
             try {
                 val response = call()
-                val verses = response.data
-                _detailUiState.value = SurahDetailUiState.Success(verses)
+                _detailUiState.value = SurahDetailUiState.Success(response.data)
             } catch (e: Exception) {
-                Log.e("QuranViewModel", "Error fetching verses", e)
                 _detailUiState.value = SurahDetailUiState.Error(e.message ?: "Bir hata oluştu")
             }
         }
