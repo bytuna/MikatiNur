@@ -45,7 +45,6 @@ Geleneksel içerikleri, yapay zeka desteği ve modern arayüz tasarımıyla (Jet
 ---
 
 ## 📸 Ekran Görüntüleri
-
 <img width="150" height="320" alt="Screenshot_20260521_111812" src="https://github.com/user-attachments/assets/4f5abf81-1941-4c15-9f6f-c5785a97a2c7" />
 <img width="150" height="320" alt="Screenshot_20260521_112600" src="https://github.com/user-attachments/assets/f0f2415a-9ba5-42c9-9b7d-767bbd71a1c3" />
 <img width="150" height="320" alt="Screenshot_20260521_111824" src="https://github.com/user-attachments/assets/97283c47-9bea-40f1-9ad0-ddca4e42381c" />
@@ -134,6 +133,6 @@ Selam ve dua ile...
 
 ---
 <p align="center">
-  Mîkat-ı Nur ile manevi bir yolculuğa çıkın. <br>
+  Mîkat-ı Nur ile manevi bir yolculuğa çıkın. <br />
   <b>2026 - ByTuna Software Development</b>
 </p>
