@@ -40,8 +40,8 @@ import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
 import androidx.compose.ui.platform.LocalContext
-import com.example.mkat_nur.ui.risale.RisaleScreen
-import com.example.mkat_nur.ui.risale.RisaleViewModel
+import com.example.mkat_nur.ui.risale.RisaleLibraryScreen
+import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
 
@@ -70,15 +70,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val prayerViewModel: PrayerViewModel = viewModel()
-                val risaleViewModel: RisaleViewModel = viewModel()
-                MkatNurApp(prayerViewModel, risaleViewModel)
+                MkatNurApp(prayerViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MkatNurApp(viewModel: PrayerViewModel, risaleViewModel: RisaleViewModel) {
+fun MkatNurApp(viewModel: PrayerViewModel) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -286,9 +285,18 @@ fun MkatNurApp(viewModel: PrayerViewModel, risaleViewModel: RisaleViewModel) {
                 )
             }
             composable("risale") {
-                RisaleScreen(
-                    viewModel = risaleViewModel,
+                RisaleLibraryScreen(
+                    onBookClick = { book ->
+                        navController.navigate("risale_reader/${book.id}")
+                    },
                     onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("risale_reader/{bookId}") { backStackEntry ->
+                val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
+                RisaleWebViewScreen(
+                    bookId = bookId,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable("tesbihat?prayer={prayer}",

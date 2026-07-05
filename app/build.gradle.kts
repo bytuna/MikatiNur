@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.webkit:webkit:1.11.0")
     
     // NAVİGASYON
     implementation("androidx.navigation:navigation-compose:2.7.7")
