@@ -40,7 +40,6 @@ import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
 import androidx.compose.ui.platform.LocalContext
-import com.example.mkat_nur.ui.risale.RisaleLibraryScreen
 import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
@@ -285,10 +284,9 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                 )
             }
             composable("risale") {
-                RisaleLibraryScreen(
-                    onBookClick = { book ->
-                        navController.navigate("risale_reader/${book.id}")
-                    },
+                RisaleWebViewScreen(
+                    bookId = null,
+                    onBackClick = { navController.popBackStack() },
                     onMenuClick = { scope.launch { drawerState.open() } }
                 )
             }

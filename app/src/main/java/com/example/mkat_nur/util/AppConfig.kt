@@ -10,8 +10,8 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.0.1"
-    const val VERSION_CODE = 2
+    const val VERSION_NAME = "1.1.0"
+    const val VERSION_CODE = 3
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
@@ -50,6 +50,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.0",
+            versionCode = 3,
+            date = "2026-05-20",
+            description = "Risale-i Nur WebView entegrasyonu tamamlandı, eski yerel veritabanları temizlendi.",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.0.1",
             versionCode = 2,
