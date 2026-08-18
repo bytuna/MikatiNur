@@ -111,9 +111,6 @@ class PrayerNotificationService : Service() {
             val remoteViews = RemoteViews(applicationContext.packageName, R.layout.notification_prayer)
             remoteViews.setTextViewText(R.id.notif_city, province)
             
-            val turkishMonth = getTurkishHijri(data.date.hijri.month.en)
-            remoteViews.setTextViewText(R.id.notif_date_hijri, "${data.date.hijri.day} $turkishMonth")
-
             val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
             val activeColor = prefs.getInt("highlight_color", android.graphics.Color.parseColor("#FFFF9800"))
             val defaultColor = android.graphics.Color.BLACK

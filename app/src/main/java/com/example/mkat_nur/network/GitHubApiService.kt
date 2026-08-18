@@ -14,11 +14,8 @@ data class GitHubRelease(
 )
 
 interface GitHubApiService {
-    @GET("repos/{owner}/{repo}/releases/latest")
-    suspend fun getLatestRelease(
-        @Path("owner") owner: String,
-        @Path("repo") repo: String
-    ): GitHubRelease
+    @GET("https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json")
+    suspend fun getLatestUpdateInfo(): GitHubRelease
 
     companion object {
         private const val BASE_URL = "https://api.github.com/"

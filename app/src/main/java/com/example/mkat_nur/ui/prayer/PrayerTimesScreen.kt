@@ -74,9 +74,44 @@ fun PrayerTimesScreen(
     val dailyContentType by viewModel.dailyContentType.collectAsState()
     val dataSource by viewModel.dataSource.collectAsState()
     val lastUpdateTimestamp by viewModel.lastUpdateTimestamp.collectAsState()
+    val updateStatus by viewModel.updateStatus.collectAsState()
 
+    val context = LocalContext.current
     val isInDarkMode = isDarkModeState ?: isSystemInDarkTheme()
     var showProvinceDialog by remember { mutableStateOf(false) }
+
+    // Güncelleme kontrolü başlat
+    LaunchedEffect(Unit) {
+        viewModel.checkForUpdates()
+    }
+
+    // Güncelleme Popup'ı
+    if (updateStatus is com.example.mkat_nur.viewmodel.UpdateStatus.UpdateAvailable) {
+        val release = (updateStatus as com.example.mkat_nur.viewmodel.UpdateStatus.UpdateAvailable).release
+        AlertDialog(
+            onDismissRequest = { /* Zorunlu değilse boş bırakılabilir */ },
+            title = { Text("Güncelleme Mevcut") },
+            text = { Text("Uygulamanın yeni bir sürümü (${release.tagName}) çıktı. Şimdi güncellemek ister misiniz?\n\nDeğişiklikler:\n${release.body}") },
+            confirmButton = {
+                Button(onClick = {
+                    val intent = Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(com.example.mkat_nur.util.AppConfig.DOWNLOAD_URL))
+                    context.startActivity(intent)
+                }) {
+                    Text("Şimdi Güncelle")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    viewModel.dismissUpdateDialog()
+                }) {
+                    Text("Daha Sonra")
+                }
+            },
+            containerColor = Color(0xFF1B263B),
+            titleContentColor = Color.White,
+            textContentColor = Color.White.copy(alpha = 0.8f)
+        )
+    }
 
     val bgColors = if (isInDarkMode) {
         listOf(Color(0xFF121212), Color(0xFF1E1E1E))

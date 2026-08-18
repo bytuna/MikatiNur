@@ -10,17 +10,15 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.1.0"
-    const val VERSION_CODE = 3
+    const val VERSION_NAME = "1.1.1"
+    const val VERSION_CODE = 4
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
 
-    // GitHub Config
-    const val GITHUB_USERNAME = "bytuna"
-    const val GITHUB_REPO_NAME = "MikatiNur"
-    const val GITHUB_URL = "https://github.com/$GITHUB_USERNAME/$GITHUB_REPO_NAME"
-    const val DOWNLOAD_URL = "$GITHUB_URL/releases/latest"
+    // Güncelleme kontrolü için ham URL
+    private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
+    const val DOWNLOAD_URL = "https://github.com/bytuna/MikatiNur/releases/latest"
 
     fun isNewerVersion(latestVersionName: String): Boolean {
         val currentParts = VERSION_NAME.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
@@ -50,6 +48,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.1",
+            versionCode = 4,
+            date = "2026-05-21",
+            description = "Bildirim paneli ve menü optimizasyonları yapıldı. Güncelleme sistemi iyileştirildi.",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.1.0",
             versionCode = 3,
