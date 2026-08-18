@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -40,6 +41,9 @@ import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import kotlinx.coroutines.launch
@@ -80,164 +84,172 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    
+    // Geçerli rotayı takip et
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Çekerek açma/kapama mantığı: 
+    // Menü açıksa her zaman kaydırarak kapatılabilir. 
+    // Menü kapalıysa sadece Risale dışındaki ekranlarda çekerek açılabilir.
+    val gesturesEnabled = drawerState.isOpen || (currentRoute != "risale" && currentRoute?.startsWith("risale_reader") != true)
+
+    // Geri tuşu ile menüyü kapatma
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+
+    val isWomenSpecialMode by viewModel.isWomenSpecial.collectAsState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = gesturesEnabled,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = Color(0xFF1B263B),
                 modifier = Modifier.width(300.dp)
             ) {
-                Spacer(Modifier.height(24.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_mosque),
-                    contentDescription = null,
+                Column(
                     modifier = Modifier
-                        .size(100.dp)
-                        .padding(16.dp)
-                        .clip(CircleShape)
-                        .align(Alignment.CenterHorizontally),
-                    contentScale = ContentScale.Crop
-                )
-                Text(
-                    "MÎKAT-I NUR",
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Spacer(Modifier.height(24.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_mosque),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(16.dp)
+                            .clip(CircleShape)
+                            .align(Alignment.CenterHorizontally),
+                        contentScale = ContentScale.Crop
+                    )
+                    Text(
+                        "MÎKAT-I NUR",
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
 
-                NavigationDrawerItem(
-                    label = { Text("Namaz Vakitleri", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.AccessTime, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("prayer_times")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("İmsakiye", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.TableChart, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("imsakiye")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Kaza Takibi", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.History, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("kaza_takibi")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Kıble Bulucu", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.Explore, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("qibla")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Kur'an-ı Kerim", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.MenuBook, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("quran")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Risale-i Nur", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.AutoStories, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("risale")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Dini Günler", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.Event, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("religious_days")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Tesbihat", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.Favorite, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("tesbihat")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Kadın Özel", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.Woman, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("women_special")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    "PAYLAŞIM ARAÇLARI",
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFFFD700).copy(alpha = 0.7f)
-                )
+                    NavigationDrawerItem(
+                        label = { Text("Namaz Vakitleri", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.AccessTime, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("prayer_times")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("İmsakiye", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.TableChart, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("imsakiye")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Kur'an-ı Kerim", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.MenuBook, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("quran")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Risale-i Nur", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.AutoStories, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("risale")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Tesbihat", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.Favorite, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("tesbihat")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Kıble Bulucu", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.Explore, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("qibla")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Kaza Takibi", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.History, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("kaza_takibi")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Dini Günler", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.Event, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("religious_days")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
 
-                NavigationDrawerItem(
-                    label = { Text("Kart Paylaş (AI)", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFFFFD700)) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("share_card")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
-                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
-                NavigationDrawerItem(
-                    label = { Text("Ayarlar", color = Color.White) },
-                    selected = false,
-                    icon = { Icon(Icons.Default.Settings, null, tint = Color.White) },
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("settings")
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
+                    if (isWomenSpecialMode) {
+                        NavigationDrawerItem(
+                            label = { Text("Kadın Özel", color = Color.White) },
+                            selected = false,
+                            icon = { Icon(Icons.Default.Woman, null, tint = Color.White) },
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                navController.navigate("women_special")
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                        )
+                    }
 
-                Spacer(Modifier.weight(1f))
-                
-                Text(
-                    text = "${AppConfig.PROJECT_NAME} v${AppConfig.VERSION_NAME}\nDeveloped by ${AppConfig.DEVELOPER}",
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.5f),
-                    textAlign = TextAlign.Center
-                )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                    NavigationDrawerItem(
+                        label = { Text("Ayarlar", color = Color.White) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.Settings, null, tint = Color.White) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("settings")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+                    
+                    Text(
+                        text = "${AppConfig.PROJECT_NAME} v${AppConfig.VERSION_NAME}\nDeveloped by ${AppConfig.DEVELOPER}",
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     ) {

@@ -160,24 +160,27 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     val updateStatus: StateFlow<UpdateStatus> = _updateStatus.asStateFlow()
 
     fun checkForUpdates() {
-        viewModelScope.launch {
-            _updateStatus.value = UpdateStatus.Checking
-            try {
-                val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestRelease(
-                    com.example.mkat_nur.util.AppConfig.GITHUB_USERNAME,
-                    com.example.mkat_nur.util.AppConfig.GITHUB_REPO_NAME
-                )
-                _latestVersion.value = release
-                if (com.example.mkat_nur.util.AppConfig.isNewerVersion(release.tagName)) {
-                    _updateStatus.value = UpdateStatus.UpdateAvailable(release)
-                } else {
-                    _updateStatus.value = UpdateStatus.UpToDate
+        if (_updateStatus.value is UpdateStatus.UpToDate || _updateStatus.value is UpdateStatus.Idle) {
+            viewModelScope.launch {
+                _updateStatus.value = UpdateStatus.Checking
+                try {
+                    val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestUpdateInfo()
+                    _latestVersion.value = release
+                    if (com.example.mkat_nur.util.AppConfig.isNewerVersion(release.tagName)) {
+                        _updateStatus.value = UpdateStatus.UpdateAvailable(release)
+                    } else {
+                        _updateStatus.value = UpdateStatus.UpToDate
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    _updateStatus.value = UpdateStatus.Error(e.message ?: "Güncelleme kontrolü başarısız.")
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _updateStatus.value = UpdateStatus.Error(e.message ?: "Güncelleme kontrolü başarısız.")
             }
         }
+    }
+
+    fun dismissUpdateDialog() {
+        _updateStatus.value = UpdateStatus.Idle
     }
 
     private val _widgetTransparency = MutableStateFlow(prefs.getFloat("widget_transparency", 0.9f))
