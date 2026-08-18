@@ -18,7 +18,7 @@ object AppConfig {
 
     // Güncelleme kontrolü için ham URL
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
-    const val DOWNLOAD_URL = "https://github.com/bytuna/MikatiNur/releases/latest"
+    const val DOWNLOAD_URL = "https://www.mikatinur.com.tr/indir"
 
     fun isNewerVersion(latestVersionName: String): Boolean {
         val currentParts = VERSION_NAME.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
