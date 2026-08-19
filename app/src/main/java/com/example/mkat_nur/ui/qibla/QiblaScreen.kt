@@ -2,16 +2,15 @@ package com.example.mkat_nur.ui.qibla
 
 import android.app.Activity
 import android.view.WindowManager
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -61,7 +60,10 @@ fun QiblaScreen(
 
     val animatedCompassAngle by animateFloatAsState(
         targetValue = -state.compassAngle,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        animationSpec = spring(
+            stiffness = 50f, // Daha yumuşak hareket için stiffness düşürüldü (StiffnessLow = 200f)
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
         label = "compassRotation"
     )
 
@@ -85,10 +87,10 @@ fun QiblaScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mîkat-ı Kıble", fontWeight = FontWeight.Bold) },
+                title = { Text("Kıble", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
                     }
                 },
                 actions = {
@@ -109,11 +111,10 @@ fun QiblaScreen(
                 .background(Brush.verticalGradient(listOf(Color(0xFF1B263B), Color(0xFF0D1B2A)))),
             contentAlignment = Alignment.Center
         ) {
-            // Arka Plan Partikülleri (Opsiyonel - Daha sonra eklenebilir)
-            
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(vertical = 20.dp)
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(color = Color(0xFFFFD700))
@@ -167,6 +168,7 @@ fun QiblaScreen(
 
                     AlignmentStatus(isFacingQibla, state.qiblaAngle)
 
+
                     // Sensör Durumu ve Uyarılar
                     if (state.sensorAccuracy < 3 || (state.pitch !in -10f..10f || state.roll !in -10f..10f)) {
                         CalibrationBox(state)
@@ -176,6 +178,67 @@ fun QiblaScreen(
         }
     }
 }
+
+@Composable
+fun CalibrationAnimation(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "8_motion")
+    
+    val time by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "time"
+    )
+
+    Canvas(modifier = modifier.size(100.dp)) {
+        val w = size.width
+        val h = size.height
+        val centerX = w / 2
+        val centerY = h / 2
+        
+        val path = Path()
+        for (i in 0..100) {
+            val t = (i.toFloat() / 100f) * 2 * PI.toFloat()
+            val scale = w * 0.4f
+            val x = (scale * cos(t)) / (1 + sin(t) * sin(t))
+            val y = (scale * sin(t) * cos(t)) / (1 + sin(t) * sin(t))
+            if (i == 0) path.moveTo(centerX + x, centerY + y)
+            else path.lineTo(centerX + x, centerY + y)
+        }
+        path.close()
+
+        drawPath(
+            path = path,
+            color = Color.White.copy(alpha = 0.1f),
+            style = Stroke(width = 4f, cap = StrokeCap.Round)
+        )
+
+        val tProgress = time * 2 * PI.toFloat()
+        val scale = w * 0.4f
+        val dotX = centerX + (scale * cos(tProgress)) / (1 + sin(tProgress) * sin(tProgress))
+        val dotY = centerY + (scale * sin(tProgress) * cos(tProgress)) / (1 + sin(tProgress) * sin(tProgress))
+
+        drawCircle(
+            color = Color(0xFFFFD700),
+            radius = 8f,
+            center = Offset(dotX, dotY)
+        )
+        
+        rotate(degrees = (time * 360f), pivot = Offset(dotX, dotY)) {
+            drawRect(
+                color = Color.White.copy(alpha = 0.5f),
+                topLeft = Offset(dotX - 10f, dotY - 15f),
+                size = Size(20f, 30f),
+                style = Stroke(width = 2f)
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun BubbleLevel(pitch: Float, roll: Float) {
@@ -233,27 +296,39 @@ fun InfoCard(state: com.example.mkat_nur.viewmodel.QiblaState) {
 @Composable
 fun CalibrationBox(state: com.example.mkat_nur.viewmodel.QiblaState) {
     val isNotFlat = state.pitch !in -10f..10f || state.roll !in -10f..10f
+    val isLowAccuracy = state.sensorAccuracy < 3
     
     Column(
         modifier = Modifier
             .padding(horizontal = 32.dp)
             .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-            .padding(12.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (isNotFlat) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.ScreenRotation, null, tint = Color(0xFF03A9F4), modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.ScreenRotation, null, tint = Color(0xFF03A9F4), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Cihazı düz tutun", color = Color(0xFF03A9F4), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Cihazı düz tutun", color = Color(0xFF03A9F4), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
-        if (state.sensorAccuracy < 3) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.CompassCalibration, null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Hassasiyeti artırmak için 8 çizin", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+        
+        if (isLowAccuracy) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CompassCalibration, null, tint = Color(0xFFFFC107), modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Pusulayı Kalibre Edin", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(8.dp))
+                CalibrationAnimation()
+                Text(
+                    "Hassasiyeti artırmak için cihazınızla havada 8 çizin",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -297,7 +372,7 @@ fun AccuracyIndicator(accuracy: Int) {
     }
     
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
         tooltip = { PlainTooltip { Text(text) } },
         state = rememberTooltipState()
     ) {
