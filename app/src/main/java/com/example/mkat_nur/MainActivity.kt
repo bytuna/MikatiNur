@@ -91,8 +91,12 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
 
     // Çekerek açma/kapama mantığı: 
     // Menü açıksa her zaman kaydırarak kapatılabilir. 
-    // Menü kapalıysa sadece Risale dışındaki ekranlarda çekerek açılabilir.
-    val gesturesEnabled = drawerState.isOpen || (currentRoute != "risale" && currentRoute?.startsWith("risale_reader") != true)
+    // Menü kapalıysa sadece Risale ve Kıble Haritası dışındaki ekranlarda çekerek açılabilir.
+    val gesturesEnabled = drawerState.isOpen || (
+        currentRoute != "risale" && 
+        currentRoute != "qibla_map" && 
+        currentRoute?.startsWith("risale_reader") != true
+    )
 
     // Geri tuşu ile menüyü kapatma
     BackHandler(enabled = drawerState.isOpen) {

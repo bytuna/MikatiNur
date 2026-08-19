@@ -35,6 +35,7 @@ import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import com.example.mkat_nur.viewmodel.UpdateStatus
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: PrayerViewModel) {
     val isDarkModeState by viewModel.isDarkMode.collectAsState()

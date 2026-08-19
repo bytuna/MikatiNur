@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.mkat_nur"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.1.0"
+        versionCode = 6
+        versionName = "1.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

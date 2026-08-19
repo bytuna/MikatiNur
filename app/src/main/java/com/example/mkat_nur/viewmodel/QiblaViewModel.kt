@@ -39,7 +39,7 @@ class QiblaViewModel(application: Application) : AndroidViewModel(application), 
 
     private var filteredAccelerometer = FloatArray(3)
     private var filteredMagnetometer = FloatArray(3)
-    private val alpha = 0.10f
+    private val alpha = 0.04f // Hassasiyeti düşürmek için alpha değerini azalttık (eski: 0.10f)
 
     private var rotationMatrix = FloatArray(9)
     private var orientationAngles = FloatArray(3)
