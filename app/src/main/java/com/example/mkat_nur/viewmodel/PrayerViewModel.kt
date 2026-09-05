@@ -105,7 +105,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _notificationSoundUri = MutableStateFlow(prefs.getString("notif_sound_uri", null))
     val notificationSoundUri: StateFlow<String?> = _notificationSoundUri.asStateFlow()
 
-    private val _highlightColor = MutableStateFlow(prefs.getInt("highlight_color", 0xFFFF9800.toInt()))
+    private val _highlightColor = MutableStateFlow(prefs.getInt("highlight_color", 0xFF2196F3.toInt()))
     val highlightColor: StateFlow<Int> = _highlightColor.asStateFlow()
 
     private val _slidingDuration = MutableStateFlow(prefs.getFloat("sliding_duration", 10f))

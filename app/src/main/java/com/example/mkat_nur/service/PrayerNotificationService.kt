@@ -112,7 +112,9 @@ class PrayerNotificationService : Service() {
             remoteViews.setTextViewText(R.id.notif_city, province)
             
             val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
-            val activeColor = prefs.getInt("highlight_color", android.graphics.Color.parseColor("#FFFF9800"))
+            // Uygulama Vurgu Rengi Varsayılan Ayarlama.
+            //val activeColor = prefs.getInt("highlight_color", android.graphics.Color.parseColor("#FFFF9800"))
+            val activeColor = prefs.getInt("highlight_color", 0xFF2196F3.toInt())
             val defaultColor = android.graphics.Color.BLACK
 
             countdown?.let {

@@ -44,7 +44,7 @@
                 android:id="@+id/widget_kerahat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="4dp"
+                android:layout_marginEnd="8dp"
                 android:text="KERAHAT VAKTİ"
                 android:textColor="#FF4444"
                 android:textSize="10sp"
@@ -73,7 +73,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:textColor="#FFD700"
+                    android:textColor="#2196F3"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 

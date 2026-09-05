@@ -196,7 +196,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                         Spacer(Modifier.height(16.dp))
 
-                        Text("Uygulama Vurgu Rengi:", color = Color.White, fontSize = 14.sp)
+                        Text("Bildirim Paneli Vurgu Rengi:", color = Color.White, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
                         val allColorOptions = listOf(
                             0xFFFFD700.toInt(), 0xFFFFFFFF.toInt(), 0xFF000000.toInt(), 
