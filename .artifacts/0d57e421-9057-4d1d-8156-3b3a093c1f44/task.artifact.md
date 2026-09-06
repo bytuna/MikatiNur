@@ -1,0 +1,5 @@
+- [ ] Web sitelerinden tesbihat metinlerini çek ve içeriği temizle
+- [ ] assets klasöründeki eski dosyaları sil
+- [ ] Yeni metin dosyalarını `app/src/main/assets/` altına oluştur
+- [ ] `TesbihatScreen.kt` içerisindeki `appendZikirStyled` fonksiyonunu yeni yapıya göre güncelle
+- [ ] Değişiklikleri doğrula
