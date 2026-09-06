@@ -1,6 +1,6 @@
 {
-  "tag_name": "1.1.2",
-  "body": "• Bildirim panelindeki yazı kaymaları düzeltildi.\n• Menü sıralaması güncellendi.\n• Küçük ekranlı telefonlar için optimizasyon yapıldı.",
-  "html_url": "https://github.com/bytuna/MikatiNur/releases/latest",
+  "tag_name": "1.1.4",
+  "body": "• Tefeül dersleri ve UI optimizasyonları\n• Arka plan temiz beyaz renge çevrildi ve yüksek kontrastlı renk paleti uygulandı.\n• Arapça metinler için Uthman Taha (uthman_taha.ttf) hattı entegre edildi.\n• 5 vakit (Sabah, Öğle, İkindi, Akşam, Yatsı) küçük ekranlı cihazlarda kaydırma gerektirmeden ekrana sığdırıldı.\n• Üst bara Tefeül butonu eklendi.\n• Tefeül dersleri eklendi.",
+  "html_url": "https://www.mikatinur.com.tr/apk/Mikat-i-Nur v1.1.4.apk",
   "name": "Mîkat-ı Nur Güncellemesi"
 }
