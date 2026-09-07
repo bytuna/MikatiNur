@@ -166,7 +166,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 try {
                     val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestUpdateInfo()
                     _latestVersion.value = release
-                    if (com.example.mkat_nur.util.AppConfig.isNewerVersion(release.tagName)) {
+                    val context = getApplication<Application>().applicationContext
+                    if (com.example.mkat_nur.util.AppConfig.isNewerVersion(context, release.tagName)) {
                         _updateStatus.value = UpdateStatus.UpdateAvailable(release)
                     } else {
                         _updateStatus.value = UpdateStatus.UpToDate

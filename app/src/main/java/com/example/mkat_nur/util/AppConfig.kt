@@ -20,10 +20,31 @@ object AppConfig {
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
     const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.4.apk"
 
+    fun isNewerVersion(context: Context, latestVersionName: String): Boolean {
+        val currentVersionName = try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: VERSION_NAME
+        } catch (e: Exception) {
+            VERSION_NAME
+        }
+
+        val currentParts = currentVersionName.removePrefix("v").trim().split(".").mapNotNull { it.toIntOrNull() }
+        val latestParts = latestVersionName.removePrefix("v").trim().split(".").mapNotNull { it.toIntOrNull() }
+
+        val maxLength = maxOf(currentParts.size, latestParts.size)
+        for (i in 0 until maxLength) {
+            val currentVal = currentParts.getOrNull(i) ?: 0
+            val latestVal = latestParts.getOrNull(i) ?: 0
+            if (latestVal > currentVal) return true
+            if (latestVal < currentVal) return false
+        }
+        return false
+    }
+
     fun isNewerVersion(latestVersionName: String): Boolean {
-        val currentParts = VERSION_NAME.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
-        val latestParts = latestVersionName.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
-        
+        val currentParts = VERSION_NAME.removePrefix("v").trim().split(".").mapNotNull { it.toIntOrNull() }
+        val latestParts = latestVersionName.removePrefix("v").trim().split(".").mapNotNull { it.toIntOrNull() }
+
         val maxLength = maxOf(currentParts.size, latestParts.size)
         for (i in 0 until maxLength) {
             val currentVal = currentParts.getOrNull(i) ?: 0
