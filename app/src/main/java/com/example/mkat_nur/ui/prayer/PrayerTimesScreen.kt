@@ -94,7 +94,8 @@ fun PrayerTimesScreen(
             text = { Text("Uygulamanın yeni bir sürümü (${release.tagName}) çıktı. Şimdi güncellemek ister misiniz?\n\nDeğişiklikler:\n${release.body}") },
             confirmButton = {
                 Button(onClick = {
-                    val intent = Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(com.example.mkat_nur.util.AppConfig.DOWNLOAD_URL))
+                    val downloadUrl = release.htmlUrl.ifEmpty { com.example.mkat_nur.util.AppConfig.DOWNLOAD_URL }
+                    val intent = Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(downloadUrl))
                     context.startActivity(intent)
                 }) {
                     Text("Şimdi Güncelle")

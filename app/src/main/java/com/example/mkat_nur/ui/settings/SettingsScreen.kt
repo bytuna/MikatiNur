@@ -135,7 +135,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             Spacer(Modifier.height(12.dp))
                             Button(
                                 onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.DOWNLOAD_URL))
+                                    val downloadUrl = release.htmlUrl.ifEmpty { AppConfig.DOWNLOAD_URL }
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl))
                                     context.startActivity(intent)
                                 },
                                 modifier = Modifier.fillMaxWidth(),

@@ -10,15 +10,15 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.1.3"
-    const val VERSION_CODE = 6
+    const val VERSION_NAME = "1.1.4"
+    const val VERSION_CODE = 7
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
 
     // Güncelleme kontrolü için ham URL
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
-    const val DOWNLOAD_URL = "https://www.mikatinur.com.tr/apk/Mikat-Nur-v1.1.3.apk"
+    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.4.apk"
 
     fun isNewerVersion(latestVersionName: String): Boolean {
         val currentParts = VERSION_NAME.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
@@ -48,6 +48,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.4",
+            versionCode = 7,
+            date = "2026-09-06",
+            description = "Tefeül dersleri, Zakir2025 usulü renkler, Uthman Taha fontu ve UI optimizasyonları eklendi.",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.1.3",
             versionCode = 6,
