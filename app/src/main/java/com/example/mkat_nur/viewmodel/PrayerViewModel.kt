@@ -45,7 +45,8 @@ sealed class UpdateStatus {
 data class CountdownState(
     val hours: Int, val minutes: Int, val seconds: Int,
     val nextPrayer: String, val currentPrayer: String,
-    val isKerahat: Boolean = false
+    val isKerahat: Boolean = false,
+    val kerahatMinutesRemaining: Int = -1
 )
 
 class PrayerViewModel(application: Application) : AndroidViewModel(application) {

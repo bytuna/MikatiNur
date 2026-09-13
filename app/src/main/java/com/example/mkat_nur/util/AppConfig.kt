@@ -10,15 +10,15 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.1.4"
-    const val VERSION_CODE = 7
+    const val VERSION_NAME = "1.1.5"
+    const val VERSION_CODE = 8
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
 
     // Güncelleme kontrolü için ham URL
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
-    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.4.apk"
+    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.5.apk"
 
     fun isNewerVersion(context: Context, latestVersionName: String): Boolean {
         val currentVersionName = try {
@@ -69,6 +69,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.5",
+            versionCode = 8,
+            date = "2026-09-13",
+            description = "Bildirim paneline kalan vakit gösterimi eklendi. Akşam Namazı tesbihatındaki hata giderildi. Kayıt ekranı eklendi.",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.1.4",
             versionCode = 7,
