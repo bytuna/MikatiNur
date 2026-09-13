@@ -43,6 +43,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _authState.value = AuthState.Idle
     }
 
+    fun setError(message: String) {
+        _authState.value = AuthState.Error(message)
+    }
+
     fun getGoogleSignInClient(context: Context, webClientId: String): GoogleSignInClient {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(webClientId)

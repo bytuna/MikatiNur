@@ -101,17 +101,35 @@ fun MkatNurApp(
     val currentUser by authViewModel.currentUser.collectAsState()
     var showAuthDialog by remember { mutableStateOf(false) }
 
+    val isGayriMuntesirAllowed = remember(currentUser) {
+        com.example.mkat_nur.util.GayriMuntesirManager.isUserAllowed(context, currentUser?.email)
+    }
+
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         try {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             val account = task.getResult(ApiException::class.java)
-            account?.idToken?.let { token ->
-                authViewModel.signInWithGoogleToken(token)
+            val idToken = account?.idToken
+            if (!idToken.isNullOrEmpty()) {
+                authViewModel.signInWithGoogleToken(idToken)
+            } else {
+                authViewModel.setError("Google Token alınamadı. Firebase Console'da Google Sign-In aktifleştirilmeli ve SHA-1 eklenmelidir.")
             }
+        } catch (e: ApiException) {
+            Log.e("Auth", "Google Sign In Error: statusCode=${e.statusCode}, message=${e.message}")
+            val errorMsg = when (e.statusCode) {
+                10 -> "Google Giriş Hatası (10: DEVELOPER_ERROR). Firebase Console'da SHA-1 sertifika parmak izi ve Google Sign-In aktif edilmelidir."
+                12500 -> "Google Giriş Hatası (12500). Lütfen Firebase Console'da Google Sign-In etkinleştirilip yeni google-services.json indirin."
+                12501 -> "Google giriş işlemi iptal edildi."
+                7 -> "İnternet bağlantısı hatası."
+                else -> "Google Giriş Hatası (${e.statusCode}): ${e.message}"
+            }
+            authViewModel.setError(errorMsg)
         } catch (e: Exception) {
-            Log.e("Auth", "Google Sign In Error: ${e.message}")
+            Log.e("Auth", "Google Sign In Exception: ${e.message}")
+            authViewModel.setError("Google Giriş Hatası: ${e.message}")
         }
     }
 
@@ -370,6 +388,19 @@ fun MkatNurApp(
                         )
                     }
 
+                    if (isGayriMuntesirAllowed) {
+                        NavigationDrawerItem(
+                            label = { Text("Gayri Münteşir", color = Color(0xFFFFD700), fontWeight = FontWeight.Bold) },
+                            selected = false,
+                            icon = { Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700)) },
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                navController.navigate("gayri_muntesir")
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                        )
+                    }
+
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
                     NavigationDrawerItem(
                         label = { Text("Ayarlar", color = Color.White) },
@@ -430,6 +461,11 @@ fun MkatNurApp(
             composable("women_special") {
                 WomenSpecialScreen(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("gayri_muntesir") {
+                com.example.mkat_nur.ui.gayri_muntesir.GayriMuntesirScreen(
+                    onMenuClick = { scope.launch { drawerState.open() } }
                 )
             }
             composable("religious_days") {

@@ -1,6 +1,6 @@
 {
-  "tag_name": "1.1.4",
-  "body": "• Tefeül dersleri ve UI optimizasyonları\n• Arka plan temiz beyaz renge çevrildi ve yüksek kontrastlı renk paleti uygulandı.\n• Arapça metinler için Uthman Taha (uthman_taha.ttf) hattı entegre edildi.\n• 5 vakit (Sabah, Öğle, İkindi, Akşam, Yatsı) küçük ekranlı cihazlarda kaydırma gerektirmeden ekrana sığdırıldı.\n• Üst bara Tefeül butonu eklendi.\n• Tefeül dersleri eklendi.",
-  "html_url": "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.4.apk",
-  "name": "Mîkat-ı Nur Güncellemesi"
+  "tag_name": "1.1.5",
+  "body": "• Bildirim paneline kalan vakit gösterimi eklendi.\n• Akşam Namazı tesbihatındaki hata giderildi.\n• Kayıt ekranı eklendi.",
+  "html_url": "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.5.apk",
+  "name": "Mîkat-ı Nur Güncellemesi v1.1.5"
 }

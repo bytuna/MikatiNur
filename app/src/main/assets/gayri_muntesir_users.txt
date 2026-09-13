@@ -1,0 +1,4 @@
+# Gayri Münteşir Özel Erişim E-posta Listesi
+# Buraya erişim izni vermek istediğiniz e-posta adreslerini her satıra bir tane gelecek şekilde yazabilirsiniz.
+# Örnek:
+ilker.tuna6134@gmail.com

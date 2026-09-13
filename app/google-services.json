@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "248706418029",
-    "project_id": "com-example-mkatnur-75e05",
-    "storage_bucket": "com-example-mkatnur-75e05.firebasestorage.app"
+    "project_number": "767372767770",
+    "project_id": "mikatinur",
+    "storage_bucket": "mikatinur.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:248706418029:android:ae84466005275104284664",
+        "mobilesdk_app_id": "1:767372767770:android:f684a57a9b805543a897a3",
         "android_client_info": {
           "package_name": "com.example.mkat_nur"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "767372767770-cuua692csaenckfdhod2v8jen7ehaiqj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mkat_nur",
+            "certificate_hash": "2e15119351d7a28b0546b14b2b997d338cfc2938"
+          }
+        },
+        {
+          "client_id": "767372767770-6f41il7os2o4igb7mt9q43omamum65jb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDuqPMcti7kj0AkuvEy3hBBFG5Scttnw3k"
+          "current_key": "AIzaSyD0jq7OzGtk337QULzJZsoZnbfof1TIlwg"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "767372767770-6f41il7os2o4igb7mt9q43omamum65jb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -17,6 +17,7 @@ import androidx.core.graphics.drawable.IconCompat
 import com.example.mkat_nur.MainActivity
 import com.example.mkat_nur.R
 import com.example.mkat_nur.model.PrayerData
+import com.example.mkat_nur.util.PrayerManager
 import com.example.mkat_nur.viewmodel.CountdownState
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -106,14 +107,21 @@ class PrayerNotificationService : Service() {
     private fun restoreCachedDataIfNeeded() {
         if (currentPrayerData == null) {
             try {
-                val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
-                val json = prefs.getString("notif_cached_data", null)
-                val province = prefs.getString("notif_cached_province", "") ?: ""
-                if (!json.isNullOrEmpty()) {
-                    val data = Gson().fromJson(json, PrayerData::class.java)
-                    if (data != null) {
-                        currentPrayerData = data
-                        currentProvinceName = province
+                val prayerManager = PrayerManager(applicationContext)
+                val todayData = prayerManager.getTodayPrayerData()
+                if (todayData != null) {
+                    currentPrayerData = todayData
+                    currentProvinceName = prayerManager.getCityName()
+                } else {
+                    val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
+                    val json = prefs.getString("notif_cached_data", null)
+                    val province = prefs.getString("notif_cached_province", "") ?: ""
+                    if (!json.isNullOrEmpty()) {
+                        val data = Gson().fromJson(json, PrayerData::class.java)
+                        if (data != null) {
+                            currentPrayerData = data
+                            currentProvinceName = province
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -149,11 +157,14 @@ class PrayerNotificationService : Service() {
 
     private fun updateNotification() {
         restoreCachedDataIfNeeded()
-        val data = currentPrayerData ?: return
-        val province = currentProvinceName
+        
+        val prayerManager = PrayerManager(applicationContext)
+        val todayData = prayerManager.getTodayPrayerData() ?: currentPrayerData ?: return
+        currentPrayerData = todayData
+        val province = prayerManager.getCityName().ifEmpty { currentProvinceName }
         
         // Vakitleri hesapla
-        val countdown = calculateCountdown(data)
+        val countdown = calculateCountdown(todayData)
 
         try {
             val remoteViews = RemoteViews(applicationContext.packageName, R.layout.notification_prayer)
@@ -164,11 +175,19 @@ class PrayerNotificationService : Service() {
             val defaultColor = android.graphics.Color.BLACK
 
             var totalMinutesLeft = -1
+            var isKerahatActive = false
 
             countdown?.let {
                 totalMinutesLeft = (it.hours * 60) + it.minutes + (if (it.seconds > 0) 1 else 0)
+                isKerahatActive = it.isKerahat
 
-                val isRamadan = data.date.hijri.month.en.contains("Ramadan", true)
+                if (it.isKerahat) {
+                    if (it.kerahatMinutesRemaining in 1..60) {
+                        totalMinutesLeft = it.kerahatMinutesRemaining
+                    }
+                }
+
+                val isRamadan = todayData.date.hijri.month.en.contains("Ramadan", true)
                 val nextP = when(it.nextPrayer) {
                     "Sabah" -> "Sabah'a"
                     "İmsak" -> "İmsak'a"
@@ -191,13 +210,13 @@ class PrayerNotificationService : Service() {
             }
 
             // Vakitleri doldur
-            remoteViews.setTextViewText(R.id.time_imsak, data.timings.fajr.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_sabah, data.timings.sabah.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_sunrise, data.timings.sunrise.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_dhuhr, data.timings.dhuhr.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_asr, data.timings.asr.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_maghrib, data.timings.maghrib.substringBefore(" "))
-            remoteViews.setTextViewText(R.id.time_isha, data.timings.isha.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_imsak, todayData.timings.fajr.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_sabah, todayData.timings.sabah.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_sunrise, todayData.timings.sunrise.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_dhuhr, todayData.timings.dhuhr.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_asr, todayData.timings.asr.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_maghrib, todayData.timings.maghrib.substringBefore(" "))
+            remoteViews.setTextViewText(R.id.time_isha, todayData.timings.isha.substringBefore(" "))
 
             val prayerNames = listOf("İmsak", "Sabah", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı")
             val timeIds = listOf(R.id.time_imsak, R.id.time_sabah, R.id.time_sunrise, R.id.time_dhuhr, R.id.time_asr, R.id.time_maghrib, R.id.time_isha)
@@ -224,7 +243,7 @@ class PrayerNotificationService : Service() {
                 .setSilent(true)
 
             if (totalMinutesLeft in 1..60) {
-                val minuteIcon = generateMinuteIconBitmap(this, totalMinutesLeft)
+                val minuteIcon = generateMinuteIconBitmap(this, totalMinutesLeft, isKerahatActive)
                 builder.setSmallIcon(minuteIcon)
             } else {
                 builder.setSmallIcon(R.drawable.ic_launcher_mosque)
@@ -237,7 +256,7 @@ class PrayerNotificationService : Service() {
         }
     }
 
-    private fun generateMinuteIconBitmap(context: Context, minutes: Int): IconCompat {
+    private fun generateMinuteIconBitmap(context: Context, minutes: Int, isKerahat: Boolean = false): IconCompat {
         val sizePx = 128
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -255,20 +274,20 @@ class PrayerNotificationService : Service() {
         }
 
         val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xDD000000.toInt()
+            color = if (isKerahat) 0xEE800000.toInt() else 0xDD000000.toInt()
             style = Paint.Style.FILL
         }
         canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, badgePaint)
 
         val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xFFFFD700.toInt()
+            color = if (isKerahat) 0xFFFF1744.toInt() else 0xFFFFD700.toInt()
             style = Paint.Style.STROKE
-            strokeWidth = 4f
+            strokeWidth = 5f
         }
         canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, borderPaint)
 
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xFFFFD700.toInt()
+            color = if (isKerahat) 0xFFFFFFFF.toInt() else 0xFFFFD700.toInt()
             textSize = when {
                 minutes < 10 -> 82f
                 minutes < 100 -> 68f
@@ -339,6 +358,8 @@ class PrayerNotificationService : Service() {
 
             // Kerahat Vakti Kontrolü
             var isKerahat = false
+            var kerahatMinutesRemaining = -1
+
             try {
                 val sunriseCal = sortedTimes.find { it.first == "Güneş" }?.second
                 val dhuhrCal = sortedTimes.find { it.first == "Öğle" }?.second
@@ -346,15 +367,27 @@ class PrayerNotificationService : Service() {
 
                 if (sunriseCal != null) {
                     val sunriseEnd = (sunriseCal.clone() as Calendar).apply { add(Calendar.MINUTE, 45) }
-                    if (now.after(sunriseCal) && now.before(sunriseEnd)) isKerahat = true
+                    if (now.after(sunriseCal) && now.before(sunriseEnd)) {
+                        isKerahat = true
+                        val diffKerahat = (sunriseEnd.timeInMillis - now.timeInMillis).coerceAtLeast(0)
+                        kerahatMinutesRemaining = (diffKerahat / (1000 * 60)).toInt() + 1
+                    }
                 }
-                if (dhuhrCal != null) {
+                if (!isKerahat && dhuhrCal != null) {
                     val dhuhrStart = (dhuhrCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
-                    if (now.after(dhuhrStart) && now.before(dhuhrCal)) isKerahat = true
+                    if (now.after(dhuhrStart) && now.before(dhuhrCal)) {
+                        isKerahat = true
+                        val diffKerahat = (dhuhrCal.timeInMillis - now.timeInMillis).coerceAtLeast(0)
+                        kerahatMinutesRemaining = (diffKerahat / (1000 * 60)).toInt() + 1
+                    }
                 }
-                if (maghribCal != null) {
+                if (!isKerahat && maghribCal != null) {
                     val maghribStart = (maghribCal.clone() as Calendar).apply { add(Calendar.MINUTE, -45) }
-                    if (now.after(maghribStart) && now.before(maghribCal)) isKerahat = true
+                    if (now.after(maghribStart) && now.before(maghribCal)) {
+                        isKerahat = true
+                        val diffKerahat = (maghribCal.timeInMillis - now.timeInMillis).coerceAtLeast(0)
+                        kerahatMinutesRemaining = (diffKerahat / (1000 * 60)).toInt() + 1
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("PrayerService", "Kerahat kontrol hatası: ${e.message}")
@@ -367,7 +400,8 @@ class PrayerNotificationService : Service() {
                 ((diff / 1000) % 60).toInt(),
                 nextN,
                 currN,
-                isKerahat
+                isKerahat,
+                kerahatMinutesRemaining
             )
         } catch (e: Exception) {
             Log.e("PrayerService", "calculateCountdown error: ${e.message}")
