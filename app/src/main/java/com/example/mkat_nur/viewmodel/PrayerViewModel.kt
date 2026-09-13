@@ -161,22 +161,23 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     val updateStatus: StateFlow<UpdateStatus> = _updateStatus.asStateFlow()
 
     fun checkForUpdates() {
-        if (_updateStatus.value is UpdateStatus.UpToDate || _updateStatus.value is UpdateStatus.Idle) {
-            viewModelScope.launch {
-                _updateStatus.value = UpdateStatus.Checking
-                try {
-                    val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestUpdateInfo()
-                    _latestVersion.value = release
-                    val context = getApplication<Application>().applicationContext
-                    if (com.example.mkat_nur.util.AppConfig.isNewerVersion(context, release.tagName)) {
-                        _updateStatus.value = UpdateStatus.UpdateAvailable(release)
-                    } else {
-                        _updateStatus.value = UpdateStatus.UpToDate
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    _updateStatus.value = UpdateStatus.Error(e.message ?: "Güncelleme kontrolü başarısız.")
+        viewModelScope.launch {
+            _updateStatus.value = UpdateStatus.Checking
+            try {
+                val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestUpdateInfo()
+                _latestVersion.value = release
+                val context = getApplication<Application>().applicationContext
+                val isNewer = com.example.mkat_nur.util.AppConfig.isNewerVersion(context, release.tagName)
+                Log.d("UpdateCheck", "Current app version: ${com.example.mkat_nur.util.AppConfig.VERSION_NAME}, Remote version: ${release.tagName}, isNewer: $isNewer")
+
+                if (isNewer) {
+                    _updateStatus.value = UpdateStatus.UpdateAvailable(release)
+                } else {
+                    _updateStatus.value = UpdateStatus.UpToDate
                 }
+            } catch (e: Exception) {
+                Log.e("UpdateCheck", "Update check error: ${e.message}")
+                _updateStatus.value = UpdateStatus.Error(e.message ?: "Güncelleme kontrolü başarısız.")
             }
         }
     }
