@@ -3,7 +3,6 @@ package com.example.mkat_nur.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -13,8 +12,9 @@ import com.example.mkat_nur.MainActivity
 import com.example.mkat_nur.R
 import com.example.mkat_nur.model.PrayerData
 import com.example.mkat_nur.viewmodel.CountdownState
-import java.util.*
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
+import java.util.*
 
 class PrayerNotificationService : Service() {
 
@@ -28,6 +28,18 @@ class PrayerNotificationService : Service() {
         fun startService(context: Context, provinceName: String, data: PrayerData) {
             currentProvinceName = provinceName
             currentPrayerData = data
+
+            // Save data to SharedPreferences for survival after process kill or reboot
+            try {
+                val prefs = context.getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putString("notif_cached_data", Gson().toJson(data))
+                    .putString("notif_cached_province", provinceName)
+                    .apply()
+            } catch (e: Exception) {
+                Log.e("PrayerService", "Error caching notification data: ${e.message}")
+            }
+
             val intent = Intent(context, PrayerNotificationService::class.java)
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -65,18 +77,43 @@ class PrayerNotificationService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        restoreCachedDataIfNeeded()
         return START_STICKY
     }
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(NOTIFICATION_ID, createPlaceholderNotification(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NOTIFICATION_ID, createPlaceholderNotification())
+        restoreCachedDataIfNeeded()
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, createPlaceholderNotification(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            } else {
+                startForeground(NOTIFICATION_ID, createPlaceholderNotification())
+            }
+        } catch (e: Throwable) {
+            Log.e("PrayerService", "startForeground error: ${e.message}")
         }
         startTimer()
+    }
+
+    private fun restoreCachedDataIfNeeded() {
+        if (currentPrayerData == null) {
+            try {
+                val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
+                val json = prefs.getString("notif_cached_data", null)
+                val province = prefs.getString("notif_cached_province", "") ?: ""
+                if (!json.isNullOrEmpty()) {
+                    val data = Gson().fromJson(json, PrayerData::class.java)
+                    if (data != null) {
+                        currentPrayerData = data
+                        currentProvinceName = province
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("PrayerService", "Error restoring cached data: ${e.message}")
+            }
+        }
     }
 
     private fun startTimer() {
@@ -84,7 +121,11 @@ class PrayerNotificationService : Service() {
         timer = Timer()
         timer?.schedule(object : TimerTask() {
             override fun run() {
-                updateNotification()
+                try {
+                    updateNotification()
+                } catch (e: Throwable) {
+                    Log.e("PrayerService", "Error in timer execution: ${e.message}")
+                }
             }
         }, 0, 1000)
     }
@@ -101,6 +142,7 @@ class PrayerNotificationService : Service() {
     }
 
     private fun updateNotification() {
+        restoreCachedDataIfNeeded()
         val data = currentPrayerData ?: return
         val province = currentProvinceName
         
@@ -112,8 +154,6 @@ class PrayerNotificationService : Service() {
             remoteViews.setTextViewText(R.id.notif_city, province)
             
             val prefs = getSharedPreferences("mkat_nur_prefs", Context.MODE_PRIVATE)
-            // Uygulama Vurgu Rengi Varsayılan Ayarlama.
-            //val activeColor = prefs.getInt("highlight_color", android.graphics.Color.parseColor("#FFFF9800"))
             val activeColor = prefs.getInt("highlight_color", 0xFF2196F3.toInt())
             val defaultColor = android.graphics.Color.BLACK
 
@@ -177,7 +217,7 @@ class PrayerNotificationService : Service() {
 
             val manager = getSystemService(NotificationManager::class.java)
             manager.notify(NOTIFICATION_ID, notification)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e("PrayerService", "Notification update failed: ${e.message}")
         }
     }
@@ -199,12 +239,14 @@ class PrayerNotificationService : Service() {
 
             val sortedTimes = timings.mapNotNull { entry ->
                 try {
-                    val dateParsed = format.parse(entry.value.substringBefore(" "))
+                    val timeStr = entry.value.substringBefore(" ").trim()
+                    val dateParsed = format.parse(timeStr) ?: return@mapNotNull null
                     val cal = Calendar.getInstance().apply {
-                        val temp = Calendar.getInstance().apply { time = dateParsed!! }
+                        val temp = Calendar.getInstance().apply { time = dateParsed }
                         set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
                         set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
                         set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
                     }
                     entry.key to cal
                 } catch (e: Exception) {
@@ -227,9 +269,11 @@ class PrayerNotificationService : Service() {
                 }
             }
 
-            if (nextT == null) {
+            if (nextT == null && sortedTimes.isNotEmpty()) {
                 nextT = (sortedTimes.first().second.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, 1) }
             }
+
+            if (nextT == null) return null
 
             // Kerahat Vakti Kontrolü
             var isKerahat = false
@@ -254,7 +298,7 @@ class PrayerNotificationService : Service() {
                 Log.e("PrayerService", "Kerahat kontrol hatası: ${e.message}")
             }
 
-            val diff = nextT!!.timeInMillis - now.timeInMillis
+            val diff = (nextT.timeInMillis - now.timeInMillis).coerceAtLeast(0)
             return CountdownState(
                 (diff / (1000 * 60 * 60)).toInt(),
                 ((diff / (1000 * 60)) % 60).toInt(),
@@ -264,6 +308,7 @@ class PrayerNotificationService : Service() {
                 isKerahat
             )
         } catch (e: Exception) {
+            Log.e("PrayerService", "calculateCountdown error: ${e.message}")
             return null
         }
     }
