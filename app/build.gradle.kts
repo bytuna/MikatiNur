@@ -66,6 +66,10 @@ dependencies {
     // COIL (Görüntüler için)
     implementation("io.coil-kt:coil-compose:2.7.0")
     
+    // FIREBASE & AUTH
+    implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     // GPS KONUM
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
