@@ -2,35 +2,43 @@ package com.example.mkat_nur
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mkat_nur.util.AppConfig
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
+import coil.compose.AsyncImage
+import com.example.mkat_nur.ui.auth.AuthDialog
 import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
@@ -38,14 +46,14 @@ import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.ui.quran.QuranScreen
 import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
+import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
+import com.example.mkat_nur.util.AppConfig
+import com.example.mkat_nur.viewmodel.AuthViewModel
 import com.example.mkat_nur.viewmodel.PrayerViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -73,25 +81,57 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val prayerViewModel: PrayerViewModel = viewModel()
-                MkatNurApp(prayerViewModel)
+                val authViewModel: AuthViewModel = viewModel()
+                MkatNurApp(prayerViewModel, authViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MkatNurApp(viewModel: PrayerViewModel) {
+fun MkatNurApp(
+    viewModel: PrayerViewModel,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+    var showAuthDialog by remember { mutableStateOf(false) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { token ->
+                authViewModel.signInWithGoogleToken(token)
+            }
+        } catch (e: Exception) {
+            Log.e("Auth", "Google Sign In Error: ${e.message}")
+        }
+    }
+
+    val webClientId = androidx.compose.ui.res.stringResource(R.string.default_web_client_id)
+
+    if (showAuthDialog) {
+        AuthDialog(
+            authViewModel = authViewModel,
+            onGoogleSignInClick = {
+                val client = authViewModel.getGoogleSignInClient(context, webClientId)
+                googleSignInLauncher.launch(client.signInIntent)
+            },
+            onDismiss = { showAuthDialog = false }
+        )
+    }
+
     // Geçerli rotayı takip et
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Çekerek açma/kapama mantığı: 
-    // Menü açıksa her zaman kaydırarak kapatılabilir. 
-    // Menü kapalıysa sadece Risale ve Kıble Haritası dışındaki ekranlarda çekerek açılabilir.
     val gesturesEnabled = drawerState.isOpen || (
         currentRoute != "risale" && 
         currentRoute != "qibla_map" && 
@@ -118,24 +158,122 @@ fun MkatNurApp(viewModel: PrayerViewModel) {
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(16.dp))
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_mosque),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(100.dp)
-                            .padding(16.dp)
+                            .size(80.dp)
+                            .padding(4.dp)
                             .clip(CircleShape)
                             .align(Alignment.CenterHorizontally),
                         contentScale = ContentScale.Crop
                     )
                     Text(
                         "MÎKAT-I NUR",
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 12.dp),
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )
+
+                    // KULLANICI GİRİŞİ / HESAP KARTI
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (currentUser != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (!currentUser?.photoUrl?.toString().isNullOrEmpty()) {
+                                    AsyncImage(
+                                        model = currentUser?.photoUrl,
+                                        contentDescription = "Profil Resmi",
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFD700),
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = currentUser?.displayName ?: "Kullanıcı",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = currentUser?.email ?: "",
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { authViewModel.signOut() },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ExitToApp,
+                                        contentDescription = "Çıkış Yap",
+                                        tint = Color(0xFFFF5252)
+                                    )
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showAuthDialog = true }
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFD700),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Giriş Yap / Kaydol",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = "Hesabınıza erişmek için tıklayın",
+                                        color = Color.White.copy(alpha = 0.65f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(6.dp))
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
 
                     NavigationDrawerItem(
