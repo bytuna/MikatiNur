@@ -604,24 +604,12 @@ fun AnnotatedString.Builder.appendZikirStyled(text: String) {
 }
 
 fun AnnotatedString.Builder.appendUnTaggedText(text: String) {
-    val titleColor = Color(0xFF0D1B2A)
     val defaultColor = Color(0xFF212121)
 
     text.lines().forEachIndexed { index, line ->
         if (index > 0) append("\n")
-        val isTitle = (line.contains("Sûresi") || line.contains("Duası") ||
-                line.contains("Salâvat") || line.contains("Fatiha") ||
-                line.contains("Âyetü’l Kürsî") || line.contains("İsm-i A’zâm") ||
-                (line.length in 1..45 && (line.contains("Namazı") || line.contains("okunur") || line.contains("Tesbihatı"))))
-
-        if (isTitle) {
-            withStyle(SpanStyle(color = titleColor, fontWeight = FontWeight.Black)) {
-                append(line)
-            }
-        } else {
-            withStyle(SpanStyle(color = defaultColor)) {
-                append(line)
-            }
+        withStyle(SpanStyle(color = defaultColor)) {
+            append(line)
         }
     }
 }
