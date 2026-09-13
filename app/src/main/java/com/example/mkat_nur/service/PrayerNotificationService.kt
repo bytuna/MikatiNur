@@ -3,11 +3,17 @@ package com.example.mkat_nur.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.example.mkat_nur.MainActivity
 import com.example.mkat_nur.R
 import com.example.mkat_nur.model.PrayerData
@@ -157,7 +163,11 @@ class PrayerNotificationService : Service() {
             val activeColor = prefs.getInt("highlight_color", 0xFF2196F3.toInt())
             val defaultColor = android.graphics.Color.BLACK
 
+            var totalMinutesLeft = -1
+
             countdown?.let {
+                totalMinutesLeft = (it.hours * 60) + it.minutes + (if (it.seconds > 0) 1 else 0)
+
                 val isRamadan = data.date.hijri.month.en.contains("Ramadan", true)
                 val nextP = when(it.nextPrayer) {
                     "Sabah" -> "Sabah'a"
@@ -205,21 +215,62 @@ class PrayerNotificationService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_mosque)
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setCustomContentView(remoteViews)
                 .setCustomBigContentView(remoteViews)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
-                .build()
+
+            if (totalMinutesLeft in 1..60) {
+                val minuteIcon = generateMinuteIconBitmap(this, totalMinutesLeft)
+                builder.setSmallIcon(minuteIcon)
+            } else {
+                builder.setSmallIcon(R.drawable.ic_launcher_mosque)
+            }
 
             val manager = getSystemService(NotificationManager::class.java)
-            manager.notify(NOTIFICATION_ID, notification)
+            manager.notify(NOTIFICATION_ID, builder.build())
         } catch (e: Throwable) {
             Log.e("PrayerService", "Notification update failed: ${e.message}")
         }
+    }
+
+    private fun generateMinuteIconBitmap(context: Context, minutes: Int): IconCompat {
+        val sizePx = 96
+        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val originalDrawable = ContextCompat.getDrawable(context, R.drawable.ic_launcher_mosque)
+        if (originalDrawable != null) {
+            originalDrawable.setBounds(0, 0, sizePx, sizePx)
+            originalDrawable.draw(canvas)
+        } else {
+            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFF1B263B.toInt()
+                style = Paint.Style.FILL
+            }
+            canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, bgPaint)
+        }
+
+        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xCC000000.toInt()
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.40f, badgePaint)
+
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFFD700.toInt()
+            textSize = if (minutes >= 100) 36f else 44f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+
+        val textY = (sizePx / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
+        canvas.drawText(minutes.toString(), sizePx / 2f, textY, textPaint)
+
+        return IconCompat.createWithBitmap(bitmap)
     }
 
     private fun calculateCountdown(data: PrayerData): CountdownState? {
