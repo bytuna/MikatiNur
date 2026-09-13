@@ -238,7 +238,7 @@ class PrayerNotificationService : Service() {
     }
 
     private fun generateMinuteIconBitmap(context: Context, minutes: Int): IconCompat {
-        val sizePx = 96
+        val sizePx = 128
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
@@ -255,14 +255,25 @@ class PrayerNotificationService : Service() {
         }
 
         val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xCC000000.toInt()
+            color = 0xDD000000.toInt()
             style = Paint.Style.FILL
         }
-        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.40f, badgePaint)
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, badgePaint)
+
+        val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFFD700.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = 4f
+        }
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, borderPaint)
 
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = 0xFFFFD700.toInt()
-            textSize = if (minutes >= 100) 36f else 44f
+            textSize = when {
+                minutes < 10 -> 82f
+                minutes < 100 -> 68f
+                else -> 54f
+            }
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
         }
