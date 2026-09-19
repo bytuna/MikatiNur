@@ -15,6 +15,9 @@ object AppConfig {
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
+    const val WEBSITE_NAME = "www.mikatinur.com.tr"
+    const val WEBSITE_URL = "https://www.mikatinur.com.tr"
+    const val CONTACT_EMAIL = "ilker.tuna@mikatinur.com.tr"
 
     // Güncelleme kontrolü için ham URL
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"

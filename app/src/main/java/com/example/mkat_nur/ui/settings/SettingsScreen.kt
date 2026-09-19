@@ -558,6 +558,9 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             Spacer(Modifier.height(16.dp))
 
             // SİSTEM
+            var isLegalExpanded by remember { mutableStateOf(false) }
+            var legalDetailType by remember { mutableStateOf<String?>(null) }
+
             SettingsCard(title = "Sistem", icon = Icons.Default.Settings) {
                 Text("Otomatik Konum Güncelleme:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
                 val intervals = listOf(0 to "Kapalı", 1 to "1 Sa", 6 to "6 Sa", 12 to "12 Sa", 24 to "24 Sa")
@@ -582,8 +585,166 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 InfoRow(label = "Proje Adı", value = AppConfig.PROJECT_NAME)
                 InfoRow(label = "Versiyon", value = "v${AppConfig.VERSION_NAME} (${AppConfig.VERSION_CODE})")
                 InfoRow(label = "Geliştirici", value = AppConfig.DEVELOPER)
+                InfoRow(label = "Web Sitesi", value = AppConfig.WEBSITE_NAME)
+                InfoRow(label = "İletişim E-Posta", value = AppConfig.CONTACT_EMAIL)
                 InfoRow(label = "Yapım Yılı", value = AppConfig.BUILD_DATE)
                 InfoRow(label = "Son Güncelleme", value = AppConfig.getAppLastUpdateTime(context))
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // İLETİŞİM VE DESTEK
+            var isContactExpanded by remember { mutableStateOf(false) }
+            var showContactDialog by remember { mutableStateOf(false) }
+
+            SettingsCard(
+                title = "İletişim ve Destek",
+                icon = Icons.Default.Email,
+                isExpandable = true,
+                isExpanded = isContactExpanded,
+                onExpandClick = { isContactExpanded = !isContactExpanded }
+            ) {
+                AnimatedVisibility(visible = isContactExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Görüş, öneri veya destek taleplerinizi doğrudan geliştiriciye iletebilirsiniz.",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.5.sp,
+                            lineHeight = 18.sp
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .clickable {
+                                    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                        data = Uri.parse("mailto:${AppConfig.CONTACT_EMAIL}")
+                                        putExtra(Intent.EXTRA_SUBJECT, "Mîkat-ı Nur - İletişim / Destek (v${AppConfig.VERSION_NAME})")
+                                    }
+                                    try { context.startActivity(Intent.createChooser(emailIntent, "E-Posta Gönder")) } catch (_: Exception) {}
+                                }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Mail, null, tint = Color(0xFFFFD700), modifier = Modifier.size(22.dp))
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("E-Posta Adresi", color = Color.White.copy(0.6f), fontSize = 11.sp)
+                                Text(AppConfig.CONTACT_EMAIL, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                            }
+                            Icon(Icons.Default.OpenInNew, null, tint = Color.White.copy(0.5f), modifier = Modifier.size(18.dp))
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .clickable {
+                                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.WEBSITE_URL))
+                                    try { context.startActivity(webIntent) } catch (_: Exception) {}
+                                }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Language, null, tint = Color(0xFF81D4FA), modifier = Modifier.size(22.dp))
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Web Sitesi", color = Color.White.copy(0.6f), fontSize = 11.sp)
+                                Text(AppConfig.WEBSITE_NAME, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                            }
+                            Icon(Icons.Default.OpenInNew, null, tint = Color.White.copy(0.5f), modifier = Modifier.size(18.dp))
+                        }
+
+                        Button(
+                            onClick = { showContactDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                        ) {
+                            Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("İletişim Formunu Aç", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+
+            if (showContactDialog) {
+                ContactDialog(
+                    onDismiss = { showContactDialog = false }
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // GİZLİLİK VE KVKK
+            SettingsCard(
+                title = "Gizlilik ve Yasal",
+                icon = Icons.Default.Gavel,
+                isExpandable = true,
+                isExpanded = isLegalExpanded,
+                onExpandClick = { isLegalExpanded = !isLegalExpanded }
+            ) {
+                AnimatedVisibility(visible = isLegalExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val prefs = remember { context.getSharedPreferences("mkat_nur_prefs", android.content.Context.MODE_PRIVATE) }
+                        val isKvkkAccepted = prefs.getBoolean("is_kvkk_accepted", false)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (isKvkkAccepted) Icons.Default.VerifiedUser else Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = if (isKvkkAccepted) Color(0xFF66BB6A) else Color(0xFFFF9800),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("KVKK Onay Durumu", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                Text(
+                                    if (isKvkkAccepted) "Aydınlatma metni onaylandı." else "Onay bekleniyor.",
+                                    color = Color.White.copy(0.7f),
+                                    fontSize = 11.5.sp
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { legalDetailType = "kvkk" },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFFD700))
+                        ) {
+                            Icon(Icons.Default.Description, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("KVKK Aydınlatma Metnini Oku", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = { legalDetailType = "privacy" },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF81D4FA))
+                        ) {
+                            Icon(Icons.Default.Shield, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Gizlilik ve KVKK Politikasını Oku", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            if (legalDetailType != null) {
+                com.example.mkat_nur.ui.legal.KvkkDetailDialog(
+                    type = legalDetailType!!,
+                    onDismiss = { legalDetailType = null }
+                )
             }
 
             Spacer(Modifier.height(24.dp))
