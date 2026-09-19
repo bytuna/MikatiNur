@@ -1,5 +1,7 @@
 package com.example.mkat_nur
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +18,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
+import com.example.mkat_nur.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -440,11 +444,60 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
 
-                    Spacer(Modifier.height(24.dp))
-                    
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = themeColors.drawerTextColor.copy(alpha = 0.15f))
+
+                    // INSTAGRAM TAKİP KARTI
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch { drawerState.close() }
+                                val appUri = Uri.parse("http://instagram.com/_u/mikati_nur")
+                                val webUri = Uri.parse("https://www.instagram.com/mikati_nur/")
+                                val instagramIntent = Intent(Intent.ACTION_VIEW, appUri).apply {
+                                    setPackage("com.instagram.android")
+                                }
+                                try {
+                                    context.startActivity(instagramIntent)
+                                } catch (_: Exception) {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
+                                }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Instagram",
+                            tint = Color(0xFFE1306C),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Instagram'da Takip Edin",
+                                color = themeColors.drawerTextColor.copy(alpha = 0.7f),
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                text = "@mikati_nur",
+                                color = themeColors.drawerTextColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = null,
+                            tint = themeColors.drawerTextColor.copy(alpha = 0.5f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
                     Text(
                         text = "${AppConfig.PROJECT_NAME} v${AppConfig.VERSION_NAME}\nDeveloped by ${AppConfig.DEVELOPER}",
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = themeColors.drawerTextColor.copy(alpha = 0.5f),
                         textAlign = TextAlign.Center
