@@ -1,0 +1,67 @@
+Gizlilik ve Kişisel Verilerin Korunması Politikası
+Son Güncelleme: 18 Eylül 2026
+
+Uygulama Adı: Mîkāt-ı Nur
+Geliştirici: İlker Tuna
+Web Sitesi: https://www.mikatinur.com.tr
+İletişim: ilker.tuna@mikatinur.com.tr
+
+Mîkāt-ı Nur ("biz", "tarafımız" veya "Uygulama") olarak, mobil uygulamamızı ve web servislerimizi kullanan ziyaretçilerimizin ve kullanıcılarımızın kişisel verilerinin gizliliğine, güvenliğine ve mahremiyetine azami özen göstermekteyiz.
+
+İşbu Gizlilik ve Kişisel Verilerin Korunması Politikası; 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK), 5651 sayılı İnternet Ortamında Yapılan Yayınların Düzenlenmesi ve Bu Yayınlar Yoluyla İşlenen Suçlarla Mücadele Edilmesi Hakkında Kanun, 5237 sayılı Türk Ceza Kanunu ve ilgili mevzuat uyarınca, veri sorumlusu sıfatıyla tarafımızca işlenen verilere ve Google Play Store gereksinimlerine ilişkin bilgilendirme amacıyla hazırlanmıştır.
+
+1. Hukuki Dayanak ve Toplanan Veriler
+Uygulamamız, yasal yükümlülüklerini ifa etmek ve hizmetlerini eksiksiz sunabilmek amacıyla yalnızca belirli, açık ve meşru amaçlarla sınırlı olarak veri işlemektedir:
+
+• Konum Verileri (ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION):
+Kapsam: Cihazınızın GPS ve hücresel/Wi-Fi ağ tabanlı konum bilgileri.
+Amaç: Yalnızca bulunduğunuz coğrafi koordinata en uygun namaz vakitlerini ve ezan saatlerini doğru şekilde tespit etmek.
+İşleme Şekli: Konum verileriniz merkezi sunucularımızda saklanmaz, profil oluşturma, davranış analizi veya takip amacıyla kesinlikle kullanılmaz. Hesaplama doğrudan cihaz üzerinde gerçekleştirilir veya yerel veritabanında (SQLite) geçici olarak önbelleğe alınır.
+
+• Kimlik ve İletişim Verileri (İsteğe Bağlı):
+Kapsam: Uygulamada oturum açmayı seçmeniz halinde Google Hesabı veya e-posta yoluyla iletilen e-posta adresi ve profil adı.
+Amaç: Hesap doğrulaması sağlamak, kullanıcı tercihlerini ve okuma durumunu yönetmek. Temel okuma ve kütüphane fonksiyonları üyelik gerekmeksizin "Misafir" modunda da kullanılabilir.
+
+• Uygulama İçi Yerel Veriler:
+Risale-i Nur okuma ilerlemesi, sayfa ayraçları, favoriler ve kişisel notlar harici sunuculara aktarılmaksızın doğrudan cihazınızın yerel depolama alanında (SQLite / Room) barındırılır.
+
+• Sistem ve Log (Günlük) Verileri:
+5651 sayılı Kanun kapsamındaki yükümlülükler ve teknik çökme analizleri doğrultusunda; IP adresi, cihaz modeli, işletim sistemi sürümü ve hata logları (çökme raporları) otomatik olarak işlenebilir.
+
+2. Kişisel Verilerin Korunmasına İlişkin Güvenlik Önlemleri ve İhlal Bildirimi
+Kişisel verilerinizin yetkisiz erişim, kayıp, hatalı kullanım, ifşa, tahrifat veya imhaya karşı korunması amacıyla gerekli idari ve teknik tedbirler (SSL/HTTPS şifreleme, güvenlik duvarları, erişim kısıtlamaları) alınmaktadır.
+Tarafımızca alınan bilgi güvenliği önlemlerine rağmen; web servislerine, sunuculara veya sisteme yönelik harici siber saldırılar sonucunda kişisel verilerin zarar görmesi veya yetkisiz üçüncü şahısların eline geçmesi durumunda, bu durum derhal sizlere ve 6698 sayılı Kanun gereğince Kişisel Verileri Koruma Kurulu’na (KVKK) bildirilecektir.
+
+3. Kullanılan Cihaz İzinleri
+• android.permission.ACCESS_FINE_LOCATION & ACCESS_COARSE_LOCATION: Doğru ezan ve namaz vakti hesaplaması için.
+• android.permission.POST_NOTIFICATIONS: Vakit bildirimleri ve hatırlatıcılar için.
+• android.permission.SCHEDULE_EXACT_ALARM & RECEIVE_BOOT_COMPLETED: Bildirimlerin ve alarmların cihaz yeniden başlatıldığında da zamanında tetiklenmesi için.
+• android.permission.INTERNET: Veri güncellemesi, kütüphane senkronizasyonu ve analitik log aktarımı için.
+
+4. Üçüncü Taraf Hizmet Sağlayıcıları ve Çerezler
+Uygulamamızda hiçbir üçüncü taraf reklam ağı (AdMob vb.) kullanılmamaktadır.
+Performans analitiği, altyapı kararlılığı ve hata ayıklama amacıyla sınırlı olmak kaydıyla Google tarafından sunulan resmi altyapılar kullanılmaktadır. Bu servisler kendi gizlilik bildirimlerine tabidir:
+• Google Play Hizmetleri: https://policies.google.com/privacy
+• Google Analytics for Firebase & Crashlytics: https://firebase.google.com/support/privacy
+
+5. Dış Bağlantılar (Üçüncü Taraf Siteler)
+Uygulama veya web sitemiz, üçüncü taraf sitelere yönlendiren harici bağlantılar içerebilir. Tarafımızca işletilmeyen harici sitelerin gizlilik uygulamalarından veya içeriklerinden sorumluluk kabul edilmemektedir.
+
+6. Çocukların Gizliliği
+Uygulamamız genel kullanıcı kitlesine yönelik olup, 13 yaşın altındaki çocuklardan bilerek ve doğrudan kişisel veri toplamamaktadır.
+
+7. Veri Sahibi Hakları, Veri Saklama ve Silme (Google Play Data Deletion)
+KVKK’nın 11. maddesi ve Google Play kullanıcı koruma standartları kapsamında dilediğiniz an:
+• Cihazdaki Yerel Verileri Temizleme: Ayarlar > Uygulamalar > Mîkāt-ı Nur > Depolama > Verileri Temizle adımlarını izleyebilirsiniz.
+• Hesap ve Sunucu Verilerinin Silinmesi: ilker.tuna@mikatinur.com.tr e-posta adresine "Veri / Hesap Silme Talebi" başlıklı bir bildirim gönderebilirsiniz. Talebiniz en geç 30 gün içinde kalıcı olarak neticelendirilecektir.
+
+8. Politika Değişiklikleri
+Mevzuat güncellemeleri veya sistemselพัฒgeliştirmeler doğrultusunda bu politika periyodik olarak güncellenebilir.
+
+9. Uygulanacak Hukuk ve Yetkili Mahkeme
+İşbu politika Türkiye Cumhuriyeti Kanunlarına tabidir. Uyuşmazlıklarda İstanbul Anadolu (Kartal) Mahkemeleri ve İcra Daireleri yetkilidir.
+
+10. İletişim
+Geliştirici / Veri Sorumlusu: İlker Tuna
+Web Sitesi: https://www.mikatinur.com.tr
+E-posta: ilker.tuna@mikatinur.com.tr

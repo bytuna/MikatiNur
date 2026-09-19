@@ -101,6 +101,21 @@ fun MkatNurApp(
     val currentUser by authViewModel.currentUser.collectAsState()
     var showAuthDialog by remember { mutableStateOf(false) }
 
+    val prefs = remember { context.getSharedPreferences("mkat_nur_prefs", android.content.Context.MODE_PRIVATE) }
+    var isKvkkAccepted by remember { mutableStateOf(prefs.getBoolean("is_kvkk_accepted", false)) }
+
+    if (!isKvkkAccepted) {
+        com.example.mkat_nur.ui.legal.KvkkConsentDialog(
+            onAccepted = {
+                prefs.edit()
+                    .putBoolean("is_kvkk_accepted", true)
+                    .putLong("kvkk_accepted_date", System.currentTimeMillis())
+                    .apply()
+                isKvkkAccepted = true
+            }
+        )
+    }
+
     val isGayriMuntesirAllowed = remember(currentUser) {
         com.example.mkat_nur.util.GayriMuntesirManager.isUserAllowed(context, currentUser?.email)
     }

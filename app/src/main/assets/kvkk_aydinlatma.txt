@@ -1,0 +1,52 @@
+KVKK Aydınlatma Metni
+
+İşbu Aydınlatma Metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu’nun (“KVKK”) 10. maddesi ile Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında, veri sorumlusu sıfatıyla İlker Tuna tarafından Mîkāt-ı Nur mobil uygulaması ve www.mikatinur.com.tr web sitesi kullanıcılarının kişisel verilerinin işlenmesine ilişkin olarak hazırlanmıştır.
+
+1. İşlenen Kişisel Veri Kategorileri ve Türleri
+• Lokasyon / Konum Bilgisi: Cihazın yaklaşık veya hassas coğrafi konum koordinatları (GPS ve ağ tabanlı veriler).
+• Kimlik ve İletişim Bilgileri (İsteğe Bağlı): Kullanıcı hesabı oluşturulması halinde ad, soyad ve e-posta adresi.
+• İşlem ve Kullanım Güvenliği Bilgileri: IP adresi, cihaz işletim sistemi sürümü, cihaz modeli, çökme logları ve uygulama hata kayıtları.
+• Kullanıcı İşlem Verileri: Okuma geçmişi, sayfa ayraçları, favoriler ve notlar (bu veriler öncelikli olarak kullanıcının cihazında yerel veri tabanında saklanmaktadır).
+
+2. Kişisel Verilerin İşlenme Amaçları
+Toplanan kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:
+• Bulunduğunuz konuma göre namaz ve ezan vakitlerinin hassas şekilde hesaplanması ve vakit bildirimlerinin sunulması,
+• Uygulama içi oturum açma, profil yönetimi ve kullanıcı tercihlerinin senkronizasyonu (isteğe bağlı hesap açılması durumunda),
+• Uygulamanın teknik kararlılığının, performansının izlenmesi, çökme ve hata analizlerinin yapılması,
+• 5651 sayılı İnternet Ortamında Yapılan Yayınların Düzenlenmesi ve Bu Yayınlar Yoluyla İşlenen Suçlarla Mücadele Edilmesi Hakkında Kanun kapsamındaki yasal log tutma yükümlülüklerinin yerine getirilmesi,
+• Bilgi güvenliği süreçlerinin yürütülmesi ve yetkisiz erişimlerin önlenmesi.
+
+3. Kişisel Verilerin Toplanma Yöntemi ve Hukuki Sebebi
+Kişisel verileriniz, Mîkāt-ı Nur mobil uygulamasının yüklenmesi, cihaz izinlerinin (konum, bildirim vb.) verilmesi, uygulama içi formların doldurulması ve uygulamanın arka plan/ön plan servislerinin çalışması sırasında tamamen veya kısmen otomatik yöntemlerle elektronik ortamda toplanmaktadır.
+
+Söz konusu kişisel veriler, KVKK’nın 5. maddesinde belirtilen aşağıdaki hukuki sebeplere dayanılarak işlenmektedir:
+• Açık Rıza (Madde 5/1): Cihaz izinleri üzerinden konum verilerinin işlenmesi ve isteğe bağlı hesap açılması süreçlerinde,
+• Bir Sözleşmenin Kurulması veya İfası (Madde 5/2-c): Kullanıcının talep ettiği dijital kütüphane ve vakit hesaplama hizmetlerinin doğrudan sunulabilmesi için,
+• Veri Sorumlusunun Hukuki Yükümlülüğü (Madde 5/2-ç): 5651 sayılı Kanun ve ilgili mevzuat uyarınca sistem erişim ve işlem loglarının tutulması,
+• Meşru Menfaat (Madde 5/2-f): Temel hak ve özgürlüklerinize zarar vermemek kaydıyla, uygulamanın performansının artırılması, hataların tespiti ve güvenliğin temini için.
+
+4. Kişisel Verilerin Aktarılması
+Toplanan kişisel verileriniz, üçüncü taraf reklam ağları veya veri simsarlarıyla asla paylaşılmaz veya satılmaz. Verileriniz yalnızca:
+• Sunucu barındırma, altyapı ve analitik hizmetlerinin yürütülmesi amacıyla gerekli teknik entegrasyonlar kapsamında altyapı sağlayıcılarına (Google Play Hizmetleri, Google Analytics for Firebase ve Crashlytics),
+• Yasal bir zorunluluk veya adli/idari talep halinde kanunen yetkili kamu kurum ve kuruluşları ile adli mercilere,
+KVKK’nın 8. ve 9. maddelerinde belirtilen şartlara uygun olarak aktarılabilir.
+
+5. Kişisel Verilerin Saklanma Süresi ve İmhası
+Kişisel verileriniz, işleme amaçlarının gerektirdiği süre boyunca veya ilgili mevzuatta öngörülen yasal saklama süreleri boyunca muhafaza edilir. Sürenin sona ermesi veya veri sahibinin geçerli talebi halinde veriler silinir, yok edilir veya anonim hale getirilir.
+
+6. İlgili Kişinin Hakları (KVKK Madde 11)
+Kişisel veri sahibi olarak KVKK’nın 11. maddesi uyarınca şu haklara sahipsiniz:
+• Kişisel verilerinizin işlenip işlenmediğini öğrenme,
+• Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme,
+• Kişisel verilerin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme,
+• Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme,
+• Kişisel verilerin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme,
+• KVKK 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerin silinmesini veya yok edilmesini isteme,
+• Düzeltme, silme ve yok edilme işlemlerinin verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme,
+• İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme,
+• Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması hâlinde zararın giderilmesini talep etme.
+
+7. Başvuru Yöntemi
+Yukarıda belirtilen haklarınızı kullanmak için kimliğinizi tevsik edici belgeler ile birlikte talebinizi:
+• Kayıtlı e-posta adresinizden ilker.tuna@mikatinur.com.tr adresine güvenli elektronik imzalı, mobil imzalı veya sistemimizde kayıtlı bulunan e-posta adresinizi kullanarak gönderebilirsiniz.
+Başvurularınız en geç 30 (otuz) gün içinde ücretsiz olarak sonuçlandırılacaktır.
