@@ -79,9 +79,19 @@ class MainActivity : ComponentActivity() {
         requestPermissionLauncher.launch(permissions.toTypedArray())
 
         setContent {
-            MaterialTheme {
-                val prayerViewModel: PrayerViewModel = viewModel()
-                val authViewModel: AuthViewModel = viewModel()
+            val prayerViewModel: PrayerViewModel = viewModel()
+            val authViewModel: AuthViewModel = viewModel()
+
+            val isDarkModeState by prayerViewModel.isDarkMode.collectAsState()
+            val isInDarkMode = isDarkModeState ?: androidx.compose.foundation.isSystemInDarkTheme()
+
+            val appThemeKey by prayerViewModel.appThemeKey.collectAsState()
+            val activeTheme = remember(appThemeKey) { com.example.mkat_nur.ui.theme.AppTheme.fromKey(appThemeKey) }
+
+            com.example.mkat_nur.ui.theme.MîkatıNurTheme(
+                appTheme = activeTheme,
+                isDark = isInDarkMode
+            ) {
                 MkatNurApp(prayerViewModel, authViewModel)
             }
         }
@@ -178,12 +188,14 @@ fun MkatNurApp(
 
     val isWomenSpecialMode by viewModel.isWomenSpecial.collectAsState()
 
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = gesturesEnabled,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = Color(0xFF1B263B),
+                drawerContainerColor = themeColors.drawerBackground,
                 modifier = Modifier.width(300.dp)
             ) {
                 Column(
@@ -206,7 +218,7 @@ fun MkatNurApp(
                         "MÎKAT-I NUR",
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 12.dp),
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = themeColors.drawerTextColor,
                         textAlign = TextAlign.Center
                     )
 
@@ -215,7 +227,7 @@ fun MkatNurApp(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 6.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
+                        colors = CardDefaults.cardColors(containerColor = themeColors.drawerTextColor.copy(alpha = 0.12f)),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         if (currentUser != null) {
@@ -238,7 +250,7 @@ fun MkatNurApp(
                                     Icon(
                                         imageVector = Icons.Default.AccountCircle,
                                         contentDescription = null,
-                                        tint = Color(0xFFFFD700),
+                                        tint = themeColors.accent,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
@@ -246,14 +258,14 @@ fun MkatNurApp(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = currentUser?.displayName ?: "Kullanıcı",
-                                        color = Color.White,
+                                        color = themeColors.drawerTextColor,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.5.sp,
                                         maxLines = 1
                                     )
                                     Text(
                                         text = currentUser?.email ?: "",
-                                        color = Color.White.copy(alpha = 0.7f),
+                                        color = themeColors.drawerTextColor.copy(alpha = 0.7f),
                                         fontSize = 11.sp,
                                         maxLines = 1
                                     )
@@ -280,39 +292,39 @@ fun MkatNurApp(
                                 Icon(
                                     imageVector = Icons.Default.AccountCircle,
                                     contentDescription = null,
-                                    tint = Color(0xFFFFD700),
+                                    tint = themeColors.accent,
                                     modifier = Modifier.size(36.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "Giriş Yap / Kaydol",
-                                        color = Color.White,
+                                        color = themeColors.drawerTextColor,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
                                     Text(
                                         text = "Hesabınıza erişmek için tıklayın",
-                                        color = Color.White.copy(alpha = 0.65f),
+                                        color = themeColors.drawerTextColor.copy(alpha = 0.65f),
                                         fontSize = 11.sp
                                     )
                                 }
                                 Icon(
                                     imageVector = Icons.Default.ChevronRight,
                                     contentDescription = null,
-                                    tint = Color.White.copy(alpha = 0.5f)
+                                    tint = themeColors.drawerTextColor.copy(alpha = 0.5f)
                                 )
                             }
                         }
                     }
 
                     Spacer(Modifier.height(6.dp))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                    HorizontalDivider(color = themeColors.drawerTextColor.copy(alpha = 0.2f))
 
                     NavigationDrawerItem(
-                        label = { Text("Namaz Vakitleri", color = Color.White) },
+                        label = { Text("Namaz Vakitleri", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.AccessTime, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.AccessTime, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("prayer_times")
@@ -320,9 +332,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("İmsakiye", color = Color.White) },
+                        label = { Text("İmsakiye", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.TableChart, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.TableChart, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("imsakiye")
@@ -330,9 +342,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Kur'an-ı Kerim", color = Color.White) },
+                        label = { Text("Kur'an-ı Kerim", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.MenuBook, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.MenuBook, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("quran")
@@ -340,9 +352,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Risale-i Nur", color = Color.White) },
+                        label = { Text("Risale-i Nur", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.AutoStories, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.AutoStories, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("risale")
@@ -350,9 +362,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Tesbihat", color = Color.White) },
+                        label = { Text("Tesbihat", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.Favorite, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.Favorite, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("tesbihat")
@@ -360,9 +372,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Kıble Bulucu", color = Color.White) },
+                        label = { Text("Kıble Bulucu", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.Explore, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.Explore, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("qibla")
@@ -370,9 +382,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Kaza Takibi", color = Color.White) },
+                        label = { Text("Kaza Takibi", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.History, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.History, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("kaza_takibi")
@@ -380,9 +392,9 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Dini Günler", color = Color.White) },
+                        label = { Text("Dini Günler", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.Event, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.Event, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("religious_days")
@@ -392,9 +404,9 @@ fun MkatNurApp(
 
                     if (isWomenSpecialMode) {
                         NavigationDrawerItem(
-                            label = { Text("Kadın Özel", color = Color.White) },
+                            label = { Text("Kadın Özel", color = themeColors.drawerTextColor) },
                             selected = false,
-                            icon = { Icon(Icons.Default.Woman, null, tint = Color.White) },
+                            icon = { Icon(Icons.Default.Woman, null, tint = themeColors.drawerTextColor) },
                             onClick = {
                                 scope.launch { drawerState.close() }
                                 navController.navigate("women_special")
@@ -405,9 +417,9 @@ fun MkatNurApp(
 
                     if (isGayriMuntesirAllowed) {
                         NavigationDrawerItem(
-                            label = { Text("Gayri Münteşir", color = Color(0xFFFFD700), fontWeight = FontWeight.Bold) },
+                            label = { Text("Gayri Münteşir", color = themeColors.accent, fontWeight = FontWeight.Bold) },
                             selected = false,
-                            icon = { Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700)) },
+                            icon = { Icon(Icons.Default.Lock, null, tint = themeColors.accent) },
                             onClick = {
                                 scope.launch { drawerState.close() }
                                 navController.navigate("gayri_muntesir")
@@ -416,11 +428,11 @@ fun MkatNurApp(
                         )
                     }
 
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                    HorizontalDivider(color = themeColors.drawerTextColor.copy(alpha = 0.2f))
                     NavigationDrawerItem(
-                        label = { Text("Ayarlar", color = Color.White) },
+                        label = { Text("Ayarlar", color = themeColors.drawerTextColor) },
                         selected = false,
-                        icon = { Icon(Icons.Default.Settings, null, tint = Color.White) },
+                        icon = { Icon(Icons.Default.Settings, null, tint = themeColors.drawerTextColor) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("settings")
@@ -434,7 +446,7 @@ fun MkatNurApp(
                         text = "${AppConfig.PROJECT_NAME} v${AppConfig.VERSION_NAME}\nDeveloped by ${AppConfig.DEVELOPER}",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = themeColors.drawerTextColor.copy(alpha = 0.5f),
                         textAlign = TextAlign.Center
                     )
                 }

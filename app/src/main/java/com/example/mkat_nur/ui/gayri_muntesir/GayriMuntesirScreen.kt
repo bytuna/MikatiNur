@@ -28,10 +28,13 @@ fun GayriMuntesirScreen(
     val context = LocalContext.current
     val lessons = remember { GayriMuntesirManager.getLessons(context) }
 
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+    val bgColors = themeColors.gradientColors
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0D1B2A), Color(0xFF1B263B))))
+            .background(Brush.verticalGradient(bgColors))
     ) {
         Scaffold(
             containerColor = Color.Transparent,

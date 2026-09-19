@@ -9,7 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -90,8 +92,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
         }
     }
 
-    val bgColors = if (isInDarkMode) listOf(Color(0xFF121212), Color(0xFF1E1E1E))
-    else listOf(Color(0xFF023E8A), Color(0xFF0077B6))
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+    val bgColors = themeColors.gradientColors
 
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(bgColors))) {
         Column(
@@ -100,7 +102,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("AYARLAR", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(vertical = 20.dp))
+            Text("AYARLAR", fontSize = 24.sp, fontWeight = FontWeight.Black, color = themeColors.textPrimary, modifier = Modifier.padding(vertical = 20.dp))
 
             // GÜNCELLEME KARTI
             SettingsCard(
@@ -111,13 +113,13 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 Column {
                     when (val status = updateStatus) {
                         is UpdateStatus.Idle -> {
-                            Text("Güncellemeler kontrol edilmedi.", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+                            Text("Güncellemeler kontrol edilmedi.", color = themeColors.textSecondary, fontSize = 14.sp)
                         }
                         is UpdateStatus.Checking -> {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFFF9800), strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = themeColors.accent, strokeWidth = 2.dp)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Kontrol ediliyor...", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+                                Text("Kontrol ediliyor...", color = themeColors.textSecondary, fontSize = 14.sp)
                             }
                         }
                         is UpdateStatus.UpToDate -> {
@@ -129,9 +131,9 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         }
                         is UpdateStatus.UpdateAvailable -> {
                             val release = status.release
-                            Text("Yeni Sürüm: ${release.tagName}", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Yeni Sürüm: ${release.tagName}", color = themeColors.textPrimary, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(4.dp))
-                            Text(release.body, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, maxLines = 3)
+                            Text(release.body, color = themeColors.textSecondary, fontSize = 12.sp, maxLines = 3)
                             Spacer(Modifier.height(12.dp))
                             Button(
                                 onClick = {
@@ -157,8 +159,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         OutlinedButton(
                             onClick = { viewModel.checkForUpdates() },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(Color.White.copy(alpha = 0.3f)))
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
                         ) {
                             Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
@@ -171,7 +173,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
 
             // GÖRÜNÜM AYARLARI (AÇILIR-KAPANIR)
             SettingsCard(
-                title = "Görünüm Ayarları", 
+                title = "Görünüm ve Tema Ayarları", 
                 icon = Icons.Default.Palette,
                 isExpandable = true,
                 isExpanded = isAppearanceExpanded,
@@ -179,25 +181,141 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isAppearanceExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Koyu Mod", color = Color.White)
-                            Switch(checked = isInDarkMode, onCheckedChange = { viewModel.toggleDarkMode(it) })
+                        Text("Tema Modu:", color = themeColors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val modes = listOf(
+                                null to "Otomatik (Sistem)",
+                                false to "Açık Mod",
+                                true to "Koyu Mod"
+                            )
+                            modes.forEach { (modeVal, label) ->
+                                FilterChip(
+                                    selected = isDarkModeState == modeVal,
+                                    onClick = { viewModel.toggleDarkMode(modeVal) },
+                                    label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Medium) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = themeColors.accent,
+                                        selectedLabelColor = Color(0xFF1B263B),
+                                        labelColor = themeColors.textPrimary
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(16.dp))
-                        Text("Yazı Boyutu: ${fontSize.toInt()}sp", color = Color.White, fontSize = 14.sp)
+
+                        Spacer(Modifier.height(14.dp))
+                        Text("Yazı Boyutu: ${fontSize.toInt()}sp", color = themeColors.textPrimary, fontSize = 14.sp)
                         Slider(
                             value = fontSize,
                             onValueChange = { viewModel.setFontSize(it) },
                             valueRange = 12f..24f,
                             steps = 6,
-                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
+                            colors = SliderDefaults.colors(
+                                thumbColor = themeColors.accent,
+                                activeTrackColor = themeColors.accent,
+                                inactiveTrackColor = themeColors.cardBorder
+                            )
                         )
 
                         Spacer(Modifier.height(16.dp))
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        HorizontalDivider(color = themeColors.cardBorder)
                         Spacer(Modifier.height(16.dp))
 
-                        Text("Bildirim Paneli Vurgu Rengi:", color = Color.White, fontSize = 14.sp)
+                        // TEMA PALETİ SEÇİMİ
+                        val currentThemeKey by viewModel.appThemeKey.collectAsState()
+                        val appThemes = com.example.mkat_nur.ui.theme.AppTheme.entries
+
+                        Text("Tema ve Renk Paleti:", color = themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(10.dp))
+
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            appThemes.forEach { appTheme ->
+                                val isSelected = currentThemeKey == appTheme.key
+                                val previewColors = appTheme.getActiveColors(isInDarkMode)
+
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(
+                                            width = if (isSelected) 2.dp else 1.dp,
+                                            color = if (isSelected) themeColors.accent else themeColors.cardBorder,
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .clickable { viewModel.setAppThemeKey(appTheme.key) },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) themeColors.primary.copy(0.12f) else themeColors.background.copy(0.5f)
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy((-6).dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(22.dp)
+                                                    .background(previewColors.background, CircleShape)
+                                                    .border(1.dp, Color.White.copy(0.4f), CircleShape)
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(22.dp)
+                                                    .background(previewColors.primary, CircleShape)
+                                                    .border(1.dp, Color.White.copy(0.4f), CircleShape)
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(22.dp)
+                                                    .background(previewColors.accent, CircleShape)
+                                                    .border(1.dp, Color.White.copy(0.4f), CircleShape)
+                                            )
+                                        }
+
+                                        Spacer(Modifier.width(12.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = appTheme.title,
+                                                color = themeColors.textPrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.5.sp
+                                            )
+                                            Text(
+                                                text = appTheme.subtitle,
+                                                color = themeColors.textSecondary,
+                                                fontSize = 10.5.sp,
+                                                lineHeight = 14.sp
+                                            )
+                                        }
+
+                                        if (isSelected) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = themeColors.accent,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+                        Spacer(Modifier.height(16.dp))
+
+                        Text("Bildirim Paneli Vurgu Rengi:", color = themeColors.textPrimary, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
                         val allColorOptions = listOf(
                             0xFFFFD700.toInt(), 0xFFFFFFFF.toInt(), 0xFF000000.toInt(), 
@@ -242,16 +360,16 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isWidgetExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Text("Widget Şeffaflığı: %${(widgetTransparency * 100).toInt()}", color = Color.White, fontSize = 14.sp)
+                        Text("Widget Şeffaflığı: %${(widgetTransparency * 100).toInt()}", color = themeColors.textPrimary, fontSize = 14.sp)
                         Slider(
                             value = widgetTransparency,
                             onValueChange = { viewModel.setWidgetTransparency(it) },
                             valueRange = 0f..1f,
-                            colors = SliderDefaults.colors(thumbColor = Color(0xFFFF9800), activeTrackColor = Color(0xFFFF9800))
+                            colors = SliderDefaults.colors(thumbColor = themeColors.accent, activeTrackColor = themeColors.accent, inactiveTrackColor = themeColors.cardBorder)
                         )
 
                         Spacer(Modifier.height(16.dp))
-                        Text("Widget Başlık Rengi:", color = Color.White, fontSize = 14.sp)
+                        Text("Widget Başlık Rengi:", color = themeColors.textPrimary, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
                         val widgetColorOptions = listOf(
                             0xFFFFD700.toInt(), 0xFFFFFFFF.toInt(), 0xFF000000.toInt(),
@@ -282,7 +400,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         }
 
                         Spacer(Modifier.height(16.dp))
-                        Text("Widget Metin Rengi:", color = Color.White, fontSize = 14.sp)
+                        Text("Widget Metin Rengi:", color = themeColors.textPrimary, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -305,7 +423,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         }
 
                         Spacer(Modifier.height(16.dp))
-                        Text("Widget Yazı Boyutu:", color = Color.White, fontSize = 14.sp)
+                        Text("Widget Yazı Boyutu:", color = themeColors.textPrimary, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
                         var isFontSizeExpanded by remember { mutableStateOf(false) }
                         val fontSizeOptions = listOf(
@@ -320,7 +438,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         Box {
                             Button(
                                 onClick = { isFontSizeExpanded = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f)),
+                                colors = ButtonDefaults.buttonColors(containerColor = themeColors.background),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
@@ -328,18 +446,18 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(currentSizeLabel, color = Color.White)
-                                    Icon(Icons.Default.ArrowDropDown, null, tint = Color.White)
+                                    Text(currentSizeLabel, color = themeColors.textPrimary)
+                                    Icon(Icons.Default.ArrowDropDown, null, tint = themeColors.textPrimary)
                                 }
                             }
                             DropdownMenu(
                                 expanded = isFontSizeExpanded,
                                 onDismissRequest = { isFontSizeExpanded = false },
-                                modifier = Modifier.background(Color(0xFF1E1E1E)).fillMaxWidth(0.8f)
+                                modifier = Modifier.background(themeColors.surface).fillMaxWidth(0.8f)
                             ) {
                                 fontSizeOptions.forEach { (size, label) ->
                                     DropdownMenuItem(
-                                        text = { Text(label, color = Color.White) },
+                                        text = { Text(label, color = themeColors.textPrimary) },
                                         onClick = {
                                             viewModel.setWidgetFontSize(size)
                                             isFontSizeExpanded = false
@@ -364,23 +482,23 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isNotifExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Text("Vakit Hatırlatıcı (dk):", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Vakit Hatırlatıcı (dk):", color = themeColors.textSecondary, fontSize = 12.sp)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             listOf(0, 15, 30, 45).forEach { mins ->
                                 FilterChip(
                                     selected = reminderMinutes.contains(mins),
                                     onClick = { viewModel.toggleReminderMinute(mins) },
-                                    label = { Text(if (mins == 0) "Vaktinde" else "$mins dk", color = Color.White) },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFFFF9800))
+                                    label = { Text(if (mins == 0) "Vaktinde" else "$mins dk", color = themeColors.textPrimary) },
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = themeColors.accent)
                                 )
                             }
                         }
                         
                         Spacer(Modifier.height(16.dp))
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        HorizontalDivider(color = themeColors.cardBorder)
                         Spacer(Modifier.height(16.dp))
                         
-                        Text("Vakit Bildirimleri:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Vakit Bildirimleri:", color = themeColors.textSecondary, fontSize = 12.sp)
                         val prayerNotifs = listOf(
                             "İmsak" to notifyImsak,
                             "Güneş" to notifySunrise,
@@ -393,22 +511,22 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         
                         val allEnabled = prayerNotifs.all { it.second }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Tümünü Seç/Kaldır", color = Color(0xFFFF9800), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text("Tümünü Seç/Kaldır", color = themeColors.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             Switch(
                                 checked = allEnabled,
                                 onCheckedChange = { viewModel.toggleAllNotifications(it) },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFF9800))
+                                colors = SwitchDefaults.colors(checkedThumbColor = themeColors.accent)
                             )
                         }
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f), modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(color = themeColors.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
                         
                         prayerNotifs.forEach { (name, isEnabled) ->
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(name, color = Color.White, fontSize = 14.sp)
+                                Text(name, color = themeColors.textPrimary, fontSize = 14.sp)
                                 Switch(
                                     checked = isEnabled,
                                     onCheckedChange = { viewModel.toggleNotification(name, it) },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFF9800))
+                                    colors = SwitchDefaults.colors(checkedThumbColor = themeColors.accent)
                                 )
                             }
                         }
@@ -424,7 +542,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 soundPickerLauncher.launch(intent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f))
+                            colors = ButtonDefaults.buttonColors(containerColor = themeColors.primary)
                         ) {
                             Icon(Icons.Default.MusicNote, null, tint = Color.White)
                             Spacer(Modifier.width(8.dp))
@@ -446,27 +564,27 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isCardExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Text("Kayma Süresi:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Kayma Süresi:", color = themeColors.textSecondary, fontSize = 12.sp)
                         val durations = listOf(5f to "5 Sn", 10f to "10 Sn", 15f to "15 Sn", 30f to "30 Sn")
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             durations.forEach { (duration, label) ->
                                 FilterChip(
                                     selected = slidingDuration == duration,
                                     onClick = { viewModel.setSlidingDuration(duration) },
-                                    label = { Text(label, color = Color.White, fontSize = 10.sp) },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFFFF9800))
+                                    label = { Text(label, color = themeColors.textPrimary, fontSize = 10.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = themeColors.accent)
                                 )
                             }
                         }
 
                         Spacer(Modifier.height(8.dp))
-                        Text("Gösterilecek İçerikler:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Gösterilecek İçerikler:", color = themeColors.textSecondary, fontSize = 12.sp)
                         
                         val contentTypes = listOf("Ayet" to showAyet, "Hadis" to showHadis, "Vecize" to showVecize, "Esma" to showEsma)
                         contentTypes.forEach { (name, isEnabled) ->
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(name, color = Color.White, fontSize = 14.sp)
-                                Checkbox(checked = isEnabled, onCheckedChange = { viewModel.toggleContentType(name, it) }, colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFF9800)))
+                                Text(name, color = themeColors.textPrimary, fontSize = 14.sp)
+                                Checkbox(checked = isEnabled, onCheckedChange = { viewModel.toggleContentType(name, it) }, colors = CheckboxDefaults.colors(checkedColor = themeColors.accent))
                             }
                         }
                     }
@@ -496,20 +614,20 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 "Kadın Özel Modu",
-                                color = Color.White,
+                                color = themeColors.textPrimary,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
                                 "Özel günlerde bildirimleri ve vakit takiplerini düzenler.",
-                                color = Color.White.copy(alpha = 0.6f),
+                                color = themeColors.textSecondary,
                                 fontSize = 12.sp
                             )
                         }
                         Switch(
                             checked = isWomenSpecial,
                             onCheckedChange = { viewModel.toggleWomenSpecial(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFF9800))
+                            colors = SwitchDefaults.colors(checkedThumbColor = themeColors.accent)
                         )
                     }
                 }
@@ -532,22 +650,22 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         val maghribOffset by viewModel.maghribOffset.collectAsState()
                         val ishaOffset by viewModel.ishaOffset.collectAsState()
 
-                        Text("Genel Kaydırma (dk):", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Genel Kaydırma (dk):", color = themeColors.textSecondary, fontSize = 12.sp)
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                            IconButton(onClick = { viewModel.setTimeOffset(timeOffset - 1) }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
-                            Text("$timeOffset", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { viewModel.setTimeOffset(timeOffset + 1) }) { Icon(Icons.Default.Add, null, tint = Color.White) }
+                            IconButton(onClick = { viewModel.setTimeOffset(timeOffset - 1) }) { Icon(Icons.Default.Remove, null, tint = themeColors.textPrimary) }
+                            Text("$timeOffset", color = themeColors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            IconButton(onClick = { viewModel.setTimeOffset(timeOffset + 1) }) { Icon(Icons.Default.Add, null, tint = themeColors.textPrimary) }
                         }
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.1f))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = themeColors.cardBorder)
                         
                         val prayerOffsets = listOf("İmsak" to imsakOffset, "Güneş" to sunriseOffset, "Öğle" to dhuhrOffset, "İkindi" to asrOffset, "Akşam" to maghribOffset, "Yatsı" to ishaOffset)
                         prayerOffsets.forEach { (name, offset) ->
                             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(name, color = Color.White, fontSize = 14.sp)
+                                Text(name, color = themeColors.textPrimary, fontSize = 14.sp)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { viewModel.setPrayerOffset(name, offset - 1) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Remove, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
-                                    Text("${if (offset > 0) "+" else ""}$offset", color = Color(0xFFFF9800), fontSize = 14.sp, modifier = Modifier.padding(horizontal = 8.dp))
-                                    IconButton(onClick = { viewModel.setPrayerOffset(name, offset + 1) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
+                                    IconButton(onClick = { viewModel.setPrayerOffset(name, offset - 1) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Remove, null, tint = themeColors.textPrimary, modifier = Modifier.size(14.dp)) }
+                                    Text("${if (offset > 0) "+" else ""}$offset", color = themeColors.accent, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                                    IconButton(onClick = { viewModel.setPrayerOffset(name, offset + 1) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Add, null, tint = themeColors.textPrimary, modifier = Modifier.size(14.dp)) }
                                 }
                             }
                         }
@@ -562,14 +680,14 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             var legalDetailType by remember { mutableStateOf<String?>(null) }
 
             SettingsCard(title = "Sistem", icon = Icons.Default.Settings) {
-                Text("Otomatik Konum Güncelleme:", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                Text("Otomatik Konum Güncelleme:", color = themeColors.textSecondary, fontSize = 12.sp)
                 val intervals = listOf(0 to "Kapalı", 1 to "1 Sa", 6 to "6 Sa", 12 to "12 Sa", 24 to "24 Sa")
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     intervals.forEach { (valHrs, label) ->
                         FilterChip(
                             selected = autoLocationInterval == valHrs,
                             onClick = { viewModel.setAutoLocationInterval(valHrs) },
-                            label = { Text(label, color = Color.White, fontSize = 10.sp) },
+                            label = { Text(label, color = themeColors.textPrimary, fontSize = 10.sp) },
                             colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF4CAF50))
                         )
                     }
@@ -579,7 +697,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                     Icon(Icons.Default.MyLocation, null, tint = Color.White); Spacer(Modifier.width(8.dp)); Text("Konumu Güncelle", color = Color.White)
                 }
                 Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                HorizontalDivider(color = themeColors.cardBorder)
                 Spacer(Modifier.height(16.dp))
                 
                 InfoRow(label = "Proje Adı", value = AppConfig.PROJECT_NAME)
@@ -608,7 +726,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             text = "Görüş, öneri veya destek taleplerinizi doğrudan geliştiriciye iletebilirsiniz.",
-                            color = Color.White.copy(alpha = 0.8f),
+                            color = themeColors.textSecondary,
                             fontSize = 12.5.sp,
                             lineHeight = 18.sp
                         )
@@ -616,7 +734,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
                                 .clickable {
                                     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
                                         data = Uri.parse("mailto:${AppConfig.CONTACT_EMAIL}")
@@ -627,19 +745,19 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Mail, null, tint = Color(0xFFFFD700), modifier = Modifier.size(22.dp))
+                            Icon(Icons.Default.Mail, null, tint = themeColors.accent, modifier = Modifier.size(22.dp))
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("E-Posta Adresi", color = Color.White.copy(0.6f), fontSize = 11.sp)
-                                Text(AppConfig.CONTACT_EMAIL, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                Text("E-Posta Adresi", color = themeColors.textSecondary, fontSize = 11.sp)
+                                Text(AppConfig.CONTACT_EMAIL, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                             }
-                            Icon(Icons.Default.OpenInNew, null, tint = Color.White.copy(0.5f), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
                         }
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
                                 .clickable {
                                     val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.WEBSITE_URL))
                                     try { context.startActivity(webIntent) } catch (_: Exception) {}
@@ -647,20 +765,20 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Language, null, tint = Color(0xFF81D4FA), modifier = Modifier.size(22.dp))
+                            Icon(Icons.Default.Language, null, tint = themeColors.secondary, modifier = Modifier.size(22.dp))
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Web Sitesi", color = Color.White.copy(0.6f), fontSize = 11.sp)
-                                Text(AppConfig.WEBSITE_NAME, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                Text("Web Sitesi", color = themeColors.textSecondary, fontSize = 11.sp)
+                                Text(AppConfig.WEBSITE_NAME, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                             }
-                            Icon(Icons.Default.OpenInNew, null, tint = Color.White.copy(0.5f), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
                         }
 
                         Button(
                             onClick = { showContactDialog = true },
                             modifier = Modifier.fillMaxWidth().height(46.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                            colors = ButtonDefaults.buttonColors(containerColor = themeColors.primary)
                         ) {
                             Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
@@ -694,22 +812,22 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White.copy(0.08f), RoundedCornerShape(12.dp))
+                                .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = if (isKvkkAccepted) Icons.Default.VerifiedUser else Icons.Default.Warning,
                                 contentDescription = null,
-                                tint = if (isKvkkAccepted) Color(0xFF66BB6A) else Color(0xFFFF9800),
+                                tint = if (isKvkkAccepted) Color(0xFF4CAF50) else themeColors.accent,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("KVKK Onay Durumu", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                Text("KVKK Onay Durumu", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                                 Text(
                                     if (isKvkkAccepted) "Aydınlatma metni onaylandı." else "Onay bekleniyor.",
-                                    color = Color.White.copy(0.7f),
+                                    color = themeColors.textSecondary,
                                     fontSize = 11.5.sp
                                 )
                             }
@@ -719,7 +837,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             onClick = { legalDetailType = "kvkk" },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFFD700))
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
                         ) {
                             Icon(Icons.Default.Description, null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
@@ -730,7 +849,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             onClick = { legalDetailType = "privacy" },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF81D4FA))
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
                         ) {
                             Icon(Icons.Default.Shield, null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
@@ -761,7 +881,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                colors = ButtonDefaults.buttonColors(containerColor = themeColors.primary)
             ) {
                 Icon(Icons.Default.Share, null, tint = Color.White)
                 Spacer(Modifier.width(12.dp))
@@ -782,20 +902,22 @@ fun SettingsCard(
     onExpandClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
     Card(
         modifier = Modifier.fillMaxWidth().then(if(isExpandable) Modifier.clickable { onExpandClick() } else Modifier),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = themeColors.surface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, themeColors.cardBorder)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = Color(0xFFFF9800), modifier = Modifier.size(20.dp))
+                Icon(icon, null, tint = themeColors.accent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
-                Text(title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text(title, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
                 if (isExpandable) {
                     Icon(
                         if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        null, tint = Color.White.copy(alpha = 0.5f)
+                        null, tint = themeColors.textSecondary
                     )
                 }
             }
@@ -809,8 +931,9 @@ fun SettingsCard(
 
 @Composable
 fun InfoRow(label: String, value: String) {
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
-        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = themeColors.textSecondary, fontSize = 14.sp)
+        Text(value, color = themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
