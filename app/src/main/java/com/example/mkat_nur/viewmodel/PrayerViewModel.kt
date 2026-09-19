@@ -71,6 +71,14 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     )
     val isDarkMode: StateFlow<Boolean?> = _isDarkMode.asStateFlow()
 
+    private val _appThemeKey = MutableStateFlow(prefs.getString("selected_app_theme", "klasik") ?: "klasik")
+    val appThemeKey: StateFlow<String> = _appThemeKey.asStateFlow()
+
+    fun setAppThemeKey(themeKey: String) {
+        _appThemeKey.value = themeKey
+        prefs.edit().putString("selected_app_theme", themeKey).apply()
+    }
+
     private val _reminderMinutes = MutableStateFlow(
         prefs.getStringSet("reminder_minutes_set", setOf("0", "15"))?.map { it.toInt() }?.toSet() ?: setOf(0, 15)
     )

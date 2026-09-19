@@ -51,8 +51,8 @@ fun ReligiousDaysScreen(
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     val listState = rememberLazyListState()
 
-    val bgColors = if (isInDarkMode) listOf(Color(0xFF121212), Color(0xFF1E1E1E))
-    else listOf(Color(0xFF023E8A), Color(0xFF0077B6))
+    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+    val bgColors = themeColors.gradientColors
 
     Scaffold(
         topBar = {
