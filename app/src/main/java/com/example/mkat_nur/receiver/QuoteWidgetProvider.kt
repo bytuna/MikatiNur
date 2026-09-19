@@ -121,6 +121,10 @@ class QuoteWidgetProvider : AppWidgetProvider() {
             // Yeni Daily Quote Widget
             val dailyQuoteWidget = ComponentName(context, DailyQuoteWidgetProvider::class.java)
             appWidgetManager.getAppWidgetIds(dailyQuoteWidget).forEach { DailyQuoteWidgetProvider.updateAppWidget(context, appWidgetManager, it) }
+
+            // Vakit Kadranı Widget (4x2)
+            val dialWidget = ComponentName(context, DialWidgetProvider::class.java)
+            appWidgetManager.getAppWidgetIds(dialWidget).forEach { DialWidgetProvider.updateAppWidget(context, appWidgetManager, it) }
         }
 
         fun updateAppWidget(
