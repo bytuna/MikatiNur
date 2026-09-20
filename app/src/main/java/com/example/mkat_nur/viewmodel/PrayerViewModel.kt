@@ -159,6 +159,29 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _autoLocationInterval = MutableStateFlow(prefs.getInt("auto_location_interval", 1))
     val autoLocationInterval: StateFlow<Int> = _autoLocationInterval.asStateFlow()
 
+    private val _prayerSoundModes = MutableStateFlow<Map<String, String>>(
+        mapOf(
+            "sabah" to (prefs.getString("prayer_sound_mode_sabah", "ezan") ?: "ezan"),
+            "ogle" to (prefs.getString("prayer_sound_mode_ogle", "ezan") ?: "ezan"),
+            "ikindi" to (prefs.getString("prayer_sound_mode_ikindi", "ezan") ?: "ezan"),
+            "aksam" to (prefs.getString("prayer_sound_mode_aksam", "ezan") ?: "ezan"),
+            "yatsi" to (prefs.getString("prayer_sound_mode_yatsi", "ezan") ?: "ezan"),
+            "imsak" to (prefs.getString("prayer_sound_mode_imsak", "ezan") ?: "ezan")
+        )
+    )
+    val prayerSoundModes: StateFlow<Map<String, String>> = _prayerSoundModes.asStateFlow()
+
+    fun getPrayerSoundMode(prayerKey: String): String {
+        return _prayerSoundModes.value[prayerKey] ?: (prefs.getString("prayer_sound_mode_$prayerKey", "ezan") ?: "ezan")
+    }
+
+    fun setPrayerSoundMode(prayerKey: String, mode: String) {
+        prefs.edit().putString("prayer_sound_mode_$prayerKey", mode).apply()
+        _prayerSoundModes.value = _prayerSoundModes.value.toMutableMap().apply {
+            put(prayerKey, mode)
+        }
+    }
+
     private val _isWomenSpecial = MutableStateFlow(prefs.getBoolean("is_women_special", false))
     val isWomenSpecial: StateFlow<Boolean> = _isWomenSpecial.asStateFlow()
 

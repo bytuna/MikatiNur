@@ -57,8 +57,58 @@ class NotificationHelper(val context: Context) {
         createNotificationChannel() // Kanalın varlığından emin ol
         
         val channelId = getDynamicChannelId()
-        val soundUriStr = prefs.getString("notif_sound_uri", null)
-        val soundUri = if (soundUriStr != null) Uri.parse(soundUriStr) else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        
+        val trLocale = java.util.Locale("tr", "TR")
+        val lowerText = (title + " " + message).lowercase(trLocale)
+        
+        // Vaktinden önceki erken hatırlatıcı kontrolü (15 dk, 30 dk, 45 dk vb.)
+        val isPreReminder = lowerText.contains("kaldı") || lowerText.contains("kalmıştır") || 
+                lowerText.contains("dk") || lowerText.contains("hatırlatıcı")
+
+        val prayerKey = when {
+            lowerText.contains("imsak") -> "imsak"
+            lowerText.contains("sabah") -> "sabah"
+            lowerText.contains("öğle") || lowerText.contains("ogle") -> "ogle"
+            lowerText.contains("ikindi") -> "ikindi"
+            lowerText.contains("akşam") || lowerText.contains("aksam") || lowerText.contains("iftar") -> "aksam"
+            lowerText.contains("yatsı") || lowerText.contains("yatsi") -> "yatsi"
+            else -> "generic"
+        }
+
+        val soundMode = if (prayerKey != "generic") {
+            prefs.getString("prayer_sound_mode_$prayerKey", "ezan") ?: "ezan"
+        } else "system"
+
+        val ezanResMap = mapOf(
+            "sabah" to R.raw.sabah_ezani,
+            "ogle" to R.raw.ogle_ezani,
+            "ikindi" to R.raw.ikindi_ezani,
+            "aksam" to R.raw.aksam_ezani,
+            "yatsi" to R.raw.yatsi_ezani,
+            "imsak" to R.raw.sabah_ezani
+        )
+
+        val soundUri: Uri? = if (isPreReminder) {
+            // Vaktinden önceki erken hatırlatıcılar SADECE kısa sistem sesi çalar (asla uzun ezan okumaz)
+            val soundUriStr = prefs.getString("notif_sound_uri", null)
+            if (soundUriStr != null) Uri.parse(soundUriStr) else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        } else {
+            // Tam Vaktinde ("0 dk"): Vakfe özel seçilen moda (Ezan / Sistem Sesi / Sessiz) uyulur!
+            when (soundMode) {
+                "silent" -> null
+                "ezan" -> {
+                    val resId = ezanResMap[prayerKey]
+                    if (resId != null) Uri.parse("android.resource://${context.packageName}/$resId") else {
+                        val soundUriStr = prefs.getString("notif_sound_uri", null)
+                        if (soundUriStr != null) Uri.parse(soundUriStr) else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    }
+                }
+                else -> {
+                    val soundUriStr = prefs.getString("notif_sound_uri", null)
+                    if (soundUriStr != null) Uri.parse(soundUriStr) else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                }
+            }
+        }
 
         val mainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
