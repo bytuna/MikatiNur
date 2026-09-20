@@ -1,6 +1,8 @@
 package com.example.mkat_nur.ui.imsakiye
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mkat_nur.model.PrayerData
+import com.example.mkat_nur.ui.theme.LocalAppThemeColors
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,7 +33,6 @@ fun ImsakiyeScreen(
     onMenuClick: () -> Unit
 ) {
     val allVakitler by viewModel.allVakitler.collectAsState()
-    val highlightColor by viewModel.highlightColor.collectAsState()
     val listState = rememberLazyListState()
     val todayStr = remember { SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date()) }
 
@@ -42,7 +44,7 @@ fun ImsakiyeScreen(
         }
     }
 
-    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+    val themeColors = LocalAppThemeColors.current
     val bgColors = themeColors.gradientColors
 
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(bgColors))) {
@@ -50,9 +52,9 @@ fun ImsakiyeScreen(
             containerColor = Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("AYLIK İMSAKİYE", fontWeight = FontWeight.Black, color = Color.White) },
+                    title = { Text("AYLIK İMSAKİYE", fontWeight = FontWeight.Black, color = themeColors.textPrimary) },
                     navigationIcon = {
-                        IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, null, tint = Color.White) }
+                        IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, null, tint = themeColors.textPrimary) }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
                 )
@@ -64,7 +66,7 @@ fun ImsakiyeScreen(
 
                 if (allVakitler.isEmpty()) {
                     Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        CircularProgressIndicator(color = Color.White)
+                        CircularProgressIndicator(color = themeColors.primary)
                     }
                 } else {
                     LazyColumn(
@@ -75,8 +77,7 @@ fun ImsakiyeScreen(
                         items(allVakitler) { data ->
                             ImsakiyeRow(
                                 data = data,
-                                isToday = data.date.readable == todayStr,
-                                highlightColor = Color(highlightColor)
+                                isToday = data.date.readable == todayStr
                             )
                         }
                     }
@@ -88,13 +89,15 @@ fun ImsakiyeScreen(
 
 @Composable
 fun ImsakiyeHeader() {
+    val themeColors = LocalAppThemeColors.current
     Surface(
-        color = Color.White.copy(alpha = 0.1f),
+        color = themeColors.surface,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, themeColors.cardBorder)
     ) {
         Row(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             HeaderText("Tarih", Modifier.weight(1.5f))
@@ -109,15 +112,18 @@ fun ImsakiyeHeader() {
 }
 
 @Composable
-fun ImsakiyeRow(data: PrayerData, isToday: Boolean, highlightColor: Color) {
-    val bgColor = if (isToday) highlightColor.copy(alpha = 0.3f) else Color.Transparent
-    val textColor = if (isToday) Color.White else Color.White.copy(alpha = 0.8f)
-    val fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+fun ImsakiyeRow(data: PrayerData, isToday: Boolean) {
+    val themeColors = LocalAppThemeColors.current
+    val bgColor = if (isToday) themeColors.accent.copy(alpha = 0.20f) else themeColors.surface
+    val borderColor = if (isToday) themeColors.accent else themeColors.cardBorder.copy(alpha = 0.5f)
+    val textColor = if (isToday) themeColors.accent else themeColors.textPrimary
+    val fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Medium
 
     Surface(
         color = bgColor,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 1.dp),
-        shape = RoundedCornerShape(4.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(if (isToday) 1.5.dp else 0.5.dp, borderColor)
     ) {
         Row(
             modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
@@ -127,7 +133,7 @@ fun ImsakiyeRow(data: PrayerData, isToday: Boolean, highlightColor: Color) {
                 text = data.date.readable.substringBefore(".202"), // Yılı kısaltalım
                 modifier = Modifier.weight(1.5f),
                 color = textColor,
-                fontSize = 11.sp,
+                fontSize = 11.5.sp,
                 fontWeight = fontWeight,
                 textAlign = TextAlign.Center
             )
@@ -143,10 +149,11 @@ fun ImsakiyeRow(data: PrayerData, isToday: Boolean, highlightColor: Color) {
 
 @Composable
 fun HeaderText(text: String, modifier: Modifier) {
+    val themeColors = LocalAppThemeColors.current
     Text(
         text = text,
         modifier = modifier,
-        color = Color.White,
+        color = themeColors.textPrimary,
         fontSize = 12.sp,
         fontWeight = FontWeight.Black,
         textAlign = TextAlign.Center

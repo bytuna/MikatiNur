@@ -1,14 +1,15 @@
 package com.example.mkat_nur.ui.religious
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Event
@@ -26,10 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mkat_nur.ui.theme.LocalAppThemeColors
 import com.example.mkat_nur.viewmodel.ReligiousDaysUiState
 import com.example.mkat_nur.viewmodel.ReligiousDaysViewModel
 import java.util.Calendar
@@ -41,17 +44,16 @@ fun ReligiousDaysScreen(
     onMenuClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     
     LaunchedEffect(Unit) {
         viewModel.loadReligiousDays(context)
     }
 
-    val isInDarkMode = isSystemInDarkTheme()
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     val listState = rememberLazyListState()
 
-    val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+    val themeColors = LocalAppThemeColors.current
     val bgColors = themeColors.gradientColors
 
     Scaffold(
@@ -61,13 +63,13 @@ fun ReligiousDaysScreen(
                     Text(
                         "DİNİ GÜNLER $currentYear",
                         fontWeight = FontWeight.Black,
-                        color = Color.White,
+                        color = themeColors.textPrimary,
                         fontSize = 20.sp
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menü", tint = Color.White)
+                        Icon(Icons.Default.Menu, contentDescription = "Menü", tint = themeColors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -87,7 +89,7 @@ fun ReligiousDaysScreen(
                 is ReligiousDaysUiState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color.White
+                        color = themeColors.primary
                     )
                 }
                 is ReligiousDaysUiState.Success -> {
@@ -103,8 +105,9 @@ fun ReligiousDaysScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = Color.White.copy(alpha = 0.08f),
-                            shape = RoundedCornerShape(12.dp)
+                            color = themeColors.surface,
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, themeColors.cardBorder)
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -115,20 +118,20 @@ fun ReligiousDaysScreen(
                                     Icon(
                                         imageVector = if (state.isFromApi) Icons.Default.CloudDone else Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = if (state.isFromApi) Color(0xFF4CAF50) else Color(0xFFFFD700),
-                                        modifier = Modifier.size(18.dp)
+                                        tint = if (state.isFromApi) Color(0xFF4CAF50) else themeColors.accent,
+                                        modifier = Modifier.size(20.dp)
                                     )
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(10.dp))
                                     Column {
                                         Text(
                                             text = if (state.isFromApi) "Diyanet API (Canlı)" else "Resmi Takvim (Onaylı)",
-                                            color = Color.White,
-                                            fontSize = 13.sp,
+                                            color = themeColors.textPrimary,
+                                            fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
                                             text = "Veriler güncel ve doğrulanmıştır.",
-                                            color = Color.White.copy(alpha = 0.6f),
+                                            color = themeColors.textSecondary,
                                             fontSize = 11.sp
                                         )
                                     }
@@ -138,11 +141,11 @@ fun ReligiousDaysScreen(
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
                                             text = state.lastUpdate,
-                                            color = Color.White.copy(alpha = 0.4f),
+                                            color = themeColors.textSecondary,
                                             fontSize = 10.sp
                                         )
                                     }
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(6.dp))
                                     IconButton(
                                         onClick = { viewModel.loadReligiousDays(context) },
                                         modifier = Modifier.size(32.dp)
@@ -150,7 +153,7 @@ fun ReligiousDaysScreen(
                                         Icon(
                                             Icons.Default.Refresh,
                                             contentDescription = "Güncelle",
-                                            tint = Color.White.copy(alpha = 0.6f),
+                                            tint = themeColors.textSecondary,
                                             modifier = Modifier.size(18.dp)
                                         )
                                     }
@@ -171,14 +174,15 @@ fun ReligiousDaysScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .then(
-                                            if (isNext) Modifier.border(2.dp, Color(0xFFFFD700), RoundedCornerShape(16.dp))
+                                            if (isNext) Modifier.border(2.dp, themeColors.accent, RoundedCornerShape(16.dp))
                                             else Modifier
                                         ),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (isNext) Color(0xFFFFD700).copy(alpha = 0.15f) 
-                                                       else Color.White.copy(alpha = 0.1f)
+                                        containerColor = if (isNext) themeColors.accent.copy(alpha = 0.15f) 
+                                                       else themeColors.surface
                                     ),
-                                    shape = RoundedCornerShape(16.dp)
+                                    shape = RoundedCornerShape(16.dp),
+                                    border = BorderStroke(if (isNext) 2.dp else 1.dp, if (isNext) themeColors.accent else themeColors.cardBorder)
                                 ) {
                                     Column(
                                         modifier = Modifier
@@ -197,13 +201,13 @@ fun ReligiousDaysScreen(
                                                 Icon(
                                                     Icons.Default.Star, 
                                                     contentDescription = null, 
-                                                    tint = Color(0xFFFFD700),
+                                                    tint = themeColors.accent,
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                                 Spacer(Modifier.width(4.dp))
                                                 Text(
                                                     "Sıradaki Önemli Gün",
-                                                    color = Color(0xFFFFD700),
+                                                    color = themeColors.accent,
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -217,7 +221,7 @@ fun ReligiousDaysScreen(
                                         ) {
                                             Text(
                                                 text = adText,
-                                                color = if (isNext) Color(0xFFFFD700) else Color.White,
+                                                color = if (isNext) themeColors.accent else themeColors.textPrimary,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 17.sp,
                                                 modifier = Modifier.weight(1f)
@@ -225,12 +229,15 @@ fun ReligiousDaysScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(8.dp))
-                                                    .background(if (isNext) Color(0xFFFFD700) else Color.White.copy(alpha = 0.2f))
+                                                    .background(if (isNext) themeColors.accent else themeColors.background)
                                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                             ) {
+                                                val tagTextColor = if (isNext) {
+                                                    if (themeColors.accent == Color(0xFFFFD700) || themeColors.accent == Color(0xFFFBBF24)) Color(0xFF0D1B2A) else Color.White
+                                                } else themeColors.textPrimary
                                                 Text(
                                                     text = tarihText,
-                                                    color = if (isNext) Color(0xFF1B263B) else Color.White,
+                                                    color = tagTextColor,
                                                     fontWeight = FontWeight.Black,
                                                     fontSize = 13.sp
                                                 )
@@ -242,13 +249,13 @@ fun ReligiousDaysScreen(
                                                 Icon(
                                                     Icons.Default.Event, 
                                                     null, 
-                                                    tint = Color.White.copy(alpha = 0.4f),
+                                                    tint = themeColors.textSecondary,
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                                 Spacer(Modifier.width(4.dp))
                                                 Text(
                                                     text = hicriText,
-                                                    color = Color.White.copy(alpha = 0.6f),
+                                                    color = themeColors.textSecondary,
                                                     fontSize = 13.sp
                                                 )
                                             }
@@ -264,12 +271,12 @@ fun ReligiousDaysScreen(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.Info, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                        Icon(Icons.Default.Info, null, tint = themeColors.textPrimary, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(16.dp))
-                        Text(text = state.message, color = Color.White)
+                        Text(text = state.message, color = themeColors.textPrimary)
                         Spacer(Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadReligiousDays(context) }) {
-                            Text("Tekrar Dene")
+                        Button(onClick = { viewModel.loadReligiousDays(context) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
+                            Text("Tekrar Dene", color = Color.White)
                         }
                     }
                 }

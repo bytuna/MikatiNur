@@ -41,10 +41,7 @@ class NotificationHelper(val context: Context) {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Vakit öncesi hatırlatıcı bildirimleri"
-                setSound(soundUri, AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build())
+                setSound(null, null) // Özel ses oynatıcımız çaldığı için sistem kanal sesini kapatıyoruz
                 enableLights(true)
                 enableVibration(true)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
@@ -140,18 +137,14 @@ class NotificationHelper(val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        if (soundMode == "ezan" && !isPreReminder && soundUri != null) {
-            builder.addAction(R.drawable.ic_launcher_mosque, "Ezanı Sustur", stopPendingIntent)
+        if (soundUri != null) {
+            builder.addAction(R.drawable.ic_launcher_mosque, "Sesi Sustur", stopPendingIntent)
             builder.setDeleteIntent(stopPendingIntent)
-            com.example.mkat_nur.service.EzanPlayerManager.playEzan(context, soundUri)
-        } else {
-            if (soundUri != null) {
-                try {
-                    val r = RingtoneManager.getRingtone(context, soundUri)
-                    r.play()
-                } catch (e: Exception) {
-                    Log.e("NotificationHelper", "Ringtone play error: ${e.message}")
-                }
+
+            if (soundMode == "ezan" && !isPreReminder) {
+                com.example.mkat_nur.service.EzanPlayerManager.playEzan(context, soundUri)
+            } else {
+                com.example.mkat_nur.service.EzanPlayerManager.playRingtone(context, soundUri)
             }
         }
 

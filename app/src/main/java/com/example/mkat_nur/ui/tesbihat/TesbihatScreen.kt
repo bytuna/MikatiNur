@@ -1,6 +1,8 @@
 package com.example.mkat_nur.ui.tesbihat
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
@@ -27,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.mkat_nur.R
+import com.example.mkat_nur.ui.theme.LocalAppThemeColors
 import java.util.Locale
 
 val UthmanTahaFontFamily = FontFamily(Font(R.font.uthman_taha))
@@ -78,7 +82,9 @@ fun TesbihatScreen(
         } catch (_: Exception) { "İçerik yüklenemedi." }
     }
 
-    val annotatedTesbihatText = remember(tesbihatContent, language) {
+    val themeColors = LocalAppThemeColors.current
+
+    val annotatedTesbihatText = remember(tesbihatContent, language, themeColors) {
         buildAnnotatedString {
             val blocks = groupLinesByAlignment(tesbihatContent)
             blocks.forEachIndexed { bIdx, block ->
@@ -86,7 +92,7 @@ fun TesbihatScreen(
                     withStyle(ParagraphStyle(textAlign = TextAlign.Center)) {
                         block.lines.forEachIndexed { lIdx, line ->
                             val cleanText = cleanOrtAFlags(line)
-                            appendZikirStyled(cleanText)
+                            appendZikirStyled(cleanText, themeColors.textPrimary)
                             if (lIdx < block.lines.lastIndex) {
                                 append("\n")
                             }
@@ -95,7 +101,7 @@ fun TesbihatScreen(
                 } else {
                     block.lines.forEachIndexed { lIdx, line ->
                         val cleanText = cleanOrtAFlags(line)
-                        appendZikirStyled(cleanText)
+                        appendZikirStyled(cleanText, themeColors.textPrimary)
                         if (lIdx < block.lines.lastIndex) {
                             append("\n")
                         }
@@ -125,10 +131,13 @@ fun TesbihatScreen(
         )
     }
 
+    val bgColors = themeColors.gradientColors
+    val solidCardBg = if (themeColors.surface.alpha < 0.9f) Color(0xFF1B263B) else themeColors.surface
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0D1B2A), Color(0xFF1B263B))))
+            .background(Brush.verticalGradient(bgColors))
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -142,7 +151,7 @@ fun TesbihatScreen(
                             Text(
                                 text = "TESBİHAT",
                                 fontWeight = FontWeight.Black,
-                                color = Color.White,
+                                color = themeColors.textPrimary,
                                 letterSpacing = 1.5.sp
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -153,7 +162,7 @@ fun TesbihatScreen(
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Tesbihat Hakkında Bilgi",
-                                    tint = Color(0xFFFFD700)
+                                    tint = Color(0xFF4CAF50)
                                 )
                             }
                             Spacer(modifier = Modifier.width(6.dp))
@@ -165,8 +174,8 @@ fun TesbihatScreen(
                                     showTefeulDialog = true
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFFFD700),
-                                    contentColor = Color(0xFF1B263B)
+                                    containerColor = Color(0xFF4CAF50),
+                                    contentColor = Color.White
                                 ),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                                 shape = RoundedCornerShape(10.dp),
@@ -182,7 +191,7 @@ fun TesbihatScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onMenuClick) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menü", tint = Color.White)
+                            Icon(Icons.Default.Menu, contentDescription = "Menü", tint = themeColors.textPrimary)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -198,7 +207,7 @@ fun TesbihatScreen(
                 TabRow(
                     selectedTabIndex = if (selectedTabIndex >= 0) selectedTabIndex else 0,
                     containerColor = Color.Transparent,
-                    contentColor = Color(0xFFFFD700),
+                    contentColor = Color(0xFF4CAF50),
                     divider = {},
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
                 ) {
@@ -218,6 +227,7 @@ fun TesbihatScreen(
                                     text = label,
                                     fontSize = 12.sp,
                                     maxLines = 1,
+                                    color = if (selectedPrayer == key) Color(0xFF4CAF50) else themeColors.textSecondary,
                                     fontWeight = if (selectedPrayer == key) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -228,12 +238,13 @@ fun TesbihatScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
                         modifier = Modifier
-                            .background(Color.White.copy(0.1f), RoundedCornerShape(12.dp))
+                            .background(solidCardBg, RoundedCornerShape(12.dp))
+                            .border(1.dp, themeColors.cardBorder, RoundedCornerShape(12.dp))
                             .padding(4.dp)
                     ) {
                         listOf("tr" to "TR", "ar" to "AR").forEach { (code, label) ->
@@ -242,9 +253,9 @@ fun TesbihatScreen(
                                 onClick = { language = code },
                                 label = { Text(label, fontSize = 11.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFFFFD700),
-                                    selectedLabelColor = Color(0xFF1B263B),
-                                    labelColor = Color.White
+                                    selectedContainerColor = Color(0xFF4CAF50),
+                                    selectedLabelColor = Color.White,
+                                    labelColor = themeColors.textPrimary
                                 ),
                                 border = null,
                                 modifier = Modifier.height(32.dp)
@@ -259,8 +270,9 @@ fun TesbihatScreen(
                             .weight(1f)
                             .padding(start = 16.dp, end = 8.dp),
                         colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFFFFD700),
-                            activeTrackColor = Color(0xFFFFD700)
+                            thumbColor = Color(0xFF4CAF50),
+                            activeTrackColor = Color(0xFF4CAF50),
+                            inactiveTrackColor = themeColors.cardBorder
                         )
                     )
                     IconButton(
@@ -270,7 +282,7 @@ fun TesbihatScreen(
                         Icon(
                             imageVector = Icons.Default.SettingsBackupRestore,
                             contentDescription = "Varsayılan Boyut",
-                            tint = Color.White.copy(alpha = 0.7f)
+                            tint = themeColors.textSecondary
                         )
                     }
                 }
@@ -279,8 +291,9 @@ fun TesbihatScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = solidCardBg),
                     shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, themeColors.cardBorder),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
                     val scrollState = rememberScrollState()
@@ -295,7 +308,7 @@ fun TesbihatScreen(
                         Text(
                             text = annotatedTesbihatText,
                             fontFamily = fontFamily,
-                            color = Color(0xFF212121),
+                            color = themeColors.textPrimary,
                             fontSize = if (language == "ar") (fontSize * 1.22f).sp else fontSize.sp,
                             lineHeight = if (language == "ar") (fontSize * 1.5f).sp else (fontSize * 1.35f).sp,
                             textAlign = if (language == "ar") TextAlign.Right else TextAlign.Left,
@@ -314,13 +327,17 @@ fun TefeulDialog(
     onNewTefeul: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val themeColors = LocalAppThemeColors.current
+    val solidDialogBg = if (themeColors.surface.alpha < 0.9f) Color(0xFF1B263B) else themeColors.surface
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1B263B)),
+            colors = CardDefaults.cardColors(containerColor = solidDialogBg),
+            border = BorderStroke(1.dp, themeColors.cardBorder),
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column(
@@ -338,7 +355,7 @@ fun TefeulDialog(
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = Color(0xFFFFD700),
+                            tint = Color(0xFF4CAF50),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -346,21 +363,21 @@ fun TefeulDialog(
                             text = "Tefeül-ü Hayır (Kısa Ders)",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFD700)
+                            color = themeColors.textPrimary
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Kapat",
-                            tint = Color.White.copy(alpha = 0.7f)
+                            tint = themeColors.textSecondary
                         )
                     }
                 }
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 12.dp),
-                    color = Color.White.copy(alpha = 0.15f)
+                    color = themeColors.cardBorder
                 )
 
                 val dialogScrollState = rememberScrollState()
@@ -374,7 +391,7 @@ fun TefeulDialog(
                     Text(
                         text = quote,
                         fontSize = 14.5.sp,
-                        color = Color.White.copy(alpha = 0.95f),
+                        color = themeColors.textPrimary,
                         textAlign = TextAlign.Start,
                         lineHeight = 22.sp,
                         modifier = Modifier.fillMaxWidth()
@@ -391,17 +408,18 @@ fun TefeulDialog(
                         onClick = onNewTefeul,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFFD700))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
                     ) {
                         Text("Başka Ders Çek", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
                     }
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Tamam", color = Color(0xFF1B263B), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("Tamam", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -457,15 +475,17 @@ fun cleanOrtAFlags(text: String): String {
 
 @Composable
 fun TesbihatInfoDialog(onDismiss: () -> Unit) {
+    val themeColors = LocalAppThemeColors.current
+    val solidDialogBg = if (themeColors.surface.alpha < 0.9f) Color(0xFF1B263B) else themeColors.surface
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1B263B)
-            ),
+            colors = CardDefaults.cardColors(containerColor = solidDialogBg),
+            border = BorderStroke(1.dp, themeColors.cardBorder),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
@@ -482,7 +502,7 @@ fun TesbihatInfoDialog(onDismiss: () -> Unit) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
-                            tint = Color(0xFFFFD700),
+                            tint = Color(0xFF4CAF50),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -490,21 +510,21 @@ fun TesbihatInfoDialog(onDismiss: () -> Unit) {
                             text = "Tesbihatın Hikmeti",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFD700)
+                            color = themeColors.textPrimary
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Kapat",
-                            tint = Color.White.copy(alpha = 0.7f)
+                            tint = themeColors.textSecondary
                         )
                     }
                 }
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 12.dp),
-                    color = Color.White.copy(alpha = 0.15f)
+                    color = themeColors.cardBorder
                 )
 
                 val dialogScrollState = rememberScrollState()
@@ -518,7 +538,7 @@ fun TesbihatInfoDialog(onDismiss: () -> Unit) {
                         text = "Risale-i Nur Külliyatı'ndan Namaz Tesbihatı Hakikatleri",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF81D4FA),
+                        color = Color(0xFF4CAF50),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
@@ -529,22 +549,22 @@ fun TesbihatInfoDialog(onDismiss: () -> Unit) {
                                 "• İbadetin Mührü ve Meyvesi:\n" +
                                 "Tesbihat, namaz ağacının meyvelerini toplamak gibidir. Namaz ile Rabbimizin huzuruna çıkan ruh, tesbihat ile O'nun azametini, hamdini ve kibriyasını kainata ilan eder.",
                         fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.9f),
+                        color = themeColors.textPrimary,
                         lineHeight = 20.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = "Anladım",
-                        color = Color(0xFF1B263B),
+                        color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -553,11 +573,11 @@ fun TesbihatInfoDialog(onDismiss: () -> Unit) {
     }
 }
 
-fun AnnotatedString.Builder.appendZikirStyled(text: String) {
-    val redColor = Color(0xFFC62828)     // Koyu Kırmızı (Cehennem / İsimler / Uyarı)
+fun AnnotatedString.Builder.appendZikirStyled(text: String, defaultTextColor: Color) {
+    val redColor = Color(0xFFD32F2F)     // Koyu Kırmızı (Cehennem / İsimler / Uyarı)
     val greenColor = Color(0xFF2E7D32)   // Zümrüt Yeşili (Cennet / Af / Mağfiret)
     val orangeColor = Color(0xFFE65100)  // Koyu Sıcak Turuncu (Fitne / Şer Sığınmaları)
-    val magentaColor = Color(0xFF6A1B9A) // Koyu Mor/Lila (Nefis / Manevi Hastalıklar)
+    val magentaColor = Color(0xFF7B1FA2) // Koyu Mor/Lila (Nefis / Manevi Hastalıklar)
     val goldColor = Color(0xFFB78103)    // Koyu Amber/Altın (Ayet / Esma / Zikir)
     val blueColor = Color(0xFF1565C0)    // Derin Mavi (Salavat / Dua / Talimat)
     val cyanColor = Color(0xFF00838F)    // Koyu Camgöbeği (Zikir)
@@ -568,12 +588,12 @@ fun AnnotatedString.Builder.appendZikirStyled(text: String) {
     val matches = regex.findAll(text).toList()
 
     if (matches.isEmpty()) {
-        appendUnTaggedText(text)
+        appendUnTaggedText(text, defaultTextColor)
     } else {
         matches.forEach { match ->
             if (match.range.first > lastIdx) {
                 val unTaggedText = text.substring(lastIdx, match.range.first)
-                appendUnTaggedText(unTaggedText)
+                appendUnTaggedText(unTaggedText, defaultTextColor)
             }
 
             val kategori = match.groupValues[1].lowercase().trim()
@@ -588,7 +608,7 @@ fun AnnotatedString.Builder.appendZikirStyled(text: String) {
                 "mavi", "blue", "dua", "talimat", "salavat" -> blueColor
                 "zikir"                                    -> cyanColor
                 "ilahi"                                    -> greenColor
-                else                                       -> Color(0xFF212121)
+                else                                       -> defaultTextColor
             }
 
             withStyle(SpanStyle(color = seciliRenk, fontWeight = FontWeight.Bold)) {
@@ -598,17 +618,15 @@ fun AnnotatedString.Builder.appendZikirStyled(text: String) {
             lastIdx = match.range.last + 1
         }
         if (lastIdx < text.length) {
-            appendUnTaggedText(text.substring(lastIdx))
+            appendUnTaggedText(text.substring(lastIdx), defaultTextColor)
         }
     }
 }
 
-fun AnnotatedString.Builder.appendUnTaggedText(text: String) {
-    val defaultColor = Color(0xFF212121)
-
+fun AnnotatedString.Builder.appendUnTaggedText(text: String, defaultTextColor: Color) {
     text.lines().forEachIndexed { index, line ->
         if (index > 0) append("\n")
-        withStyle(SpanStyle(color = defaultColor)) {
+        withStyle(SpanStyle(color = defaultTextColor)) {
             append(line)
         }
     }
