@@ -124,12 +124,36 @@ class NotificationHelper(val context: Context) {
             .setSmallIcon(R.drawable.ic_launcher_mosque)
             .setContentTitle(title)
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL) // Ses, Titreşim ve Işıkları varsayılan yap
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setSound(soundUri)
             .setAutoCancel(true)
             .setContentIntent(mainPendingIntent)
+
+        val stopIntent = Intent(context, com.example.mkat_nur.service.EzanStopReceiver::class.java).apply {
+            action = com.example.mkat_nur.service.EzanStopReceiver.ACTION_STOP_EZAN
+        }
+        val stopPendingIntent = PendingIntent.getBroadcast(
+            context,
+            995,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        if (soundMode == "ezan" && !isPreReminder && soundUri != null) {
+            builder.addAction(R.drawable.ic_launcher_mosque, "Ezanı Sustur", stopPendingIntent)
+            builder.setDeleteIntent(stopPendingIntent)
+            com.example.mkat_nur.service.EzanPlayerManager.playEzan(context, soundUri)
+        } else {
+            if (soundUri != null) {
+                try {
+                    val r = RingtoneManager.getRingtone(context, soundUri)
+                    r.play()
+                } catch (e: Exception) {
+                    Log.e("NotificationHelper", "Ringtone play error: ${e.message}")
+                }
+            }
+        }
 
         if (fullScreenIntent != null) {
             val popupPendingIntent = PendingIntent.getActivity(
@@ -144,15 +168,6 @@ class NotificationHelper(val context: Context) {
         }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        // Sesin kesin çalması için manuel tetikleme (Yedek mekanizma)
-        try {
-            val r = RingtoneManager.getRingtone(context, soundUri)
-            r.play()
-        } catch (e: Exception) {
-            Log.e("NotificationHelper", "Ringtone play error: ${e.message}")
-        }
-
-        manager.notify(System.currentTimeMillis().toInt(), builder.build())
+        manager.notify(com.example.mkat_nur.service.EzanStopReceiver.NOTIFICATION_ID_EZAN, builder.build())
     }
 }
