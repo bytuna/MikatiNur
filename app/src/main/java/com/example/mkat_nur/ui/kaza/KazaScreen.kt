@@ -1,6 +1,7 @@
 package com.example.mkat_nur.ui.kaza
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mkat_nur.ui.theme.LocalAppThemeColors
 import com.example.mkat_nur.viewmodel.KazaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,22 +39,23 @@ fun KazaScreen(
 
     var showResetAllDialog by remember { mutableStateOf(false) }
 
-    val bgColors = listOf(Color(0xFF0D1B2A), Color(0xFF1B263B))
+    val themeColors = LocalAppThemeColors.current
+    val bgColors = themeColors.gradientColors
 
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(bgColors))) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Kaza Takibi", fontWeight = FontWeight.ExtraBold, color = Color.White) },
+                    title = { Text("Kaza Takibi", fontWeight = FontWeight.ExtraBold, color = themeColors.textPrimary) },
                     navigationIcon = {
                         IconButton(onClick = onMenuClick) {
-                            Icon(Icons.Default.Menu, null, tint = Color.White)
+                            Icon(Icons.Default.Menu, null, tint = themeColors.textPrimary)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showResetAllDialog = true }) {
-                            Icon(Icons.Default.DeleteSweep, "Tümünü Sıfırla", tint = Color.White.copy(alpha = 0.7f))
+                            Icon(Icons.Default.DeleteSweep, "Tümünü Sıfırla", tint = themeColors.textSecondary)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -80,21 +83,22 @@ fun KazaScreen(
     if (showResetAllDialog) {
         AlertDialog(
             onDismissRequest = { showResetAllDialog = false },
-            title = { Text("Tümünü Sıfırla") },
-            text = { Text("Tüm kaza borçlarınız sıfırlanacaktır. Bu işlem geri alınamaz. Emin misiniz?") },
+            title = { Text("Tümünü Sıfırla", color = themeColors.textPrimary) },
+            text = { Text("Tüm kaza borçlarınız sıfırlanacaktır. Bu işlem geri alınamaz. Emin misiniz?", color = themeColors.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.resetAll()
                     showResetAllDialog = false
                 }) {
-                    Text("EVET", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text("EVET", color = Color(0xFFF44336), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetAllDialog = false }) {
-                    Text("İPTAL")
+                    Text("İPTAL", color = themeColors.textSecondary)
                 }
-            }
+            },
+            containerColor = themeColors.surface
         )
     }
 }
@@ -106,14 +110,17 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
     var textValue by remember { mutableStateOf(debt.toString()) }
     var showResetDialog by remember { mutableStateOf(false) }
 
+    val themeColors = LocalAppThemeColors.current
+
     LaunchedEffect(debt) {
         if (!editMode) textValue = debt.toString()
     }
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f)),
-        shape = RoundedCornerShape(24.dp)
+        colors = CardDefaults.cardColors(containerColor = themeColors.surface),
+        shape = RoundedCornerShape(24.dp),
+        border = BorderStroke(1.dp, themeColors.cardBorder)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -122,8 +129,8 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(name, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Text("Kalan Borç: $debt", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text(name, color = themeColors.textSecondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("Kalan Borç: $debt", color = themeColors.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.Black)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -135,16 +142,16 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                         expanded = true
                         editMode = !editMode 
                     }) {
-                        Icon(if (editMode) Icons.Default.Check else Icons.Default.Edit, null, tint = Color.White.copy(alpha = 0.7f))
+                        Icon(if (editMode) Icons.Default.Check else Icons.Default.Edit, null, tint = themeColors.textSecondary)
                     }
                     
                     Button(
                         onClick = { if (debt > 0) onKazaPrayed() },
                         enabled = debt > 0,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("KILINDI", fontWeight = FontWeight.Bold)
+                        Text("KILINDI", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -155,14 +162,14 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                         OutlinedTextField(
                             value = textValue,
                             onValueChange = { textValue = it },
-                            label = { Text("Toplam Borç Girin", color = Color.White.copy(alpha = 0.7f)) },
+                            label = { Text("Toplam Borç Girin", color = themeColors.textSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedBorderColor = Color(0xFFFF9800),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                                focusedTextColor = themeColors.textPrimary,
+                                unfocusedTextColor = themeColors.textPrimary,
+                                focusedBorderColor = Color(0xFF4CAF50),
+                                unfocusedBorderColor = themeColors.cardBorder
                             ),
                             trailingIcon = {
                                 IconButton(onClick = {
@@ -170,7 +177,7 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                                     onSetDebt(newVal)
                                     editMode = false
                                 }) {
-                                    Icon(Icons.Default.Save, null, tint = Color(0xFFFF9800))
+                                    Icon(Icons.Default.Save, null, tint = Color(0xFF4CAF50))
                                 }
                             }
                         )
@@ -187,7 +194,7 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                             }
                             
                             IconButton(onClick = { showResetDialog = true }) {
-                                Icon(Icons.Default.Refresh, "Sıfırla", tint = Color.Red.copy(alpha = 0.7f))
+                                Icon(Icons.Default.Refresh, "Sıfırla", tint = Color(0xFFF44336))
                             }
                         }
                     }
@@ -199,28 +206,30 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("$name Sıfırla") },
-            text = { Text("$name vakti için tüm kaza borcunuzu sıfırlamak istediğinize emin misiniz?") },
+            title = { Text("$name Sıfırla", color = themeColors.textPrimary) },
+            text = { Text("$name vakti için tüm kaza borcunuzu sıfırlamak istediğinize emin misiniz?", color = themeColors.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onSetDebt(0)
                     showResetDialog = false
                 }) {
-                    Text("SIFIRLA", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text("SIFIRLA", color = Color(0xFFF44336), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("İPTAL")
+                    Text("İPTAL", color = themeColors.textSecondary)
                 }
-            }
+            },
+            containerColor = themeColors.surface
         )
     }
 }
 
 @Composable
 fun ActionButton(text: String, onClick: () -> Unit) {
+    val themeColors = LocalAppThemeColors.current
     TextButton(onClick = onClick) {
-        Text(text, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+        Text(text, color = themeColors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     }
 }

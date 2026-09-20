@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.example.mkat_nur.service.EzanPlayerManager.stopEzan()
         
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -99,6 +100,11 @@ class MainActivity : ComponentActivity() {
                 MkatNurApp(prayerViewModel, authViewModel)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        com.example.mkat_nur.service.EzanPlayerManager.stopEzan()
     }
 }
 

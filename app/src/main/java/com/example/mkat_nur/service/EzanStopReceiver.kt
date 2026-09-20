@@ -6,11 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
 
 object EzanPlayerManager {
     private var activePlayer: MediaPlayer? = null
+    private var activeRingtone: Ringtone? = null
 
     fun playEzan(context: Context, soundUri: Uri) {
         stopEzan()
@@ -30,7 +33,18 @@ object EzanPlayerManager {
                 }
             }
         } catch (e: Exception) {
-            Log.e("EzanPlayerManager", "Play error: ${e.message}")
+            Log.e("EzanPlayerManager", "Play ezan error: ${e.message}")
+        }
+    }
+
+    fun playRingtone(context: Context, soundUri: Uri) {
+        stopEzan()
+        try {
+            activeRingtone = RingtoneManager.getRingtone(context, soundUri)?.apply {
+                play()
+            }
+        } catch (e: Exception) {
+            Log.e("EzanPlayerManager", "Play ringtone error: ${e.message}")
         }
     }
 
@@ -40,19 +54,26 @@ object EzanPlayerManager {
             activePlayer?.release()
         } catch (_: Exception) {}
         activePlayer = null
+
+        try {
+            activeRingtone?.stop()
+        } catch (_: Exception) {}
+        activeRingtone = null
     }
 
-    fun isPlaying(): Boolean = activePlayer?.isPlaying == true
+    fun isPlaying(): Boolean = (activePlayer?.isPlaying == true) || (activeRingtone?.isPlaying == true)
 }
 
 class EzanStopReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == ACTION_STOP_EZAN) {
-            EzanPlayerManager.stopEzan()
-            try {
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.cancel(NOTIFICATION_ID_EZAN)
-            } catch (_: Exception) {}
+        Log.d("EzanStopReceiver", "Received stop ezan action: ${intent.action}")
+        EzanPlayerManager.stopEzan()
+        try {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(NOTIFICATION_ID_EZAN)
+            notificationManager.cancelAll()
+        } catch (e: Exception) {
+            Log.e("EzanStopReceiver", "Cancel error: ${e.message}")
         }
     }
 
