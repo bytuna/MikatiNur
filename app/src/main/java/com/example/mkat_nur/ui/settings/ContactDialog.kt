@@ -58,7 +58,7 @@ fun ContactDialog(
                         Icon(
                             imageVector = Icons.Default.Email,
                             contentDescription = null,
-                            tint = Color(0xFFFF9800),
+                            tint = Color(0xFF4CAF50),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -66,7 +66,7 @@ fun ContactDialog(
                             text = "İletişime Geç",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFD700)
+                            color = Color(0xFF4CAF50)
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
@@ -96,12 +96,12 @@ fun ContactDialog(
                     value = subject,
                     onValueChange = { subject = it },
                     label = { Text("Konu / Başlık", color = Color.White.copy(0.7f)) },
-                    leadingIcon = { Icon(Icons.Default.Subject, null, tint = Color(0xFFFF9800)) },
+                    leadingIcon = { Icon(Icons.Default.Subject, null, tint = Color(0xFF4CAF50)) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFFFF9800),
+                        focusedBorderColor = Color(0xFF4CAF50),
                         unfocusedBorderColor = Color.White.copy(0.3f)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -118,7 +118,7 @@ fun ContactDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFFFF9800),
+                        focusedBorderColor = Color(0xFF4CAF50),
                         unfocusedBorderColor = Color.White.copy(0.3f)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -134,7 +134,7 @@ fun ContactDialog(
                         checked = includeDeviceInfo,
                         onCheckedChange = { includeDeviceInfo = it },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFFF9800),
+                            checkedColor = Color(0xFF4CAF50),
                             uncheckedColor = Color.White.copy(0.6f)
                         )
                     )
@@ -158,7 +158,7 @@ fun ContactDialog(
                         )
                         onDismiss()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()

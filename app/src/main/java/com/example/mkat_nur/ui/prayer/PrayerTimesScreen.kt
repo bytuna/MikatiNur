@@ -549,7 +549,7 @@ fun ModernCountdown(state: CountdownState) {
             Spacer(Modifier.height(12.dp))
 
             Surface(
-                color = themeColors.primary.copy(alpha = 0.12f),
+                color = themeColors.textPrimary.copy(alpha = 0.12f),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(
                     width = 1.5.dp,
@@ -559,7 +559,7 @@ fun ModernCountdown(state: CountdownState) {
                 Text(
                     text = "${state.currentPrayer} Vakti", 
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp), 
-                    color = themeColors.primary, 
+                    color = themeColors.textPrimary, 
                     fontSize = 15.sp, 
                     fontWeight = FontWeight.Bold
                 )
@@ -602,7 +602,7 @@ fun PrayerTimeItem(name: String, time: String, isActive: Boolean, onPrayerClick:
     Box(
         modifier = modifier
             .background(
-                if (isActive) themeColors.primary.copy(alpha = 0.15f) else themeColors.surface,
+                if (isActive) themeColors.accent.copy(alpha = 0.20f) else themeColors.surface,
                 RoundedCornerShape(16.dp)
             )
             .border(
@@ -614,8 +614,8 @@ fun PrayerTimeItem(name: String, time: String, isActive: Boolean, onPrayerClick:
             .padding(12.dp)
     ) {
         Column {
-            Text(name, color = if (isActive) themeColors.primary else themeColors.textSecondary, fontSize = 10.sp, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal)
-            Text(time.substringBefore(" "), color = if (isActive) themeColors.primary else themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(name, color = if (isActive) themeColors.accent else themeColors.textSecondary, fontSize = 10.sp, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal)
+            Text(time.substringBefore(" "), color = themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
