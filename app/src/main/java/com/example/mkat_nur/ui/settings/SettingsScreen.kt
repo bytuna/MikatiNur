@@ -2,6 +2,7 @@ package com.example.mkat_nur.ui.settings
 
 import android.app.Activity
 import android.content.Intent
+import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -33,9 +34,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mkat_nur.R
 import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import com.example.mkat_nur.viewmodel.UpdateStatus
+
+data class CustomSoundItem(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val resId: Int
+)
+
+data class EzanMakamItem(
+    val prayerKey: String,
+    val prayerName: String,
+    val makam: String,
+    val muezzin: String,
+    val resId: Int
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -482,13 +499,14 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
             ) {
                 AnimatedVisibility(visible = isNotifExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                     Column {
-                        Text("Vakit Hatırlatıcı (dk):", color = themeColors.textSecondary, fontSize = 12.sp)
+                        Text("Vakit Hatırlatıcı Zamanlaması:", color = themeColors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Vaktinde (0 dk) bildirimleri aşağıdaki vakit ses moduna göre (Ezan/Sistem/Sessiz) çalar. 15, 30, 45 dk erken bildirimler ise sadece kısa sistem bildirim sesi çalar.", color = themeColors.textSecondary.copy(alpha = 0.85f), fontSize = 10.5.sp, modifier = Modifier.padding(top = 2.dp, bottom = 6.dp), lineHeight = 15.sp)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             listOf(0, 15, 30, 45).forEach { mins ->
                                 FilterChip(
                                     selected = reminderMinutes.contains(mins),
                                     onClick = { viewModel.toggleReminderMinute(mins) },
-                                    label = { Text(if (mins == 0) "Vaktinde" else "$mins dk", color = if (reminderMinutes.contains(mins)) Color.White else themeColors.textPrimary) },
+                                    label = { Text(if (mins == 0) "Vaktinde (0 dk)" else "$mins dk önce", color = if (reminderMinutes.contains(mins)) Color.White else themeColors.textPrimary, fontSize = 11.sp) },
                                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF4CAF50))
                                 )
                             }
@@ -536,7 +554,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             onClick = {
                                 val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                                     putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
-                                    putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Bildirim Sesi Seç")
+                                    putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Sistem Bildirim Sesi Seç")
                                     putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, notificationSoundUri?.let { Uri.parse(it) })
                                 }
                                 soundPickerLauncher.launch(intent)
@@ -546,7 +564,172 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         ) {
                             Icon(Icons.Default.MusicNote, null, tint = Color.White)
                             Spacer(Modifier.width(8.dp))
-                            Text(if (notificationSoundUri == null) "Varsayılan Bildirim Sesi" else "Sesi Değiştir", color = Color.White)
+                            Text(if (notificationSoundUri == null) "Sistem Bildirim Sesi Seç" else "Sistem Sesini Değiştir", color = Color.White)
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+                        Spacer(Modifier.height(16.dp))
+
+                        // VAKİT BAZLI EZAN VE MAKAM AYARLARI (5 VAKİT EZAN VE ezan_bilgileri.txt)
+                        Text("Vakit Bazlı Ezan ve Makam Ayarları:", color = themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text("5 vakit ezan sesini makam bilgileriyle dinleyin ve vakitlere özel ses modlarını ayarlayın.", color = themeColors.textSecondary, fontSize = 11.5.sp)
+                        Spacer(Modifier.height(10.dp))
+
+                        var activeAudioPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+                        var playingResId by remember { mutableStateOf<Int?>(null) }
+
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                activeAudioPlayer?.stop()
+                                activeAudioPlayer?.release()
+                                activeAudioPlayer = null
+                            }
+                        }
+
+                        // ezan_bilgileri.txt dosyasından bilgileri oku
+                        val ezanMakamList = remember(context) {
+                            val list = mutableListOf<EzanMakamItem>()
+                            try {
+                                val lines = context.resources.openRawResource(R.raw.ezan_bilgileri).bufferedReader().use { it.readLines() }
+                                val resMap = mapOf(
+                                    "sabah" to R.raw.sabah_ezani,
+                                    "ogle" to R.raw.ogle_ezani,
+                                    "ikindi" to R.raw.ikindi_ezani,
+                                    "aksam" to R.raw.aksam_ezani,
+                                    "yatsi" to R.raw.yatsi_ezani
+                                )
+                                val keys = listOf("sabah", "ogle", "ikindi", "aksam", "yatsi")
+
+                                lines.forEachIndexed { index, line ->
+                                    val parts = line.split(",").map { it.trim() }
+                                    if (parts.size >= 3 && index < keys.size) {
+                                        val key = keys[index]
+                                        val resId = resMap[key] ?: R.raw.sabah_ezani
+                                        list.add(EzanMakamItem(key, parts[0], parts[1], parts[2], resId))
+                                    }
+                                }
+                            } catch (_: Exception) {}
+
+                            if (list.isEmpty()) {
+                                list.addAll(listOf(
+                                    EzanMakamItem("sabah", "Sabah Ezanı", "Sabâ Makamı", "Mekke-i Mükerreme Baş Müezzini", R.raw.sabah_ezani),
+                                    EzanMakamItem("ogle", "Öğle Ezanı", "Râst Makamı", "Mescid-i Nebevi Müezzini", R.raw.ogle_ezani),
+                                    EzanMakamItem("ikindi", "İkindi Ezanı", "Hicâz Makamı", "İstanbul Selatin Cami Müezzini", R.raw.ikindi_ezani),
+                                    EzanMakamItem("aksam", "Akşam Ezanı", "Segâh Makamı", "Kudüs Mescid-i Aksa Müezzini", R.raw.aksam_ezani),
+                                    EzanMakamItem("yatsi", "Yatsı Ezanı", "Uşşâk Makamı", "Kahire El-Ezher Müezzini", R.raw.yatsi_ezani)
+                                ))
+                            }
+                            list
+                        }
+
+                        val prayerSoundModes by viewModel.prayerSoundModes.collectAsState()
+
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            ezanMakamList.forEach { item ->
+                                val currentMode = prayerSoundModes[item.prayerKey] ?: viewModel.getPrayerSoundMode(item.prayerKey)
+                                val isPlaying = playingResId == item.resId
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = themeColors.background.copy(alpha = 0.5f)),
+                                    shape = RoundedCornerShape(14.dp),
+                                    border = BorderStroke(1.dp, themeColors.cardBorder)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(item.prayerName, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                    Spacer(Modifier.width(8.dp))
+                                                    Surface(
+                                                        color = Color(0xFF4CAF50).copy(alpha = 0.18f),
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        border = BorderStroke(1.dp, Color(0xFF4CAF50))
+                                                    ) {
+                                                        Text(
+                                                            text = item.makam,
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                            color = Color(0xFF4CAF50),
+                                                            fontSize = 10.5.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                                Text(item.muezzin, color = themeColors.textSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
+                                            }
+
+                                            // Start / Stop Oynat/Durdur Butonu
+                                            IconButton(
+                                                onClick = {
+                                                    try {
+                                                        if (isPlaying) {
+                                                            activeAudioPlayer?.stop()
+                                                            activeAudioPlayer?.release()
+                                                            activeAudioPlayer = null
+                                                            playingResId = null
+                                                        } else {
+                                                            activeAudioPlayer?.stop()
+                                                            activeAudioPlayer?.release()
+                                                            activeAudioPlayer = MediaPlayer.create(context, item.resId)
+                                                            activeAudioPlayer?.setOnCompletionListener {
+                                                                playingResId = null
+                                                            }
+                                                            activeAudioPlayer?.start()
+                                                            playingResId = item.resId
+                                                        }
+                                                    } catch (_: Exception) {}
+                                                },
+                                                modifier = Modifier.size(38.dp).background(
+                                                    if (isPlaying) Color(0xFFF44336) else Color(0xFF4CAF50),
+                                                    CircleShape
+                                                )
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                                    contentDescription = if (isPlaying) "Durdur" else "Oynat",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        HorizontalDivider(color = themeColors.cardBorder.copy(alpha = 0.5f))
+                                        Spacer(Modifier.height(8.dp))
+
+                                        Text("Vakit Ses Modu:", color = themeColors.textSecondary, fontSize = 11.sp)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            val modes = listOf(
+                                                "ezan" to "Ezan Oku",
+                                                "system" to "Sistem Sesi",
+                                                "silent" to "Sessiz"
+                                            )
+                                            modes.forEach { (mKey, mLabel) ->
+                                                FilterChip(
+                                                    selected = currentMode == mKey,
+                                                    onClick = { viewModel.setPrayerSoundMode(item.prayerKey, mKey) },
+                                                    label = { Text(mLabel, fontSize = 10.5.sp, fontWeight = FontWeight.Medium) },
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = Color(0xFF4CAF50),
+                                                        selectedLabelColor = Color.White,
+                                                        labelColor = themeColors.textPrimary
+                                                    ),
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
