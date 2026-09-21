@@ -93,7 +93,7 @@ class PrayerManager(private val context: Context) {
     }
 
     fun getNextVakitInfo(data: PrayerData): Pair<String, Long>? {
-        val now = Calendar.getInstance()
+        val nowMillis = System.currentTimeMillis()
         try {
             val imsak = getCalFromTime(data.timings.fajr.substringBefore(" "))
             val gunes = getCalFromTime(data.timings.sunrise.substringBefore(" "))
@@ -103,12 +103,12 @@ class PrayerManager(private val context: Context) {
             val yatsi = getCalFromTime(data.timings.isha.substringBefore(" "))
 
             val result = when {
-                now.before(imsak) -> "İmsak" to imsak
-                now.before(gunes) -> "Güneş" to gunes
-                now.before(ogle) -> "Öğle" to ogle
-                now.before(ikindi) -> "İkindi" to ikindi
-                now.before(aksam) -> "Akşam" to aksam
-                now.before(yatsi) -> "Yatsı" to yatsi
+                nowMillis < imsak.timeInMillis -> "İmsak" to imsak
+                nowMillis < gunes.timeInMillis -> "Güneş" to gunes
+                nowMillis < ogle.timeInMillis -> "Öğle" to ogle
+                nowMillis < ikindi.timeInMillis -> "İkindi" to ikindi
+                nowMillis < aksam.timeInMillis -> "Akşam" to aksam
+                nowMillis < yatsi.timeInMillis -> "Yatsı" to yatsi
                 else -> {
                     imsak.add(Calendar.DAY_OF_YEAR, 1)
                     "İmsak" to imsak

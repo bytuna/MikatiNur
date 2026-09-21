@@ -193,6 +193,25 @@ class DialWidgetProvider : AppWidgetProvider() {
 
                     views.setChronometer(R.id.widget_dial_chronometer, baseTime, null, true)
                     views.setChronometerCountDown(R.id.widget_dial_chronometer, true)
+
+                    // Vakit doldugu an widget'ı tam 00:00 anında otomatik yenile
+                    try {
+                        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                        val refreshIntent = Intent(context, DialWidgetProvider::class.java).apply {
+                            action = "REFRESH_WIDGET"
+                        }
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context,
+                            998,
+                            refreshIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                        try {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetTime + 500L, pendingIntent)
+                        } catch (_: SecurityException) {
+                            alarmManager.set(AlarmManager.RTC_WAKEUP, targetTime + 500L, pendingIntent)
+                        }
+                    } catch (_: Exception) {}
                 }
             }
 

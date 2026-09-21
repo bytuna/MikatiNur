@@ -217,10 +217,35 @@ class QuoteWidgetProvider : AppWidgetProvider() {
                     }
                     views.setTextViewText(R.id.widget_next_vakit_label, "$suffix:")
 
-                    val remainingMillis = nextVakitTime - System.currentTimeMillis()
+                    val nowMillis = System.currentTimeMillis()
+                    var targetMillis = nextVakitTime
+                    if (targetMillis <= nowMillis) {
+                        targetMillis += 86400000L
+                    }
+
+                    val remainingMillis = (targetMillis - nowMillis).coerceAtLeast(0)
                     val baseTime = SystemClock.elapsedRealtime() + remainingMillis
                     views.setChronometer(R.id.widget_countdown, baseTime, null, true)
                     views.setChronometerCountDown(R.id.widget_countdown, true)
+
+                    // Vakit doldugu an widget'ı tam 00:00 anında otomatik yenile
+                    try {
+                        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                        val refreshIntent = Intent(context, QuoteWidgetProvider::class.java).apply {
+                            action = "REFRESH_WIDGET"
+                        }
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context,
+                            999,
+                            refreshIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                        try {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis + 500L, pendingIntent)
+                        } catch (_: SecurityException) {
+                            alarmManager.set(AlarmManager.RTC_WAKEUP, targetMillis + 500L, pendingIntent)
+                        }
+                    } catch (_: Exception) {}
                 }
                 views.setTextColor(R.id.widget_countdown, titleColor)
                 
