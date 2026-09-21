@@ -181,8 +181,16 @@ class DialWidgetProvider : AppWidgetProvider() {
 
                 if (nextVakitInfo != null) {
                     val (_, nextVakitTime) = nextVakitInfo
-                    val remainingMillis = (nextVakitTime - System.currentTimeMillis()).coerceAtLeast(0)
+                    val nowMillis = System.currentTimeMillis()
+                    
+                    var targetTime = nextVakitTime
+                    if (targetTime <= nowMillis) {
+                        targetTime += 86400000L // Vakit geçmişse 24 saat ekle (yarınki vakit)
+                    }
+
+                    val remainingMillis = (targetTime - nowMillis).coerceAtLeast(0)
                     val baseTime = SystemClock.elapsedRealtime() + remainingMillis
+
                     views.setChronometer(R.id.widget_dial_chronometer, baseTime, null, true)
                     views.setChronometerCountDown(R.id.widget_dial_chronometer, true)
                 }
