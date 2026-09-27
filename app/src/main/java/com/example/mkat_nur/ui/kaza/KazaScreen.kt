@@ -69,6 +69,93 @@ fun KazaScreen(
                 contentPadding = PaddingValues(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // BULUT SENKRONİZASYON BİLGİ KARTI
+                item {
+                    val syncState by viewModel.syncState.collectAsState()
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        color = themeColors.surface,
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, themeColors.cardBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            when (val sync = syncState) {
+                                is com.example.mkat_nur.viewmodel.KazaSyncState.Synced -> {
+                                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CloudDone,
+                                            contentDescription = null,
+                                            tint = Color(0xFF4CAF50),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                        Spacer(Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = "Bulut Senkronize Edildi",
+                                                color = themeColors.textPrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                            Text(
+                                                text = "${sync.userEmail} hesabınızda güvende",
+                                                color = themeColors.textSecondary,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    IconButton(onClick = { viewModel.checkAndSyncCloud() }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Refresh, "Yenile", tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                                is com.example.mkat_nur.viewmodel.KazaSyncState.NotLoggedIn -> {
+                                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CloudOff,
+                                            contentDescription = null,
+                                            tint = themeColors.accent,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                        Spacer(Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = "Cihazınızda Kayıtlı",
+                                                color = themeColors.textPrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                            Text(
+                                                text = "Silip yükleme için giriş yapıp güvenceye alın",
+                                                color = themeColors.textSecondary,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                is com.example.mkat_nur.viewmodel.KazaSyncState.Syncing -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFF4CAF50), strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(10.dp))
+                                        Text("Bulut verileri senkronize ediliyor...", color = themeColors.textSecondary, fontSize = 12.sp)
+                                    }
+                                }
+                                is com.example.mkat_nur.viewmodel.KazaSyncState.Error -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Warning, null, tint = Color(0xFFF44336), modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Senkronizasyon hatası", color = Color(0xFFF44336), fontSize = 12.sp)
+                                    }
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+
                 item { KazaItem("Sabah", fajrDebt, onKazaPrayed = { viewModel.updateDebt("fajr", -1) }, onSetDebt = { viewModel.setDebt("fajr", it) }) }
                 item { KazaItem("Öğle", dhuhrDebt, onKazaPrayed = { viewModel.updateDebt("dhuhr", -1) }, onSetDebt = { viewModel.setDebt("dhuhr", it) }) }
                 item { KazaItem("İkindi", asrDebt, onKazaPrayed = { viewModel.updateDebt("asr", -1) }, onSetDebt = { viewModel.setDebt("asr", it) }) }

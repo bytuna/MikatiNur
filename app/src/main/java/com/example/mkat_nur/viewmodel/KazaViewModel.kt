@@ -2,13 +2,27 @@ package com.example.mkat_nur.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+sealed class KazaSyncState {
+    object Idle : KazaSyncState()
+    object Syncing : KazaSyncState()
+    data class Synced(val userEmail: String) : KazaSyncState()
+    object NotLoggedIn : KazaSyncState()
+    data class Error(val message: String) : KazaSyncState()
+}
+
 class KazaViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("kaza_prefs", Context.MODE_PRIVATE)
+    private val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
     private val _fajrDebt = MutableStateFlow(prefs.getInt("fajr_debt", 0))
     val fajrDebt: StateFlow<Int> = _fajrDebt.asStateFlow()
@@ -27,6 +41,95 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _witrDebt = MutableStateFlow(prefs.getInt("witr_debt", 0))
     val witrDebt: StateFlow<Int> = _witrDebt.asStateFlow()
+
+    private val _syncState = MutableStateFlow<KazaSyncState>(KazaSyncState.Idle)
+    val syncState: StateFlow<KazaSyncState> = _syncState.asStateFlow()
+
+    init {
+        checkAndSyncCloud()
+    }
+
+    fun checkAndSyncCloud() {
+        val user = try { auth.currentUser } catch (_: Exception) { null }
+        if (user == null) {
+            _syncState.value = KazaSyncState.NotLoggedIn
+            return
+        }
+
+        _syncState.value = KazaSyncState.Syncing
+        try {
+            val userDoc = firestore.collection("users").document(user.uid).collection("data").document("kaza_debt")
+
+            userDoc.get().addOnSuccessListener { snapshot ->
+                if (snapshot != null && snapshot.exists()) {
+                    val cloudFajr = (snapshot.getLong("fajr") ?: 0L).toInt()
+                    val cloudDhuhr = (snapshot.getLong("dhuhr") ?: 0L).toInt()
+                    val cloudAsr = (snapshot.getLong("asr") ?: 0L).toInt()
+                    val cloudMaghrib = (snapshot.getLong("maghrib") ?: 0L).toInt()
+                    val cloudIsha = (snapshot.getLong("isha") ?: 0L).toInt()
+                    val cloudWitr = (snapshot.getLong("witr") ?: 0L).toInt()
+
+                    _fajrDebt.value = cloudFajr
+                    _dhuhrDebt.value = cloudDhuhr
+                    _asrDebt.value = cloudAsr
+                    _maghribDebt.value = cloudMaghrib
+                    _ishaDebt.value = cloudIsha
+                    _witrDebt.value = cloudWitr
+
+                    prefs.edit().apply {
+                        putInt("fajr_debt", cloudFajr)
+                        putInt("dhuhr_debt", cloudDhuhr)
+                        putInt("asr_debt", cloudAsr)
+                        putInt("maghrib_debt", cloudMaghrib)
+                        putInt("isha_debt", cloudIsha)
+                        putInt("witr_debt", cloudWitr)
+                        apply()
+                    }
+
+                    val accountName = user.email.takeIf { !it.isNullOrEmpty() } ?: user.displayName.takeIf { !it.isNullOrEmpty() } ?: "Kullanıcı"
+                    _syncState.value = KazaSyncState.Synced(accountName)
+                } else {
+                    pushLocalToCloud()
+                }
+            }.addOnFailureListener { e ->
+                Log.e("KazaSync", "Fetch error: ${e.message}")
+                _syncState.value = KazaSyncState.Error(e.message ?: "Bulut senkronizasyon hatası")
+            }
+        } catch (e: Exception) {
+            Log.e("KazaSync", "Sync Exception: ${e.message}")
+            _syncState.value = KazaSyncState.NotLoggedIn
+        }
+    }
+
+    private fun pushLocalToCloud() {
+        val user = try { auth.currentUser } catch (_: Exception) { null } ?: return
+
+        val data = hashMapOf(
+            "fajr" to _fajrDebt.value,
+            "dhuhr" to _dhuhrDebt.value,
+            "asr" to _asrDebt.value,
+            "maghrib" to _maghribDebt.value,
+            "isha" to _ishaDebt.value,
+            "witr" to _witrDebt.value,
+            "last_updated" to System.currentTimeMillis(),
+            "user_email" to (user.email ?: "")
+        )
+
+        try {
+            firestore.collection("users").document(user.uid).collection("data").document("kaza_debt")
+                .set(data, SetOptions.merge())
+                .addOnSuccessListener {
+                    val accountName = user.email.takeIf { !it.isNullOrEmpty() } ?: user.displayName.takeIf { !it.isNullOrEmpty() } ?: "Kullanıcı"
+                    _syncState.value = KazaSyncState.Synced(accountName)
+                }
+                .addOnFailureListener { e ->
+                    Log.e("KazaSync", "Push error: ${e.message}")
+                    _syncState.value = KazaSyncState.Error(e.message ?: "Yedekleme hatası")
+                }
+        } catch (e: Exception) {
+            Log.e("KazaSync", "Push Exception: ${e.message}")
+        }
+    }
 
     fun updateDebt(prayer: String, delta: Int) {
         when (prayer) {
@@ -55,6 +158,7 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putInt("witr_debt", _witrDebt.value).apply()
             }
         }
+        pushLocalToCloud()
     }
 
     fun setDebt(prayer: String, total: Int) {
@@ -84,6 +188,7 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putInt("witr_debt", _witrDebt.value).apply()
             }
         }
+        pushLocalToCloud()
     }
 
     fun resetAll() {
@@ -94,5 +199,6 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
         _ishaDebt.value = 0
         _witrDebt.value = 0
         prefs.edit().clear().apply()
+        pushLocalToCloud()
     }
 }
