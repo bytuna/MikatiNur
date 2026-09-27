@@ -29,7 +29,8 @@ Denildikten sonra dua edilir. Duadan sonra bir defa [RENK:altın]Faʿlem ennehu[
 
 [ORTA][RENK:kırmızı]Bismillâhirraḥmânirraḥîm.[/RENK]
 
-[RENK:altın]İnnallâhe ve melâiketehû yüšallûne ʿale'n-nebiy. Yâ eyyühelleẕîne âmenû šallû ʿaleyhi ve sellimû teslîmâ. Lebbeyk.[/RENK]
+[RENK:altın]İnnallâhe ve melâiketehû yüšallûne ʿale'n-nebiy. Yâ eyyühelleẕîne âmenû šallû ʿaleyhi ve sellimû teslîmâ.[/RENK]
+[RENK:altın]Lebbeyk.[/RENK]
 
 [RENK:mavi]Allahümme šalli ʿalâ seyyidinâ Muḥammedin ve ʿalâ âli seyyidinâ Muḥammed.[/RENK]
 [RENK:mavi]Bi-ʿadedi külli dâin ve devâin ve bârik ve sellim ʿaleyhi ve ʿaleyhim kesîrâ.[/RENK]
@@ -37,7 +38,6 @@ Denildikten sonra dua edilir. Duadan sonra bir defa [RENK:altın]Faʿlem ennehu[
 [RENK:mavi]Bi-ʿadedi külli dâin ve devâin ve bârik ve sellim ʿaleyhi ve ʿaleyhim kesîrâ.[/RENK]
 [RENK:mavi]Allahümme šalli ʿalâ seyyidinâ Muḥammedin ve ʿalâ âli seyyidinâ Muḥammed.[/RENK]
 [RENK:mavi]Bi-ʿadedi külli dâin ve devâin ve bârik ve sellim ʿaleyhi ve ʿaleyhim kesîran kesîrâ.[/RENK]
-[RENK:mavi]Šalli ve sellim yâ Rabbi 'alâ ḥabîbike Muḥammedin ve ʿalâ cemîʿı'l-enbiyâi ve'l-mürselîn ve ʿalâ âli küllin ve šahbi küllin ecmaʿîn. Âmin ve'l-ḥamdü lillâhi Rabbi'l-âlemîn.[/RENK]
 
 [RENK:mavi]Šalli ve sellim yâ Rabbi 'alâ ḥabîbike Muḥammedin ve ʿalâ cemîʿı'l-enbiyâi ve'l-mürselîn ve ʿalâ âli küllin ve šahbi küllin ecmaʿîn. Âmin ve'l-ḥamdü lillâhi Rabbi'l-âlemîn.[/RENK]
 

@@ -136,10 +136,6 @@ fun MkatNurApp(
         )
     }
 
-    val isGayriMuntesirAllowed = remember(currentUser) {
-        com.example.mkat_nur.util.GayriMuntesirManager.isUserAllowed(context, currentUser?.email)
-    }
-
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -425,19 +421,6 @@ fun MkatNurApp(
                         )
                     }
 
-                    if (isGayriMuntesirAllowed) {
-                        NavigationDrawerItem(
-                            label = { Text("Gayri Münteşir", color = themeColors.accent, fontWeight = FontWeight.Bold) },
-                            selected = false,
-                            icon = { Icon(Icons.Default.Lock, null, tint = themeColors.accent) },
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                navController.navigate("gayri_muntesir")
-                            },
-                            colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                        )
-                    }
-
                     HorizontalDivider(color = themeColors.drawerTextColor.copy(alpha = 0.2f))
                     NavigationDrawerItem(
                         label = { Text("Ayarlar", color = themeColors.drawerTextColor) },
@@ -547,11 +530,6 @@ fun MkatNurApp(
             composable("women_special") {
                 WomenSpecialScreen(
                     onBackClick = { navController.popBackStack() }
-                )
-            }
-            composable("gayri_muntesir") {
-                com.example.mkat_nur.ui.gayri_muntesir.GayriMuntesirScreen(
-                    onMenuClick = { scope.launch { drawerState.open() } }
                 )
             }
             composable("religious_days") {
