@@ -1,4 +1,3 @@
----
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/bytuna/MikatiNur?color=orange&label=S%C3%BCr%C3%BCm)
 ![Android](https://img.shields.io/badge/Platform-Android-green?logo=android)
