@@ -118,7 +118,9 @@ Uygulama hakkındaki görüşleriniz, hata bildirimleriniz veya özellik öneril
 
 * 👳‍♂️ Geliştirici: ByTuna
 
-* 📩 E-posta: [E-Posta Gönder](bytuna61@gmail.com)
+* 🌐 Web Site : [Mikat-ı Nur](https://www.mikatinur.com.tr)
+
+* 📩 E-posta: [E-Posta Gönder](ilker.tuna@mikatinur.com.tr)
 
 * 📚 GitHub: Issues bölümünden bildirim yapabilirsiniz.
 
