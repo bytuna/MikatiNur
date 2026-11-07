@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.example.mkat_nur.model.*
+import com.example.mkat_nur.network.PlaceOption
 import com.example.mkat_nur.receiver.PrayerNotificationReceiver
 import com.example.mkat_nur.util.NotificationHelper
 import com.google.android.gms.location.*
@@ -312,6 +313,76 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 Log.e("PrayerViewModel", "İlçeler çekilemedi: ${e.message}")
             }
+        }
+    }
+
+    // ---- Ülke / Şehir / İlçe seçimi (kendi sitemizin yer listesi) ----
+    private val _countries = MutableStateFlow<List<PlaceOption>>(emptyList())
+    val countries: StateFlow<List<PlaceOption>> = _countries.asStateFlow()
+
+    private val _regions = MutableStateFlow<List<PlaceOption>>(emptyList())
+    val regions: StateFlow<List<PlaceOption>> = _regions.asStateFlow()
+
+    private val _districts = MutableStateFlow<List<PlaceOption>>(emptyList())
+    val districts: StateFlow<List<PlaceOption>> = _districts.asStateFlow()
+
+    private val _placesLoading = MutableStateFlow(false)
+    val placesLoading: StateFlow<Boolean> = _placesLoading.asStateFlow()
+
+    fun fetchCountries() {
+        if (_countries.value.size > 1) return
+        viewModelScope.launch {
+            _placesLoading.value = true
+            _countries.value = try {
+                RetrofitClient.mikatInstance.countries().items.ifEmpty { listOf(PlaceOption("2", "Türkiye")) }
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "Ülkeler çekilemedi: ${e.message}")
+                listOf(PlaceOption("2", "Türkiye"))
+            }
+            _placesLoading.value = false
+        }
+    }
+
+    fun fetchRegions(countryId: String) {
+        _regions.value = emptyList()
+        _districts.value = emptyList()
+        viewModelScope.launch {
+            _placesLoading.value = true
+            _regions.value = try {
+                RetrofitClient.mikatInstance.regions(countryId).items
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "İller çekilemedi: ${e.message}")
+                if (countryId == "2") {
+                    try {
+                        val collator = Collator.getInstance(Locale.forLanguageTag("tr-TR"))
+                        RetrofitClient.diyanetInstance.getSehirler()
+                            .map { PlaceOption(it.sehirId, it.sehirAdi) }
+                            .sortedWith { a, b -> collator.compare(a.name, b.name) }
+                    } catch (e2: Exception) { emptyList() }
+                } else emptyList()
+            }
+            _placesLoading.value = false
+        }
+    }
+
+    fun fetchDistricts(regionId: String, isTurkey: Boolean) {
+        _districts.value = emptyList()
+        viewModelScope.launch {
+            _placesLoading.value = true
+            _districts.value = try {
+                RetrofitClient.mikatInstance.districts(regionId).items
+            } catch (e: Exception) {
+                Log.e("PrayerViewModel", "İlçeler çekilemedi: ${e.message}")
+                if (isTurkey) {
+                    try {
+                        val collator = Collator.getInstance(Locale.forLanguageTag("tr-TR"))
+                        RetrofitClient.diyanetInstance.getIlceler(regionId)
+                            .map { PlaceOption(it.ilceId, it.ilceAdi) }
+                            .sortedWith { a, b -> collator.compare(a.name, b.name) }
+                    } catch (e2: Exception) { emptyList() }
+                } else emptyList()
+            }
+            _placesLoading.value = false
         }
     }
 
@@ -646,7 +717,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     _lastUpdateTimestamp.value = now
                     prefs.edit().putLong("last_update_timestamp", now).apply()
 
-                    _dataSource.value = "Diyanet (Resmi)"
+                    _dataSource.value = if (com.example.mkat_nur.network.VakitSource.isUmmAlQura(cityIdentifier)) "Ümmü'l-Kurâ (Hesaplama)" else "Diyanet (Resmi)"
                     allPrayerDataList = responseList.map { it.toPrayerData() }
                     _allVakitler.value = allPrayerDataList
                     saveVakitlerToCache(allPrayerDataList) // Hafızaya kaydet

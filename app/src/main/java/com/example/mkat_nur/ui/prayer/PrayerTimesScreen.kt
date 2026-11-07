@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.mkat_nur.model.PrayerData
 import com.example.mkat_nur.model.Province
+import com.example.mkat_nur.network.PlaceOption
 import com.example.mkat_nur.service.PrayerNotificationService
 import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.util.ShareUtils
@@ -623,49 +625,115 @@ fun PrayerTimeItem(name: String, time: String, isActive: Boolean, onPrayerClick:
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedSehirId by remember { mutableStateOf<String?>(null) }
-    var selectedSehirName by remember { mutableStateOf("") }
-
-    val sehirler by viewModel.sehirler.collectAsState()
-    val ilceler by viewModel.ilceler.collectAsState()
-
-    val trLocale = remember { Locale.forLanguageTag("tr-TR") }
-    
-    val filteredSehirler = remember(sehirler, searchQuery) {
-        sehirler.filter { it.sehirAdi.contains(searchQuery, ignoreCase = true) }
-    }
-    val filteredIlceler = remember(ilceler, searchQuery) {
-        ilceler.filter { it.ilceAdi.contains(searchQuery, ignoreCase = true) }
-    }
-
+    val countries by viewModel.countries.collectAsState()
+    val regions by viewModel.regions.collectAsState()
+    val districts by viewModel.districts.collectAsState()
+    val loading by viewModel.placesLoading.collectAsState()
+    val selected by viewModel.selectedProvince.collectAsState()
     val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
+
+    // 0: ülke, 1: il / şehir, 2: ilçe
+    var step by remember { mutableIntStateOf(0) }
+    var country by remember { mutableStateOf<PlaceOption?>(null) }
+    var region by remember { mutableStateOf<PlaceOption?>(null) }
+    var query by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) { viewModel.fetchCountries() }
+
+    // Tek il / tek ilçe varsa bir sonraki adıma otomatik geç
+    LaunchedEffect(regions, loading, step) {
+        if (step == 1 && !loading && regions.size == 1) {
+            val only = regions[0]
+            region = only
+            step = 2
+            query = ""
+            viewModel.fetchDistricts(only.id, country?.id == "2")
+        }
+    }
+    LaunchedEffect(districts, loading, step) {
+        if (step == 2 && !loading && districts.size == 1) {
+            val only = districts[0]
+            viewModel.onProvinceSelected(Province(only.name, only.id))
+            onDismiss()
+        }
+    }
+
+    val source = when (step) {
+        0 -> countries.sortedByDescending { it.id == "2" } // Türkiye en üstte
+        1 -> regions
+        else -> districts
+    }
+    val filtered = remember(source, query) { source.filter { it.name.contains(query, ignoreCase = true) } }
+
+    val title = when (step) {
+        0 -> "Ülke Seçin"
+        1 -> "${country?.name ?: ""} · İl / Şehir"
+        else -> "${region?.name ?: ""} · İlçe"
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier.padding(28.dp),
+        modifier = Modifier.padding(24.dp),
         content = {
             Card(
                 colors = CardDefaults.cardColors(containerColor = themeColors.dialogSurface),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(28.dp),
+                border = BorderStroke(1.dp, themeColors.cardBorder)
             ) {
-                Column(modifier = Modifier.padding(20.dp).fillMaxHeight(0.85f)) {
-                    Text(
-                        if (selectedSehirId == null) "Şehir Seçin" else "$selectedSehirName - İlçe Seçin",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = themeColors.textPrimary
-                    )
-                    
+                Column(modifier = Modifier.padding(20.dp).fillMaxHeight(0.88f)) {
+                    // Başlık
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (step > 0) {
+                            IconButton(
+                                onClick = {
+                                    query = ""
+                                    // İl listesi bellekte duruyor; tek il varsa doğrudan ülke listesine dön
+                                    step = if (step == 2 && regions.size > 1) 1 else 0
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = themeColors.textPrimary)
+                            }
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = themeColors.textPrimary)
+                            Text(
+                                "Seçili: ${selected.name}",
+                                fontSize = 11.sp,
+                                color = themeColors.textSecondary
+                            )
+                        }
+                    }
+
                     Spacer(Modifier.height(12.dp))
-                    
+
+                    // GPS ile bul
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.refreshLocation()
+                            onDismiss()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, themeColors.accent.copy(alpha = 0.6f))
+                    ) {
+                        Icon(Icons.Default.MyLocation, null, tint = themeColors.accent, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Konumumu Kullan (GPS)", color = themeColors.accent, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
                     OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Arama yapın...", color = themeColors.textSecondary) },
+                        value = query,
+                        onValueChange = { query = it },
+                        placeholder = { Text("Ara...", color = themeColors.textSecondary) },
+                        leadingIcon = { Icon(Icons.Default.Search, null, tint = themeColors.textSecondary) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = themeColors.accent,
                             unfocusedBorderColor = themeColors.cardBorder,
@@ -673,59 +741,81 @@ fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
                             unfocusedTextColor = themeColors.textPrimary
                         )
                     )
-                    
-                    Spacer(Modifier.height(12.dp))
 
-                    if (selectedSehirId == null) {
-                        LazyColumn(modifier = Modifier.weight(1f)) {
-                            items(filteredSehirler) { sehir ->
-                                Text(
-                                    text = sehir.sehirAdi,
-                                    color = themeColors.textPrimary,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            selectedSehirId = sehir.sehirId
-                                            selectedSehirName = sehir.sehirAdi
-                                            searchQuery = ""
-                                            viewModel.fetchIlceler(sehir.sehirId)
+                    Spacer(Modifier.height(8.dp))
+
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        if (loading && source.isEmpty()) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = themeColors.accent
+                            )
+                        } else if (filtered.isEmpty()) {
+                            Text(
+                                if (source.isEmpty()) "Liste alınamadı. İnternet bağlantınızı kontrol edin." else "Sonuç bulunamadı.",
+                                color = themeColors.textSecondary,
+                                modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        } else {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                items(filtered, key = { it.id }) { item ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                query = ""
+                                                when (step) {
+                                                    0 -> {
+                                                        country = item
+                                                        step = 1
+                                                        viewModel.fetchRegions(item.id)
+                                                    }
+                                                    1 -> {
+                                                        region = item
+                                                        step = 2
+                                                        viewModel.fetchDistricts(item.id, country?.id == "2")
+                                                    }
+                                                    else -> {
+                                                        viewModel.onProvinceSelected(Province(item.name, item.id))
+                                                        onDismiss()
+                                                    }
+                                                }
+                                            }
+                                            .padding(vertical = 14.dp, horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(item.name, color = themeColors.textPrimary, fontSize = 15.sp)
+                                        if (step < 2) {
+                                            Icon(
+                                                Icons.Default.ChevronRight,
+                                                null,
+                                                tint = themeColors.textSecondary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp)
-                                )
-                                HorizontalDivider(color = themeColors.cardBorder)
-                            }
-                        }
-                    } else {
-                        LazyColumn(modifier = Modifier.weight(1f)) {
-                            items(filteredIlceler) { ilce ->
-                                Text(
-                                    text = ilce.ilceAdi,
-                                    color = themeColors.textPrimary,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.onProvinceSelected(Province(ilce.ilceAdi, ilce.ilceId))
-                                            onDismiss()
-                                        }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp)
-                                )
-                                HorizontalDivider(color = themeColors.cardBorder)
+                                    }
+                                    HorizontalDivider(color = themeColors.cardBorder)
+                                }
                             }
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    if (step > 0 && country?.id != "2") {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Bildirimler cihazınızın saatine göre çalışır. Bulunduğunuzdan farklı bir saat dilimindeki yer seçerseniz bildirim saatleri farklı olabilir.",
+                            color = themeColors.textSecondary,
+                            fontSize = 10.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        if (selectedSehirId != null) {
-                            TextButton(onClick = {
-                                selectedSehirId = null
-                                searchQuery = ""
-                            }) {
-                                Text("Geri", color = themeColors.accent)
-                            }
-                        }
                         TextButton(onClick = onDismiss) {
-                            Text("İptal", color = themeColors.textSecondary)
+                            Text("Kapat", color = themeColors.textSecondary)
                         }
                     }
                 }
