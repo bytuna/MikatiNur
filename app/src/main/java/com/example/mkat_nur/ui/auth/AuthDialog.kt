@@ -63,7 +63,7 @@ fun AuthDialog(
                 .fillMaxWidth()
                 .padding(8.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = themeColors.surface),
+            colors = CardDefaults.cardColors(containerColor = themeColors.dialogSurface),
             border = BorderStroke(1.dp, themeColors.cardBorder),
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {

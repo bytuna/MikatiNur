@@ -1,6 +1,7 @@
 package com.example.mkat_nur.viewmodel
 
 import com.example.mkat_nur.model.PrayerResponse
+import com.example.mkat_nur.network.MikatApi
 import com.example.mkat_nur.network.NamazApi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -24,6 +25,9 @@ object RetrofitClient {
     
     // Güvenilir ve ücretsiz Diyanet API Base URL'i
     private const val DIYANET_BASE_URL = "https://ezanvakti.emushaf.net/" 
+
+    // Kendi sitemizin vakit servisi
+    private const val MIKAT_BASE_URL = "https://www.mikatinur.com.tr/projects/namaz-vakti/api/v1/"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -52,6 +56,15 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(NamazApi::class.java)
+    }
+
+    val mikatInstance: MikatApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(MIKAT_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(MikatApi::class.java)
     }
 
     // Varsayılan olarak aladhanInstance'ı döndürür (Geriye dönük uyumluluk için)

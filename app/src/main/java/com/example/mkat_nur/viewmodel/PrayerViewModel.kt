@@ -566,8 +566,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                             null
                         }
                     }
-                    
-                    if (!addresses.isNullOrEmpty()) {
+
+                    if (!addresses.isNullOrEmpty() && (addresses[0].countryCode == null || addresses[0].countryCode == "TR")) {
                         val city = addresses[0].adminArea ?: "" // Örn: İstanbul
                         val district = addresses[0].subAdminArea ?: addresses[0].locality ?: "" // Örn: Pendik
                         
@@ -601,6 +601,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                         }
                     }
                 }
+                if (location != null) {
+                    val near = try {
+                        RetrofitClient.mikatInstance.nearest(location.latitude, location.longitude)
+                    } catch (e: Exception) { null }
+                    if (near != null && near.distanceKm <= 80) {
+                        onProvinceSelected(Province(near.name, near.id, location.latitude, location.longitude))
+                        return@launch
+                    }
+                }
                 _dataSource.value = "GPS Başarısız, Kayıtlı Veri."
                 fetchPrayerTimes()
             } catch (e: Exception) {
@@ -630,7 +639,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 loadVakitlerFromCache()
 
                 val cityIdentifier = if (_selectedProvince.value.id.isNotEmpty()) _selectedProvince.value.id else _selectedProvince.value.name
-                val responseList = RetrofitClient.diyanetInstance.getVakitler(cityIdentifier)
+                val responseList = com.example.mkat_nur.network.VakitSource.fetch(cityIdentifier)
                 
                 if (responseList.isNotEmpty()) {
                     val now = System.currentTimeMillis()

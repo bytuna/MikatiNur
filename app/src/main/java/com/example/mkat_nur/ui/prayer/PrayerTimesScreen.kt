@@ -95,9 +95,9 @@ fun PrayerTimesScreen(
                     Text("Daha Sonra")
                 }
             },
-            containerColor = Color(0xFF1B263B),
-            titleContentColor = Color.White,
-            textContentColor = Color.White.copy(alpha = 0.8f)
+            containerColor = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current.dialogSurface,
+            titleContentColor = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current.textPrimary,
+            textContentColor = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current.textSecondary
         )
     }
 
@@ -200,7 +200,7 @@ fun MainContent(
             text = {
                 Text("Kıble Saati, Güneş'in tam kıble yönünde olduğu vakittir. Bu vakitte Güneş'e doğru dönen bir kimse, aynı zamanda kıbleye dönmüş olur. Pusulaya ihtiyaç duymadan en doğru şekilde kıbleyi tayin etmenizi sağlar.")
             },
-            containerColor = themeColors.surface,
+            containerColor = themeColors.dialogSurface,
             titleContentColor = themeColors.textPrimary,
             textContentColor = themeColors.textSecondary
         )
@@ -647,7 +647,7 @@ fun ProvinceSelectionDialog(viewModel: PrayerViewModel, onDismiss: () -> Unit) {
         modifier = Modifier.padding(28.dp),
         content = {
             Card(
-                colors = CardDefaults.cardColors(containerColor = themeColors.surface),
+                colors = CardDefaults.cardColors(containerColor = themeColors.dialogSurface),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp).fillMaxHeight(0.85f)) {

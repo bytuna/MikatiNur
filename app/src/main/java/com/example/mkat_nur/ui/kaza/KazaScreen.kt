@@ -185,7 +185,7 @@ fun KazaScreen(
                     Text("İPTAL", color = themeColors.textSecondary)
                 }
             },
-            containerColor = themeColors.surface
+            containerColor = themeColors.dialogSurface
         )
     }
 }
@@ -308,7 +308,7 @@ fun KazaItem(name: String, debt: Int, onKazaPrayed: () -> Unit, onSetDebt: (Int)
                     Text("İPTAL", color = themeColors.textSecondary)
                 }
             },
-            containerColor = themeColors.surface
+            containerColor = themeColors.dialogSurface
         )
     }
 }

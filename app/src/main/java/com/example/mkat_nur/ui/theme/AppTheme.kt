@@ -13,7 +13,8 @@ data class ThemeColors(
     val cardBorder: Color,
     val drawerBackground: Color,
     val drawerTextColor: Color,
-    val gradientColors: List<Color>
+    val gradientColors: List<Color>,
+    val dialogSurface: Color = surface
 )
 
 enum class AppTheme(
@@ -38,7 +39,8 @@ enum class AppTheme(
             cardBorder = Color.White.copy(alpha = 0.2f),
             drawerBackground = Color(0xFF1B263B),
             drawerTextColor = Color.White,
-            gradientColors = listOf(Color(0xFF023E8A), Color(0xFF0077B6))
+            gradientColors = listOf(Color(0xFF023E8A), Color(0xFF0077B6)),
+            dialogSurface = Color(0xFF1B263B)
         ),
         darkColors = ThemeColors(
             background = Color(0xFF0D1B2A),
@@ -51,7 +53,8 @@ enum class AppTheme(
             cardBorder = Color(0xFFFFD700).copy(alpha = 0.35f),
             drawerBackground = Color(0xFF0D1B2A),
             drawerTextColor = Color.White,
-            gradientColors = listOf(Color(0xFF0D1B2A), Color(0xFF1B263B))
+            gradientColors = listOf(Color(0xFF0D1B2A), Color(0xFF1B263B)),
+            dialogSurface = Color(0xFF1B263B)
         )
     ),
 
@@ -70,7 +73,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF0A4426).copy(alpha = 0.25f),
             drawerBackground = Color(0xFF0A3C26),
             drawerTextColor = Color(0xFFFFFFFF),
-            gradientColors = listOf(Color(0xFFCDE0D2), Color(0xFFDCE8DE))
+            gradientColors = listOf(Color(0xFFCDE0D2), Color(0xFFDCE8DE)),
+            dialogSurface = Color(0xFFF0F5F1)
         ),
         darkColors = ThemeColors(
             background = Color(0xFF071710),
@@ -83,7 +87,8 @@ enum class AppTheme(
             cardBorder = Color(0xFFFBBF24).copy(alpha = 0.35f),
             drawerBackground = Color(0xFF071710),
             drawerTextColor = Color(0xFFECFDF5),
-            gradientColors = listOf(Color(0xFF071710), Color(0xFF0F2B1D))
+            gradientColors = listOf(Color(0xFF071710), Color(0xFF0F2B1D)),
+            dialogSurface = Color(0xFF0F2B1D)
         )
     ),
 
@@ -102,7 +107,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF0F172A).copy(alpha = 0.25f),
             drawerBackground = Color(0xFF1E293B),
             drawerTextColor = Color(0xFFFFFFFF),
-            gradientColors = listOf(Color(0xFFBCCCDC), Color(0xFFD9E2EC))
+            gradientColors = listOf(Color(0xFFBCCCDC), Color(0xFFD9E2EC)),
+            dialogSurface = Color(0xFFEDF2F7)
         ),
         darkColors = ThemeColors(
             background = Color(0xFF0A0F1D),
@@ -115,7 +121,8 @@ enum class AppTheme(
             cardBorder = Color(0xFFF59E0B).copy(alpha = 0.35f),
             drawerBackground = Color(0xFF0A0F1D),
             drawerTextColor = Color(0xFFF8FAFC),
-            gradientColors = listOf(Color(0xFF0A0F1D), Color(0xFF141C2E))
+            gradientColors = listOf(Color(0xFF0A0F1D), Color(0xFF141C2E)),
+            dialogSurface = Color(0xFF141C2E)
         )
     ),
 
@@ -134,7 +141,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF2C2523).copy(alpha = 0.25f),
             drawerBackground = Color(0xFF3D261D),
             drawerTextColor = Color(0xFFF9F4E8),
-            gradientColors = listOf(Color(0xFFDDD0B5), Color(0xFFE8DCC4))
+            gradientColors = listOf(Color(0xFFDDD0B5), Color(0xFFE8DCC4)),
+            dialogSurface = Color(0xFFF3EAD8)
         ),
         darkColors = ThemeColors(
             background = Color(0xFF1A1310),
@@ -147,7 +155,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF57392B),
             drawerBackground = Color(0xFF1A1310),
             drawerTextColor = Color(0xFFF5F5F4),
-            gradientColors = listOf(Color(0xFF1A1310), Color(0xFF281E19))
+            gradientColors = listOf(Color(0xFF1A1310), Color(0xFF281E19)),
+            dialogSurface = Color(0xFF281E19)
         )
     ),
 
@@ -166,7 +175,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF092C48).copy(alpha = 0.25f),
             drawerBackground = Color(0xFF0D3B66),
             drawerTextColor = Color(0xFFFFFFFF),
-            gradientColors = listOf(Color(0xFFBFCFD9), Color(0xFFD5E0EA))
+            gradientColors = listOf(Color(0xFFBFCFD9), Color(0xFFD5E0EA)),
+            dialogSurface = Color(0xFFE8F0F7)
         ),
         darkColors = ThemeColors(
             background = Color(0xFF081C24),
@@ -179,7 +189,8 @@ enum class AppTheme(
             cardBorder = Color(0xFF1E4B5A),
             drawerBackground = Color(0xFF081C24),
             drawerTextColor = Color(0xFFF1F5F9),
-            gradientColors = listOf(Color(0xFF081C24), Color(0xFF112E38))
+            gradientColors = listOf(Color(0xFF081C24), Color(0xFF112E38)),
+            dialogSurface = Color(0xFF112E38)
         )
     );
 

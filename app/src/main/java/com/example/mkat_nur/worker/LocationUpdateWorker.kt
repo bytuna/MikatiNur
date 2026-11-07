@@ -36,7 +36,7 @@ class LocationUpdateWorker(
                 val geocoder = Geocoder(applicationContext, Locale("tr"))
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
 
-                if (!addresses.isNullOrEmpty()) {
+                if (!addresses.isNullOrEmpty() && (addresses[0].countryCode == null || addresses[0].countryCode == "TR")) {
                     val city = addresses[0].adminArea ?: ""
                     val district = addresses[0].subAdminArea ?: addresses[0].locality ?: ""
 
@@ -57,6 +57,17 @@ class LocationUpdateWorker(
                     }
                 }
             }
+            if (location != null) {
+                val near = try {
+                    RetrofitClient.mikatInstance.nearest(location.latitude, location.longitude)
+                } catch (e: Exception) { null }
+                if (near != null && near.distanceKm <= 80) {
+                    val province = Province(near.name, near.id, location.latitude, location.longitude)
+                    saveLocation(province)
+                    fetchAndCachePrayerTimes(province)
+                    return Result.success()
+                }
+            }
             return Result.failure()
         } catch (e: Exception) {
             Log.e("LocationUpdateWorker", "Hata: ${e.message}")
@@ -74,7 +85,7 @@ class LocationUpdateWorker(
     private suspend fun fetchAndCachePrayerTimes(province: Province) {
         try {
             val cityIdentifier = if (province.id.isNotEmpty()) province.id else province.name
-            val responseList = RetrofitClient.diyanetInstance.getVakitler(cityIdentifier)
+            val responseList = com.example.mkat_nur.network.VakitSource.fetch(cityIdentifier)
             if (responseList.isNotEmpty()) {
                 val prayerDataList = responseList.map { it.toPrayerData() }
                 val gson = com.google.gson.Gson()
