@@ -53,7 +53,6 @@ import com.example.mkat_nur.ui.dhikr.DhikrScreen
 import com.example.mkat_nur.util.FullScreenIntentHelper
 import com.example.mkat_nur.util.StatsStore
 import com.example.mkat_nur.ui.qibla.QiblaScreen
-import com.example.mkat_nur.ui.quran.QuranScreen
 import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
 import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
@@ -398,16 +397,6 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
-                        label = { Text("Kur'an-ı Kerim 1", color = themeColors.drawerTextColor) },
-                        selected = false,
-                        icon = { Icon(Icons.Default.LibraryBooks, null, tint = themeColors.drawerTextColor) },
-                        onClick = {
-                            scope.launch { drawerState.close() }
-                            navController.navigate("quran1")
-                        },
-                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                    )
-                    NavigationDrawerItem(
                         label = { Text("Risale-i Nur", color = themeColors.drawerTextColor) },
                         selected = false,
                         icon = { Icon(Icons.Default.AutoStories, null, tint = themeColors.drawerTextColor) },
@@ -583,11 +572,6 @@ fun MkatNurApp(
                 SettingsScreen(viewModel = viewModel)
             }
             composable("quran") {
-                QuranScreen(
-                    onMenuClick = { scope.launch { drawerState.open() } }
-                )
-            }
-            composable("quran1") {
                 Quran1Screen(
                     onMenuClick = { scope.launch { drawerState.open() } }
                 )

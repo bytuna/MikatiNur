@@ -8,7 +8,7 @@ Uygulama içinde aynı liste **Ayarlar → Gizlilik ve Yasal → Lisanslar ve Ka
 | Kaynak | Kullanım | Lisans |
 |---|---|---|
 | Tanzil Quran Text (Uthmani, v1.1), © 2007-2026 Tanzil Project — https://tanzil.net | Arapça Kur'an metni (`assets/quran-uthmani.txt`) | Creative Commons Attribution 3.0. Metin değiştirilemez; kaynak belirtilmeli ve tanzil.net'e bağlantı verilmeli; telif bloğu dosyada korunmalıdır. |
-| AlQuran Cloud API (Islamic Network) — https://alquran.cloud | Kur'an-ı Kerim 1: sure, tecvid, okunuş, Diyanet meali, Alafasy sesleri | Servisin hizmet şartları |
+| AlQuran Cloud API (Islamic Network) — https://alquran.cloud | Kur'an-ı Kerim: sure, tecvid, okunuş, Diyanet meali, Alafasy sesleri | Servisin hizmet şartları |
 | Quran.com API (Quran Foundation) — https://quran.com | Meal/çeviriler (Diyanet İşleri Başkanlığı Türkçe meali dahil) | Servisin hizmet şartları |
 | EveryAyah.com — https://everyayah.com | Kıraat sesleri | Servisin hizmet şartları |
 | android.quran.com ve TheQuran/quran-images | Mushaf sayfa görselleri | Kaynak sitelerin kullanım şartları |

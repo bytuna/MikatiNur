@@ -18,6 +18,20 @@ interface AlQuranCloudApi {
         @Path(value = "editions", encoded = true) editions: String
     ): AlQuranMultiResponse
 
+    /** GET /v1/juz/{juz}/editions/... (çoklu edisyon; yanıtta ayetlerin "surah" bilgisi bulunur) */
+    @GET("v1/juz/{juz}/editions/{editions}")
+    suspend fun getJuzEditions(
+        @Path("juz") juz: Int,
+        @Path(value = "editions", encoded = true) editions: String
+    ): AlQuranMultiResponse
+
+    /** GET /v1/page/{page}/editions/... */
+    @GET("v1/page/{page}/editions/{editions}")
+    suspend fun getPageEditions(
+        @Path("page") page: Int,
+        @Path(value = "editions", encoded = true) editions: String
+    ): AlQuranMultiResponse
+
     companion object {
         const val EDITION_UTHMANI = "quran-uthmani"
         const val EDITION_TAJWEED = "quran-tajweed"
@@ -32,6 +46,14 @@ interface AlQuranCloudApi {
         /** Okunuş edisyonu bulunamazsa kullanılan liste. */
         val EDITIONS_WITHOUT_TRANSLITERATION = listOf(
             EDITION_UTHMANI, EDITION_TAJWEED, EDITION_MEAL, EDITION_AUDIO
+        ).joinToString(",")
+
+        /** Cüz/sayfa okumasında ses edisyonu istenmez; ses seçilen hafızdan ayrıca kurulur. */
+        val SECTION_EDITIONS = listOf(
+            EDITION_UTHMANI, EDITION_TAJWEED, EDITION_TRANSLITERATION, EDITION_MEAL
+        ).joinToString(",")
+        val SECTION_EDITIONS_WITHOUT_TRANSLITERATION = listOf(
+            EDITION_UTHMANI, EDITION_TAJWEED, EDITION_MEAL
         ).joinToString(",")
 
         val instance: AlQuranCloudApi by lazy {

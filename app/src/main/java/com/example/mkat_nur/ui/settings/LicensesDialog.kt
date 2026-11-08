@@ -53,7 +53,7 @@ private val NOTICE_GROUPS = listOf(
             ),
             NoticeItem(
                 "AlQuran Cloud API (Islamic Network)",
-                "Kur'an-ı Kerim 1 bölümünde sure, tecvid, okunuş, Diyanet meali ve Alafasy kıraat sesleri.",
+                "Kur'an-ı Kerim bölümünde sure, tecvid, okunuş, Diyanet meali ve Alafasy kıraat sesleri.",
                 "Servisin hizmet şartları",
                 "https://alquran.cloud"
             ),

@@ -13,6 +13,12 @@ data class AlQuranEditionInfo(
     @SerializedName("type") val type: String? = null
 )
 
+data class AlQuranSurahRef(
+    @SerializedName("number") val number: Int = 0,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("englishName") val englishName: String? = null
+)
+
 data class AlQuranAyah(
     @SerializedName("number") val number: Int = 0,
     @SerializedName("text") val text: String? = null,
@@ -20,7 +26,9 @@ data class AlQuranAyah(
     @SerializedName("juz") val juz: Int? = null,
     @SerializedName("page") val page: Int? = null,
     @SerializedName("audio") val audio: String? = null,
-    @SerializedName("audioSecondary") val audioSecondary: List<String>? = null
+    @SerializedName("audioSecondary") val audioSecondary: List<String>? = null,
+    /** Cüz/sayfa isteklerinde ayetin hangi sureye ait olduğunu bildirir. */
+    @SerializedName("surah") val surah: AlQuranSurahRef? = null
 )
 
 data class AlQuranSurahEdition(
@@ -51,14 +59,21 @@ data class Quran1Ayah(
     val tajweed: String?,
     val transliteration: String?,
     val meal: String?,
-    val audioUrl: String?
+    val audioUrl: String?,
+    /** Cüz/sayfa okumasında ayetin sure bilgisi (sure okumasında da doldurulur). */
+    val surahNumber: Int = 0,
+    val surahTurkishName: String = ""
 )
 
 data class Quran1Surah(
     val number: Int,
     val arabicName: String,
     val turkishName: String,
-    val ayahs: List<Quran1Ayah>
+    val ayahs: List<Quran1Ayah>,
+    /** true ise bu bir cüz/sayfa okumasıdır; birden çok sureden ayet içerir. */
+    val isSection: Boolean = false,
+    val title: String = "",
+    val subtitle: String = ""
 )
 
 /** Sure listesi satırı (assets/quran_surahs.json'dan, internetsiz gösterilir). */

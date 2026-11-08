@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +43,7 @@ import java.util.Locale
 
 private val P = Quran1Palette
 
-/** Kur'an-ı Kerim 1: sure listesi, ayet okuma ve sesli tilavet ekranı. */
+/** Kur'an-ı Kerim: sure / cüz / sayfa / hatim sekmeleri, ayet okuma ve sesli tilavet ekranı. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Quran1Screen(
@@ -50,15 +52,17 @@ fun Quran1Screen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val surahs by viewModel.surahList.collectAsState()
-    val openSurah by viewModel.openSurahNumber.collectAsState()
+    val target by viewModel.openTarget.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
     var showLegend by remember { mutableStateOf(false) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var query by rememberSaveable { mutableStateOf("") }
 
     // Ekrandan ayrılırken sesi duraklat
     DisposableEffect(Unit) { onDispose { viewModel.pauseAudio() } }
 
-    // Sure açıkken geri tuşu listeye döner
-    BackHandler(enabled = openSurah != null) { viewModel.closeSurah() }
+    // Okuma açıkken geri tuşu listeye döner
+    BackHandler(enabled = target != null) { viewModel.closeReader() }
 
     Box(
         modifier = Modifier
@@ -68,21 +72,25 @@ fun Quran1Screen(
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 title = {
-                    val title = if (openSurah == null) "Kur'an-ı Kerim 1"
-                    else surahs.firstOrNull { it.number == openSurah }?.let { "${it.number}. ${it.turkishName}" } ?: "Kur'an-ı Kerim 1"
+                    val title = when (val t = target) {
+                        null -> "Kur'an-ı Kerim"
+                        is Quran1Target.Surah -> surahs.firstOrNull { it.number == t.number }?.let { "${it.number}. ${it.turkishName}" } ?: "Kur'an-ı Kerim"
+                        is Quran1Target.Juz -> "${t.number}. Cüz"
+                        is Quran1Target.Page -> "${t.number}. Sayfa"
+                    }
                     Text(title, color = P.Gold, fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
-                    if (openSurah == null) {
+                    if (target == null) {
                         IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, "Menü", tint = P.Gold) }
                     } else {
-                        IconButton(onClick = { viewModel.closeSurah() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Sure listesi", tint = P.Gold)
+                        IconButton(onClick = { viewModel.closeReader() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Listeye dön", tint = P.Gold)
                         }
                     }
                 },
                 actions = {
-                    if (openSurah != null) {
+                    if (target != null) {
                         IconButton(onClick = { showLegend = true }) { Icon(Icons.Default.Palette, "Tecvid renkleri", tint = P.Gold) }
                     }
                     IconButton(onClick = { showSettings = true }) { Icon(Icons.Default.Tune, "Ayarlar", tint = P.Gold) }
@@ -91,7 +99,58 @@ fun Quran1Screen(
             )
 
             when (val s = state) {
-                is Quran1UiState.ListView -> SurahList(surahs) { viewModel.openSurah(it) }
+                is Quran1UiState.ListView -> Column(modifier = Modifier.fillMaxSize()) {
+                    val tabs = listOf("SURELER", "CÜZLER", "SAYFALAR", "HATİM")
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color.Transparent,
+                        contentColor = P.Gold,
+                    ) {
+                        tabs.forEachIndexed { i, label ->
+                            Tab(selected = selectedTab == i, onClick = { selectedTab = i }) {
+                                Text(
+                                    label,
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                    fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1,
+                                    color = if (selectedTab == i) P.Gold else P.Paper.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                    if (selectedTab != 3) {
+                        OutlinedTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            singleLine = true,
+                            placeholder = {
+                                Text(
+                                    when (selectedTab) {
+                                        0 -> "Sure ara (ad veya numara)"
+                                        1 -> "Cüz numarası ara"
+                                        else -> "Sayfa numarası ara"
+                                    },
+                                    color = P.Paper.copy(alpha = 0.6f)
+                                )
+                            },
+                            leadingIcon = { Icon(Icons.Default.Search, null, tint = P.Gold) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = P.Gold,
+                                unfocusedBorderColor = P.Gold.copy(alpha = 0.4f),
+                                focusedTextColor = P.Paper,
+                                unfocusedTextColor = P.Paper,
+                                cursorColor = P.Gold
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
+                    when (selectedTab) {
+                        0 -> SurahList(surahs, query) { viewModel.openSurah(it) }
+                        1 -> Quran1JuzList(query) { viewModel.openJuz(it) }
+                        2 -> Quran1PageList(query) { viewModel.openPage(it) }
+                        else -> Quran1HatimTab(onOpenJuz = { viewModel.openJuz(it) })
+                    }
+                }
                 is Quran1UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = P.Gold)
                 }
@@ -108,7 +167,7 @@ fun Quran1Screen(
                         Text("Tekrar Dene", color = P.Ink, fontWeight = FontWeight.Bold)
                     }
                 }
-                is Quran1UiState.Success -> SurahReader(s, viewModel)
+                is Quran1UiState.Success -> SurahReader(s, target, viewModel)
             }
         }
     }
@@ -117,7 +176,7 @@ fun Quran1Screen(
         AlertDialog(
             onDismissRequest = { showSettings = false },
             containerColor = P.Paper,
-            title = { Text("Kur'an-ı Kerim 1 Ayarları", color = P.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text("Kur'an-ı Kerim Ayarları", color = P.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Quran1SettingsSection(textColor = P.Ink, secondaryColor = P.InkSoft, accentColor = P.EmeraldSoft)
@@ -153,10 +212,8 @@ fun Quran1Screen(
 private fun normalize(s: String): String =
     Normalizer.normalize(s.lowercase(Locale("tr")), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SurahList(surahs: List<Quran1SurahInfo>, onSelect: (Int) -> Unit) {
-    var query by remember { mutableStateOf("") }
+private fun SurahList(surahs: List<Quran1SurahInfo>, query: String, onSelect: (Int) -> Unit) {
     val filtered = remember(surahs, query) {
         if (query.isBlank()) surahs
         else {
@@ -165,88 +222,74 @@ private fun SurahList(surahs: List<Quran1SurahInfo>, onSelect: (Int) -> Unit) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            singleLine = true,
-            placeholder = { Text("Sure ara (ad veya numara)", color = P.Paper.copy(alpha = 0.6f)) },
-            leadingIcon = { Icon(Icons.Default.Search, null, tint = P.Gold) },
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = P.Gold,
-                unfocusedBorderColor = P.Gold.copy(alpha = 0.4f),
-                focusedTextColor = P.Paper,
-                unfocusedTextColor = P.Paper,
-                cursorColor = P.Gold
-            ),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            itemsIndexed(filtered, key = { _, s -> s.number }) { _, surah ->
-                Surface(
-                    onClick = { onSelect(surah.number) },
-                    shape = RoundedCornerShape(16.dp),
-                    color = P.Paper,
-                    border = BorderStroke(1.dp, P.Gold.copy(alpha = 0.6f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(40.dp).border(1.5.dp, P.GoldDeep, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) { Text("${surah.number}", color = P.Emerald, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(surah.turkishName, color = P.Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("${surah.verseCount} ayet", color = P.InkSoft, fontSize = 12.sp)
-                        }
-                        Text(surah.arabicName, color = P.Emerald, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        itemsIndexed(filtered, key = { _, s -> s.number }) { _, surah ->
+            Surface(
+                onClick = { onSelect(surah.number) },
+                shape = RoundedCornerShape(16.dp),
+                color = P.Paper,
+                border = BorderStroke(1.dp, P.Gold.copy(alpha = 0.6f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(40.dp).border(1.5.dp, P.GoldDeep, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) { Text("${surah.number}", color = P.Emerald, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(surah.turkishName, color = P.Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("${surah.verseCount} ayet", color = P.InkSoft, fontSize = 12.sp)
                     }
+                    Text(surah.arabicName, color = P.Emerald, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            item { Spacer(Modifier.height(24.dp)) }
         }
+        item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
 // ====================================================================== Okuma ekranı
 
 @Composable
-private fun rememberMushafFont(fontKey: String): FontFamily {
+internal fun rememberMushafFont(fontKey: String): FontFamily {
     val context = LocalContext.current
-    return remember(fontKey) {
-        val option = Quran1Fonts.options.firstOrNull { it.key == fontKey } ?: Quran1Fonts.options.first()
-        var id = context.resources.getIdentifier(option.resName, "font", context.packageName)
-        if (id == 0) id = context.resources.getIdentifier(Quran1Fonts.options.first().resName, "font", context.packageName)
-        if (id != 0) FontFamily(Font(id)) else FontFamily.Serif
-    }
+    return remember(fontKey) { resolveMushafFont(context, fontKey) }
 }
 
 @Composable
-private fun SurahReader(content: Quran1UiState.Success, viewModel: Quran1ViewModel) {
+private fun SurahReader(content: Quran1UiState.Success, target: Quran1Target?, viewModel: Quran1ViewModel) {
     val surah = content.surah
     val mealli by Quran1Settings.mealli.collectAsState()
     val tajweed by Quran1Settings.tajweed.collectAsState()
     val fontSize by Quran1Settings.fontSize.collectAsState()
     val fontKey by Quran1Settings.fontKey.collectAsState()
     val autoScroll by Quran1Settings.autoScroll.collectAsState()
+    val reciterId by Quran1Settings.reciterId.collectAsState()
+    val speed by Quran1Settings.playbackSpeed.collectAsState()
     val playingIndex by viewModel.currentPlayingAyahIndex.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
     val audioError by viewModel.audioError.collectAsState()
     val fontFamily = rememberMushafFont(fontKey)
+    var showReciters by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
-    val hasAudio = surah.ayahs.isNotEmpty() && surah.ayahs.all { !it.audioUrl.isNullOrBlank() }
+    val hasAudio = surah.ayahs.isNotEmpty() && surah.ayahs.all { it.surahNumber > 0 || !it.audioUrl.isNullOrBlank() }
+
+    // Yeni bölüm açılınca en başa dön
+    LaunchedEffect(target) { listState.scrollToItem(0) }
 
     // Çalan ayeti ekranın tam ortasında tut
     CenterOnPlayingAyah(listState, playingIndex, autoScroll && playingIndex >= 0, headerCount = 1)
+
+    if (showReciters) {
+        Quran1ReciterDialog(onDismiss = { showReciters = false })
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
@@ -259,35 +302,100 @@ private fun SurahReader(content: Quran1UiState.Success, viewModel: Quran1ViewMod
                 item(key = "header") { SurahHeader(surah, content.fromCache) }
 
                 itemsIndexed(surah.ayahs, key = { _, a -> a.globalNumber }) { index, ayah ->
-                    AyahCard(
-                        ayah = ayah,
-                        isActive = index == playingIndex,
-                        mealli = mealli,
-                        tajweed = tajweed,
-                        fontSize = fontSize,
-                        fontFamily = fontFamily,
-                        canPlay = hasAudio,
-                        onPlay = { viewModel.playFrom(index) }
-                    )
+                    Column {
+                        // Cüz/sayfa okumasında yeni sure başlangıcını göster
+                        if (surah.isSection && ayah.numberInSurah == 1) {
+                            Text(
+                                "${ayah.surahNumber}. ${ayah.surahTurkishName}",
+                                color = P.Gold, fontWeight = FontWeight.Bold, fontSize = 15.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            )
+                        }
+                        AyahCard(
+                            ayah = ayah,
+                            label = if (surah.isSection)
+                                listOfNotNull(ayah.surahTurkishName.takeIf { it.isNotBlank() }, ayah.page?.let { "Sayfa $it" }).joinToString(" · ")
+                            else listOfNotNull(ayah.juz?.let { "Cüz $it" }, ayah.page?.let { "Sayfa $it" }).joinToString(" · "),
+                            isActive = index == playingIndex,
+                            mealli = mealli,
+                            tajweed = tajweed,
+                            fontSize = fontSize,
+                            fontFamily = fontFamily,
+                            canPlay = hasAudio,
+                            onPlay = { viewModel.playFrom(index) }
+                        )
+                    }
                 }
-                item(key = "footer") { Spacer(Modifier.height(16.dp)) }
+                item(key = "footer") {
+                    SectionFooter(target, viewModel)
+                }
             }
         }
 
         if (hasAudio) {
             AudioBar(
                 total = surah.ayahs.size,
-                ayahNumber = surah.ayahs.getOrNull(playingIndex)?.numberInSurah,
+                ayahNumber = surah.ayahs.getOrNull(playingIndex)?.let { if (surah.isSection) playingIndex + 1 else it.numberInSurah },
                 isPlaying = isPlaying,
                 isBuffering = isBuffering,
                 autoScroll = autoScroll,
                 error = audioError,
+                reciterName = Quran1Reciters.byId(reciterId).shortName,
+                speedLabel = Quran1Speeds.label(speed),
                 onPrev = { viewModel.previousAyah() },
                 onToggle = { viewModel.togglePlayPause() },
                 onNext = { viewModel.nextAyah() },
-                onToggleAutoScroll = { Quran1Settings.setAutoScroll(!autoScroll) }
+                onToggleAutoScroll = { Quran1Settings.setAutoScroll(!autoScroll) },
+                onCycleSpeed = { Quran1Settings.cyclePlaybackSpeed() },
+                onPickReciter = { showReciters = true }
             )
         }
+    }
+}
+
+/** Okumanın sonu: önceki/sonraki cüz-sayfa gezinmesi ve (hatim açıksa) cüzü tamamla düğmesi. */
+@Composable
+private fun SectionFooter(target: Quran1Target?, viewModel: Quran1ViewModel) {
+    val hatimActive by Quran1HatimStore.active.collectAsState()
+    val completed by Quran1HatimStore.completed.collectAsState()
+
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (target is Quran1Target.Juz || target is Quran1Target.Page) {
+            val number = if (target is Quran1Target.Juz) target.number else (target as Quran1Target.Page).number
+            val max = if (target is Quran1Target.Juz) 30 else 604
+            val unit = if (target is Quran1Target.Juz) "Cüz" else "Sayfa"
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number - 1) else viewModel.openPage(number - 1) },
+                    enabled = number > 1,
+                    modifier = Modifier.weight(1f),
+                    border = BorderStroke(1.dp, P.Gold.copy(alpha = if (number > 1) 0.8f else 0.3f))
+                ) { Text("◀ Önceki $unit", color = P.Gold, fontSize = 12.sp, maxLines = 1) }
+                Button(
+                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number + 1) else viewModel.openPage(number + 1) },
+                    enabled = number < max,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = P.Gold, disabledContainerColor = P.Gold.copy(alpha = 0.3f))
+                ) { Text("Sonraki $unit ▶", color = P.Ink, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1) }
+            }
+        }
+        if (target is Quran1Target.Juz && hatimActive) {
+            val done = completed.contains(target.number)
+            Button(
+                onClick = { Quran1HatimStore.toggleCompleted(target.number) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = if (done) P.EmeraldSoft else P.Emerald)
+            ) {
+                Icon(if (done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked, null, tint = P.Paper)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    if (done) "Hatimde tamamlandı (geri almak için dokun)" else "Bu cüzü hatimde tamamlandı işaretle",
+                    color = P.Paper, fontWeight = FontWeight.Bold, fontSize = 12.sp
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -328,8 +436,13 @@ private fun SurahHeader(surah: Quran1Surah, fromCache: Boolean) {
             modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(surah.arabicName, color = P.Gold, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Text(surah.turkishName, color = P.Paper, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            if (surah.isSection) {
+                Text(surah.title, color = P.Gold, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text(surah.subtitle, color = P.Paper, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            } else {
+                Text(surah.arabicName, color = P.Gold, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text(surah.turkishName, color = P.Paper, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
             Text("${surah.ayahs.size} ayet", color = P.Paper.copy(alpha = 0.7f), fontSize = 12.sp)
             if (fromCache) {
                 Spacer(Modifier.height(4.dp))
@@ -342,6 +455,7 @@ private fun SurahHeader(surah: Quran1Surah, fromCache: Boolean) {
 @Composable
 private fun AyahCard(
     ayah: Quran1Ayah,
+    label: String,
     isActive: Boolean,
     mealli: Boolean,
     tajweed: Boolean,
@@ -375,8 +489,9 @@ private fun AyahCard(
                 }
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    listOfNotNull(ayah.juz?.let { "Cüz $it" }, ayah.page?.let { "Sayfa $it" }).joinToString(" · "),
-                    color = P.InkSoft, fontSize = 11.sp, modifier = Modifier.weight(1f)
+                    label,
+                    color = P.InkSoft, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 if (canPlay) {
                     IconButton(onClick = onPlay, modifier = Modifier.size(36.dp)) {
@@ -431,10 +546,14 @@ private fun AudioBar(
     isBuffering: Boolean,
     autoScroll: Boolean,
     error: String?,
+    reciterName: String,
+    speedLabel: String,
     onPrev: () -> Unit,
     onToggle: () -> Unit,
     onNext: () -> Unit,
-    onToggleAutoScroll: () -> Unit
+    onToggleAutoScroll: () -> Unit,
+    onCycleSpeed: () -> Unit,
+    onPickReciter: () -> Unit
 ) {
     Surface(
         color = P.EmeraldDeep,
@@ -442,21 +561,44 @@ private fun AudioBar(
         shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.navigationBarsPadding().padding(horizontal = 10.dp, vertical = 8.dp)) {
             if (error != null) {
                 Text(error, color = Color(0xFFFFB4A9), fontSize = 11.sp, modifier = Modifier.padding(bottom = 4.dp))
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
+                // Sol: ayet numarası + hafız adı. Kalan alanı doldurur, uzun ad "…" ile kesilir;
+                // sağdaki düğmeler sabit boyutlu olduğu için asla üst üste binmez.
+                Column(modifier = Modifier.weight(1f).padding(end = 6.dp)) {
                     Text(
                         if (ayahNumber != null) "Ayet $ayahNumber / $total" else "Dinlemek için ▶",
-                        color = P.Paper, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
+                        color = P.Paper, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
-                    Text("Mişarî Raşid Alafasy", color = P.Gold.copy(alpha = 0.8f), fontSize = 10.5.sp)
+                    Text(
+                        reciterName,
+                        color = P.Gold.copy(alpha = 0.85f), fontSize = 10.5.sp,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable(onClick = onPickReciter)
+                    )
                 }
-                IconButton(onClick = onPrev) { Icon(Icons.Default.SkipPrevious, "Önceki ayet", tint = P.Paper) }
+                // Hız düğmesi: ayet numarasının sağında, oynat düğmesinin solunda
+                Surface(
+                    onClick = onCycleSpeed,
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color.Transparent,
+                    border = BorderStroke(1.dp, P.Gold),
+                    modifier = Modifier.width(46.dp).height(28.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            speedLabel, color = P.Gold, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                            maxLines = 1, softWrap = false
+                        )
+                    }
+                }
+                IconButton(onClick = onPrev, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.SkipPrevious, "Önceki ayet", tint = P.Paper) }
                 Box(
-                    modifier = Modifier.size(48.dp).background(P.Gold, CircleShape).clickable(onClick = onToggle),
+                    modifier = Modifier.size(46.dp).background(P.Gold, CircleShape).clickable(onClick = onToggle),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isBuffering && !isPlaying) {
@@ -469,8 +611,8 @@ private fun AudioBar(
                         )
                     }
                 }
-                IconButton(onClick = onNext) { Icon(Icons.Default.SkipNext, "Sonraki ayet", tint = P.Paper) }
-                IconButton(onClick = onToggleAutoScroll) {
+                IconButton(onClick = onNext, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.SkipNext, "Sonraki ayet", tint = P.Paper) }
+                IconButton(onClick = onToggleAutoScroll, modifier = Modifier.size(40.dp)) {
                     Icon(
                         Icons.Default.CenterFocusStrong,
                         if (autoScroll) "Otomatik kaydırma açık" else "Otomatik kaydırma kapalı",

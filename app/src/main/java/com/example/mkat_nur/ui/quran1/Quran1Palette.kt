@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Risale-i Nur baskılarının sıcak tonlarına yakın palet: koyu zümrüt, krem kâğıt, antik altın.
- * Kur'an-ı Kerim 1 modülü ve (aynı değerlerle) mevcut Kur'an sayfalarında kullanılır.
+ * Kur'an-ı Kerim modülünde kullanılır.
  */
 object Quran1Palette {
     val EmeraldDeep = Color(0xFF0B3D33)

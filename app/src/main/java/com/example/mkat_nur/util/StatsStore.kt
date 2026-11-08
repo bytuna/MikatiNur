@@ -147,8 +147,13 @@ object StatsStore {
 
     data class QuranPosition(val juz: Int, val page: Int)
 
-    /** Cüzler sekmesinde en son kalınan yer; hiç okuma kaydı yoksa null. */
+    /** Kur'an'da en son kalınan cüz/sayfa; hiç okuma kaydı yoksa null. */
     fun quranPosition(context: Context): QuranPosition? {
+        val q = context.applicationContext.getSharedPreferences("quran1_prefs", Context.MODE_PRIVATE)
+        if (q.contains("q1_last_juz")) {
+            return QuranPosition(q.getInt("q1_last_juz", 1), q.getInt("q1_last_page", 1))
+        }
+        // Eski sürümden kalan kayıt
         val p = prefs(context)
         if (!p.contains("quran_last_juz_tab_read_juz")) return null
         return QuranPosition(

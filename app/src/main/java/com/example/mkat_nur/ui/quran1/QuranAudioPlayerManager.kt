@@ -108,6 +108,11 @@ class QuranAudioPlayerManager(context: Context) {
         }
     }
 
+    /** Oynatma hızı (ses perdesi değişmez). Sonraki ayetlerde de korunur. */
+    fun setSpeed(speed: Float) {
+        player.setPlaybackSpeed(speed)
+    }
+
     fun pause() {
         if (player.isPlaying) player.pause()
     }

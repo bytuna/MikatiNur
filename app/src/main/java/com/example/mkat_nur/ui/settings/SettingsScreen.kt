@@ -644,7 +644,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
 
             // KUR'AN-I KERİM 1 AYARLARI (AÇILIR-KAPANIR)
             SettingsCard(
-                title = "Kur'an-ı Kerim 1 Ayarları",
+                title = "Kur'an-ı Kerim Ayarları",
                 icon = Icons.Default.MenuBook,
                 isExpandable = true,
                 isExpanded = isQuran1Expanded,
