@@ -131,7 +131,18 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun debtOf(prayer: String): Int = when (prayer) {
+        "fajr" -> _fajrDebt.value
+        "dhuhr" -> _dhuhrDebt.value
+        "asr" -> _asrDebt.value
+        "maghrib" -> _maghribDebt.value
+        "isha" -> _ishaDebt.value
+        "witr" -> _witrDebt.value
+        else -> 0
+    }
+
     fun updateDebt(prayer: String, delta: Int) {
+        val before = debtOf(prayer)
         when (prayer) {
             "fajr" -> {
                 _fajrDebt.value = (_fajrDebt.value + delta).coerceAtLeast(0)
@@ -158,6 +169,9 @@ class KazaViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putInt("witr_debt", _witrDebt.value).apply()
             }
         }
+        // Profil özeti için: azalan borç = kılınan kaza
+        val prayed = before - debtOf(prayer)
+        if (prayed > 0) com.example.mkat_nur.util.StatsStore.addKazaPrayed(getApplication(), prayed)
         pushLocalToCloud()
     }
 

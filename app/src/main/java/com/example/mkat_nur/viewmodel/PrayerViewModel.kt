@@ -94,22 +94,48 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _timeOffset = MutableStateFlow(prefs.getInt("time_offset", 0))
     val timeOffset: StateFlow<Int> = _timeOffset.asStateFlow()
 
-    private val _imsakOffset = MutableStateFlow(prefs.getInt("offset_imsak", 0))
+    // ---- Vakit başına dakika ayarı (anahtarlar tek yerden) ----
+    // Eski sürümler "offset_öğle" gibi Türkçe anahtarla yazıyor, "offset_dhuhr" ile okuyordu;
+    // bu yüzden ayar uygulama kapanınca kayboluyordu. Artık yazma ve okuma aynı anahtarı kullanır,
+    // eski anahtarla kaydedilmiş bir değer varsa ilk okumada yeni anahtara taşınır.
+    private fun prayerOffsetKey(prayer: String): String = when (prayer) {
+        "İmsak" -> "offset_imsak"
+        "Güneş" -> "offset_sunrise"
+        "Öğle" -> "offset_dhuhr"
+        "İkindi" -> "offset_asr"
+        "Akşam" -> "offset_maghrib"
+        "Yatsı" -> "offset_isha"
+        else -> "offset_${prayer.lowercase()}"
+    }
+
+    private fun readPrayerOffset(prayer: String): Int {
+        val key = prayerOffsetKey(prayer)
+        if (prefs.contains(key)) return prefs.getInt(key, 0)
+        val legacyKey = "offset_${prayer.lowercase()}"
+        if (legacyKey != key && prefs.contains(legacyKey)) {
+            val value = prefs.getInt(legacyKey, 0)
+            prefs.edit().putInt(key, value).remove(legacyKey).apply()
+            return value
+        }
+        return 0
+    }
+
+    private val _imsakOffset = MutableStateFlow(readPrayerOffset("İmsak"))
     val imsakOffset: StateFlow<Int> = _imsakOffset.asStateFlow()
 
-    private val _sunriseOffset = MutableStateFlow(prefs.getInt("offset_sunrise", 0))
+    private val _sunriseOffset = MutableStateFlow(readPrayerOffset("Güneş"))
     val sunriseOffset: StateFlow<Int> = _sunriseOffset.asStateFlow()
 
-    private val _dhuhrOffset = MutableStateFlow(prefs.getInt("offset_dhuhr", 0))
+    private val _dhuhrOffset = MutableStateFlow(readPrayerOffset("Öğle"))
     val dhuhrOffset: StateFlow<Int> = _dhuhrOffset.asStateFlow()
 
-    private val _asrOffset = MutableStateFlow(prefs.getInt("offset_asr", 0))
+    private val _asrOffset = MutableStateFlow(readPrayerOffset("İkindi"))
     val asrOffset: StateFlow<Int> = _asrOffset.asStateFlow()
 
-    private val _maghribOffset = MutableStateFlow(prefs.getInt("offset_maghrib", 0))
+    private val _maghribOffset = MutableStateFlow(readPrayerOffset("Akşam"))
     val maghribOffset: StateFlow<Int> = _maghribOffset.asStateFlow()
 
-    private val _ishaOffset = MutableStateFlow(prefs.getInt("offset_isha", 0))
+    private val _ishaOffset = MutableStateFlow(readPrayerOffset("Yatsı"))
     val ishaOffset: StateFlow<Int> = _ishaOffset.asStateFlow()
 
     private val _notificationSoundUri = MutableStateFlow(prefs.getString("notif_sound_uri", null))
@@ -256,6 +282,23 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         fetchSehirler()
         scheduleAutoLocationWork(_autoLocationInterval.value)
         startLocationTracking()
+        scheduleFridayCheck()
+    }
+
+    // Cuma kartı alarmının kurulu kaldığından emin olmak için 12 saatte bir kontrol
+    private fun scheduleFridayCheck() {
+        try {
+            val request = PeriodicWorkRequestBuilder<com.example.mkat_nur.worker.FridayCheckWorker>(
+                12, java.util.concurrent.TimeUnit.HOURS
+            ).build()
+            WorkManager.getInstance(getApplication()).enqueueUniquePeriodicWork(
+                "FridayCheck",
+                ExistingPeriodicWorkPolicy.KEEP,
+                request
+            )
+        } catch (e: Exception) {
+            Log.e("PrayerViewModel", "Friday check worker error: ${e.message}")
+        }
     }
 
     private fun startLocationTracking() {
@@ -432,7 +475,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setPrayerOffset(prayer: String, offset: Int) {
-        val prefKey = "offset_${prayer.lowercase()}"
+        val prefKey = prayerOffsetKey(prayer)
         prefs.edit().putInt(prefKey, offset).apply()
         when(prayer) {
             "İmsak" -> _imsakOffset.value = offset
@@ -889,34 +932,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val now = Calendar.getInstance()
 
-        // Cuma Mesajı Alarmı (Öğleden 45 dk önce)
-        if (now.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY) {
-            try {
-                val dhuhrTime = applyOffset(data.timings.dhuhr, commonOffset + _dhuhrOffset.value)
-                val dateParsed = sdf.parse(dhuhrTime.substringBefore(" "))!!
-                val cumaCal = Calendar.getInstance().apply {
-                    val temp = Calendar.getInstance().apply { time = dateParsed }
-                    set(Calendar.HOUR_OF_DAY, temp.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, temp.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                    add(Calendar.MINUTE, -45)
-                }
-
-                if (cumaCal.after(now)) {
-                    val intent = Intent(getApplication(), PrayerNotificationReceiver::class.java).apply {
-                        putExtra("IS_FRIDAY_MESSAGE", true)
-                    }
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        getApplication(), 9999, intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    setExactAlarm(alarmManager, cumaCal.timeInMillis, pendingIntent)
-                }
-            } catch (e: Exception) {
-                Log.e("PrayerViewModel", "Friday alarm error: ${e.message}")
-            }
-        }
+        // Cuma kartı: bugün Cuma olsun olmasın her zaman SIRADAKİ Cuma için kurulur (FridayScheduler)
+        com.example.mkat_nur.util.FridayScheduler.scheduleNext(getApplication())
 
         prayerTimes.forEachIndexed { index, (name, timeStr, isNotifyEnabled) ->
             if (!isNotifyEnabled) return@forEachIndexed // Bildirim kapalıysa atla

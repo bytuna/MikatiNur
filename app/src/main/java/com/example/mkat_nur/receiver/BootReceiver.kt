@@ -30,6 +30,9 @@ class BootReceiver : BroadcastReceiver() {
                     }
                 }
 
+                // Cuma kartı alarmını yeniden kur
+                com.example.mkat_nur.util.FridayScheduler.scheduleNext(context)
+
                 QuoteWidgetProvider.updateAllWidgets(context)
             } catch (e: Exception) {
                 Log.e("BootReceiver", "Error restoring service on boot: ${e.message}")

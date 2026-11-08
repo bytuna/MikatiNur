@@ -50,7 +50,12 @@ class NotificationHelper(val context: Context) {
         }
     }
 
-    fun showNotification(title: String, message: String, fullScreenIntent: Intent? = null) {
+    fun showNotification(
+        title: String,
+        message: String,
+        fullScreenIntent: Intent? = null,
+        contentIntent: Intent? = null
+    ) {
         createNotificationChannel() // Kanalın varlığından emin ol
         
         val channelId = getDynamicChannelId()
@@ -117,6 +122,16 @@ class NotificationHelper(val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Bildirime dokununca açılacak yer: verilmişse o ekran, yoksa ana ekran
+        val clickPendingIntent = if (contentIntent != null) {
+            PendingIntent.getActivity(
+                context,
+                2,
+                contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else mainPendingIntent
+
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_mosque)
             .setContentTitle(title)
@@ -125,7 +140,7 @@ class NotificationHelper(val context: Context) {
             .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
-            .setContentIntent(mainPendingIntent)
+            .setContentIntent(clickPendingIntent)
 
         val stopIntent = Intent(context, com.example.mkat_nur.service.EzanStopReceiver::class.java).apply {
             action = com.example.mkat_nur.service.EzanStopReceiver.ACTION_STOP_EZAN
@@ -148,16 +163,21 @@ class NotificationHelper(val context: Context) {
             }
         }
 
-        if (fullScreenIntent != null) {
-            val popupPendingIntent = PendingIntent.getActivity(
-                context,
-                1,
-                fullScreenIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            builder.setFullScreenIntent(popupPendingIntent, true)
-        } else {
-            builder.setFullScreenIntent(mainPendingIntent, true) // Kilit ekranında göstermek için varsayılan
+        // Tam ekran açılış: Android 14+ cihazlarda kullanıcı "Tam ekran bildirimler" iznini
+        // vermediyse sistem bu isteği yok sayar. İzin yoksa istemeden bırakıyoruz; bildirim yine
+        // yüksek öncelikli (ekranın üstünden kayan) olarak gelir ve dokununca ilgili ekran açılır.
+        if (FullScreenIntentHelper.canUse(context)) {
+            if (fullScreenIntent != null) {
+                val popupPendingIntent = PendingIntent.getActivity(
+                    context,
+                    1,
+                    fullScreenIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                builder.setFullScreenIntent(popupPendingIntent, true)
+            } else {
+                builder.setFullScreenIntent(mainPendingIntent, true) // Kilit ekranında göstermek için varsayılan
+            }
         }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

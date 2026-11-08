@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.google.firebase.firestore.FirebaseFirestore
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -121,6 +123,75 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             .addOnFailureListener { e ->
                 _authState.value = AuthState.Error(mapFirebaseError(e.message))
             }
+    }
+
+    // ------------------------------------------------------------------ Profil işlemleri
+
+    /** Giriş e-posta+şifre ile mi yapılmış? (Google kullanıcıları şifreyle yeniden doğrulanamaz.) */
+    fun isPasswordUser(): Boolean =
+        auth.currentUser?.providerData?.any { it.providerId == EmailAuthProvider.PROVIDER_ID } == true
+
+    fun isGoogleUser(): Boolean =
+        auth.currentUser?.providerData?.any { it.providerId == GoogleAuthProvider.PROVIDER_ID } == true
+
+    fun updateDisplayName(name: String, onResult: (Boolean, String) -> Unit) {
+        val user = auth.currentUser
+        val clean = name.trim()
+        if (user == null) { onResult(false, "Oturum açık değil."); return }
+        if (clean.length < 2) { onResult(false, "Ad en az 2 karakter olmalıdır."); return }
+        if (clean.length > 40) { onResult(false, "Ad en fazla 40 karakter olabilir."); return }
+        user.updateProfile(UserProfileChangeRequest.Builder().setDisplayName(clean).build())
+            .addOnSuccessListener {
+                user.reload().addOnCompleteListener {
+                    _currentUser.value = auth.currentUser
+                    onResult(true, "Adınız güncellendi.")
+                }
+            }
+            .addOnFailureListener { e -> onResult(false, mapFirebaseError(e.message)) }
+    }
+
+    /** Oturum açık kullanıcının e-postasına şifre sıfırlama bağlantısı gönderir. */
+    fun sendPasswordReset(onResult: (Boolean, String) -> Unit) {
+        val email = auth.currentUser?.email
+        if (email.isNullOrBlank()) { onResult(false, "Bu hesapta e-posta adresi yok."); return }
+        auth.sendPasswordResetEmail(email)
+            .addOnSuccessListener { onResult(true, "Şifre sıfırlama bağlantısı $email adresine gönderildi.") }
+            .addOnFailureListener { e -> onResult(false, mapFirebaseError(e.message)) }
+    }
+
+    /**
+     * Hesabı kalıcı olarak siler. Güvenlik için önce yeniden doğrulama yapılır:
+     * e-posta kullanıcıları şifreyi, Google kullanıcıları yeni bir Google ID token'ı verir.
+     * Buluttaki kaza verisi de silinir.
+     */
+    fun deleteAccount(password: String?, googleIdToken: String?, onResult: (Boolean, String) -> Unit) {
+        val user = auth.currentUser
+        if (user == null) { onResult(false, "Oturum açık değil."); return }
+
+        val credential = when {
+            googleIdToken != null -> GoogleAuthProvider.getCredential(googleIdToken, null)
+            !password.isNullOrEmpty() && !user.email.isNullOrBlank() ->
+                EmailAuthProvider.getCredential(user.email!!, password)
+            else -> { onResult(false, "Doğrulama bilgisi eksik."); return }
+        }
+
+        user.reauthenticate(credential)
+            .addOnSuccessListener {
+                val uid = user.uid
+                FirebaseFirestore.getInstance().collection("users").document(uid)
+                    .collection("data").document("kaza_debt").delete()
+                    .addOnCompleteListener {
+                        // Bulut verisi silinemese bile (örn. kayıt yoksa) hesabı silmeye devam et
+                        user.delete()
+                            .addOnSuccessListener {
+                                _currentUser.value = null
+                                _authState.value = AuthState.Idle
+                                onResult(true, "Hesabınız ve bulut verileriniz silindi.")
+                            }
+                            .addOnFailureListener { e -> onResult(false, mapFirebaseError(e.message)) }
+                    }
+            }
+            .addOnFailureListener { e -> onResult(false, mapFirebaseError(e.message)) }
     }
 
     fun signOut() {

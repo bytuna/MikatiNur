@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/data/bug-reports.json
+/data/analytics.json

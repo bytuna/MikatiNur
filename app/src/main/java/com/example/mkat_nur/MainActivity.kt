@@ -46,6 +46,11 @@ import com.example.mkat_nur.ui.auth.AuthDialog
 import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
+import com.example.mkat_nur.ui.profile.ProfileScreen
+import com.example.mkat_nur.ui.profile.UserAvatar
+import com.example.mkat_nur.ui.dhikr.DhikrScreen
+import com.example.mkat_nur.util.FullScreenIntentHelper
+import com.example.mkat_nur.util.StatsStore
 import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.ui.quran.QuranScreen
 import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
@@ -73,6 +78,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.example.mkat_nur.service.EzanPlayerManager.stopEzan()
+        StatsStore.recordAppOpen(this)
+        com.example.mkat_nur.util.FridayScheduler.scheduleNext(this)
         
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -105,6 +112,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         com.example.mkat_nur.service.EzanPlayerManager.stopEzan()
+        StatsStore.recordAppOpen(this)
     }
 }
 
@@ -132,6 +140,41 @@ fun MkatNurApp(
                     .putLong("kvkk_accepted_date", System.currentTimeMillis())
                     .apply()
                 isKvkkAccepted = true
+            }
+        )
+    }
+
+    // Android 14+: "Tam ekran bildirimler" izni kapalıysa kullanıcıya bir kez açıklayıp ayara götür
+    var showFullScreenDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(isKvkkAccepted) {
+        if (isKvkkAccepted && FullScreenIntentHelper.shouldAsk(context)) showFullScreenDialog = true
+    }
+    if (showFullScreenDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                FullScreenIntentHelper.markAsked(context)
+                showFullScreenDialog = false
+            },
+            title = { Text("Kilit ekranı kartları") },
+            text = {
+                Text(
+                    "Ezan vakti ve Cuma mesajı kartının telefon kilitliyken ekranda açılabilmesi için " +
+                        "“Tam ekran bildirimler” iznini vermeniz gerekir. İzin vermezseniz bildirimler " +
+                        "yine gelir; dokununca kart açılır."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    FullScreenIntentHelper.markAsked(context)
+                    showFullScreenDialog = false
+                    FullScreenIntentHelper.openSettings(context)
+                }) { Text("Ayarı aç") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    FullScreenIntentHelper.markAsked(context)
+                    showFullScreenDialog = false
+                }) { Text("Şimdi değil") }
             }
         )
     }
@@ -243,38 +286,34 @@ fun MkatNurApp(
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (!currentUser?.photoUrl?.toString().isNullOrEmpty()) {
-                                    AsyncImage(
-                                        model = currentUser?.photoUrl,
-                                        contentDescription = "Profil Resmi",
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.AccountCircle,
-                                        contentDescription = null,
-                                        tint = themeColors.accent,
-                                        modifier = Modifier.size(40.dp)
-                                    )
+                                val openProfile = {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate("profile") { launchSingleTop = true }
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = currentUser?.displayName ?: "Kullanıcı",
-                                        color = themeColors.drawerTextColor,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.5.sp,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = currentUser?.email ?: "",
-                                        color = themeColors.drawerTextColor.copy(alpha = 0.7f),
-                                        fontSize = 11.sp,
-                                        maxLines = 1
-                                    )
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { openProfile() },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    currentUser?.let { UserAvatar(it, 40.dp, refreshKey = drawerState.isOpen) }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Kullanıcı",
+                                            color = themeColors.drawerTextColor,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.5.sp,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = currentUser?.email ?: "",
+                                            color = themeColors.drawerTextColor.copy(alpha = 0.7f),
+                                            fontSize = 11.sp,
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
                                 IconButton(
                                     onClick = { authViewModel.signOut() },
@@ -374,6 +413,16 @@ fun MkatNurApp(
                         onClick = {
                             scope.launch { drawerState.close() }
                             navController.navigate("tesbihat")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Zikirmatik", color = themeColors.drawerTextColor) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.TouchApp, null, tint = themeColors.drawerTextColor) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("zikirmatik")
                         },
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
@@ -562,6 +611,19 @@ fun MkatNurApp(
                     viewModel = viewModel,
                     initialPrayer = prayer,
                     onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("zikirmatik") {
+                DhikrScreen(onMenuClick = { scope.launch { drawerState.open() } })
+            }
+            composable("profile") {
+                ProfileScreen(
+                    authViewModel = authViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onOpenZikirmatik = { navController.navigate("zikirmatik") },
+                    onOpenKaza = { navController.navigate("kaza_takibi") },
+                    onOpenQuran = { navController.navigate("quran") },
+                    onSignedOut = { navController.popBackStack("prayer_times", inclusive = false) }
                 )
             }
             composable("share_card") {

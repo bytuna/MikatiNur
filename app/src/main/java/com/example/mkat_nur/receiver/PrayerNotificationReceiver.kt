@@ -7,6 +7,7 @@ import android.os.PowerManager
 import com.example.mkat_nur.FridayMessageActivity
 import com.example.mkat_nur.PrayerPopupActivity
 import com.example.mkat_nur.util.ContentManager
+import com.example.mkat_nur.util.FridayScheduler
 import com.example.mkat_nur.util.NotificationHelper
 
 class PrayerNotificationReceiver : BroadcastReceiver() {
@@ -29,12 +30,25 @@ class PrayerNotificationReceiver : BroadcastReceiver() {
             val helper = NotificationHelper(context)
 
             if (isFridayMessage) {
-                helper.showNotification("Hayırlı Cumalar", "Günün Cuma mesajı hazır. Görmek için tıklayın.")
-                
+                // Bir sonraki Cuma için alarmı hemen yeniden kur (ne olursa olsun)
+                FridayScheduler.scheduleNext(context)
+
                 val fridayIntent = Intent(context, FridayMessageActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
-                context.startActivity(fridayIntent)
+                // Bildirime dokununca ve kilit ekranında kart açılır
+                helper.showNotification(
+                    "Hayırlı Cumalar",
+                    "Cuma mesajınız hazır. Görmek için dokunun.",
+                    fullScreenIntent = fridayIntent,
+                    contentIntent = fridayIntent
+                )
+                // Ekran açıksa doğrudan göster (arka planda engellenirse bildirim yine kalır)
+                try {
+                    context.startActivity(fridayIntent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
                 return
             }
 
