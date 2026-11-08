@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,6 +79,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     val updateStatus by viewModel.updateStatus.collectAsState()
 
     val context = LocalContext.current
+    val latestRelease by viewModel.latestVersion.collectAsState()
+    val installedVersion = remember { AppConfig.getInstalledVersionName(context) }
 
     LaunchedEffect(Unit) {
         viewModel.checkForUpdates()
@@ -99,6 +102,8 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     var isOffsetExpanded by remember { mutableStateOf(false) }
     var isCardExpanded by remember { mutableStateOf(false) }
     var isSpecialExpanded by remember { mutableStateOf(false) }
+    var showEzanDialog by remember { mutableStateOf(false) }
+    var showLicensesDialog by remember { mutableStateOf(false) }
 
     val soundPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -128,6 +133,15 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                 isExpandable = false
             ) {
                 Column {
+                    // Yüklü ve son sürüm bilgisi (son sürüm, denetim sonrası indirme sayfasından gelir)
+                    InfoRow(label = "Yüklü Sürüm", value = "v$installedVersion")
+                    InfoRow(
+                        label = "Son Sürüm",
+                        value = latestRelease?.tagName?.let { "v${it.removePrefix("v")}" }
+                            ?: if (updateStatus is UpdateStatus.Checking) "Denetleniyor..." else "Bilinmiyor"
+                    )
+                    Spacer(Modifier.height(8.dp))
+
                     when (val status = updateStatus) {
                         is UpdateStatus.Idle -> {
                             Text("Güncellemeler kontrol edilmedi.", color = themeColors.textSecondary, fontSize = 14.sp)
@@ -361,6 +375,23 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 }
                             }
                         }
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.resetAppearanceToDefaults()
+                                Toast.makeText(context, "Görünüm ayarları varsayılana döndürüldü.", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
+                        ) {
+                            Icon(Icons.Default.RestartAlt, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Varsayılana Geri Dön")
+                        }
                     }
                 }
             }
@@ -483,6 +514,23 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                                 }
                             }
                         }
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.resetWidgetToDefaults()
+                                Toast.makeText(context, "Widget ayarları varsayılana döndürüldü.", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
+                        ) {
+                            Icon(Icons.Default.RestartAlt, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Varsayılana Geri Dön")
+                        }
                     }
                 }
             }
@@ -571,165 +619,20 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                         HorizontalDivider(color = themeColors.cardBorder)
                         Spacer(Modifier.height(16.dp))
 
-                        // VAKİT BAZLI EZAN VE MAKAM AYARLARI (5 VAKİT EZAN VE ezan_bilgileri.txt)
+                        // VAKİT BAZLI EZAN VE MAKAM AYARLARI (ayrı pencerede açılır)
                         Text("Vakit Bazlı Ezan ve Makam Ayarları:", color = themeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
-                        Text("5 vakit ezan sesini makam bilgileriyle dinleyin ve vakitlere özel ses modlarını ayarlayın.", color = themeColors.textSecondary, fontSize = 11.5.sp)
+                        Text("5 vakit ezanını makam bilgileriyle dinleyin ve her vakit için ses modunu seçin.", color = themeColors.textSecondary, fontSize = 11.5.sp)
                         Spacer(Modifier.height(10.dp))
-
-                        var activeAudioPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-                        var playingResId by remember { mutableStateOf<Int?>(null) }
-
-                        DisposableEffect(Unit) {
-                            onDispose {
-                                activeAudioPlayer?.stop()
-                                activeAudioPlayer?.release()
-                                activeAudioPlayer = null
-                            }
-                        }
-
-                        // ezan_bilgileri.txt dosyasından bilgileri oku
-                        val ezanMakamList = remember(context) {
-                            val list = mutableListOf<EzanMakamItem>()
-                            try {
-                                val lines = context.resources.openRawResource(R.raw.ezan_bilgileri).bufferedReader().use { it.readLines() }
-                                val resMap = mapOf(
-                                    "sabah" to R.raw.sabah_ezani,
-                                    "ogle" to R.raw.ogle_ezani,
-                                    "ikindi" to R.raw.ikindi_ezani,
-                                    "aksam" to R.raw.aksam_ezani,
-                                    "yatsi" to R.raw.yatsi_ezani
-                                )
-                                val keys = listOf("sabah", "ogle", "ikindi", "aksam", "yatsi")
-
-                                lines.forEachIndexed { index, line ->
-                                    val parts = line.split(",").map { it.trim() }
-                                    if (parts.size >= 3 && index < keys.size) {
-                                        val key = keys[index]
-                                        val resId = resMap[key] ?: R.raw.sabah_ezani
-                                        list.add(EzanMakamItem(key, parts[0], parts[1], parts[2], resId))
-                                    }
-                                }
-                            } catch (_: Exception) {}
-
-                            if (list.isEmpty()) {
-                                list.addAll(listOf(
-                                    EzanMakamItem("sabah", "Sabah Ezanı", "Sabâ Makamı", "Mekke-i Mükerreme Baş Müezzini", R.raw.sabah_ezani),
-                                    EzanMakamItem("ogle", "Öğle Ezanı", "Râst Makamı", "Mescid-i Nebevi Müezzini", R.raw.ogle_ezani),
-                                    EzanMakamItem("ikindi", "İkindi Ezanı", "Hicâz Makamı", "İstanbul Selatin Cami Müezzini", R.raw.ikindi_ezani),
-                                    EzanMakamItem("aksam", "Akşam Ezanı", "Segâh Makamı", "Kudüs Mescid-i Aksa Müezzini", R.raw.aksam_ezani),
-                                    EzanMakamItem("yatsi", "Yatsı Ezanı", "Uşşâk Makamı", "Kahire El-Ezher Müezzini", R.raw.yatsi_ezani)
-                                ))
-                            }
-                            list
-                        }
-
-                        val prayerSoundModes by viewModel.prayerSoundModes.collectAsState()
-
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            ezanMakamList.forEach { item ->
-                                val currentMode = prayerSoundModes[item.prayerKey] ?: viewModel.getPrayerSoundMode(item.prayerKey)
-                                val isPlaying = playingResId == item.resId
-
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = themeColors.background.copy(alpha = 0.5f)),
-                                    shape = RoundedCornerShape(14.dp),
-                                    border = BorderStroke(1.dp, themeColors.cardBorder)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(item.prayerName, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                                    Spacer(Modifier.width(8.dp))
-                                                    Surface(
-                                                        color = Color(0xFF4CAF50).copy(alpha = 0.18f),
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        border = BorderStroke(1.dp, Color(0xFF4CAF50))
-                                                    ) {
-                                                        Text(
-                                                            text = item.makam,
-                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                            color = Color(0xFF4CAF50),
-                                                            fontSize = 10.5.sp,
-                                                            fontWeight = FontWeight.Bold
-                                                        )
-                                                    }
-                                                }
-                                                Text(item.muezzin, color = themeColors.textSecondary, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
-                                            }
-
-                                            // Start / Stop Oynat/Durdur Butonu
-                                            IconButton(
-                                                onClick = {
-                                                    try {
-                                                        if (isPlaying) {
-                                                            activeAudioPlayer?.stop()
-                                                            activeAudioPlayer?.release()
-                                                            activeAudioPlayer = null
-                                                            playingResId = null
-                                                        } else {
-                                                            activeAudioPlayer?.stop()
-                                                            activeAudioPlayer?.release()
-                                                            activeAudioPlayer = MediaPlayer.create(context, item.resId)
-                                                            activeAudioPlayer?.setOnCompletionListener {
-                                                                playingResId = null
-                                                            }
-                                                            activeAudioPlayer?.start()
-                                                            playingResId = item.resId
-                                                        }
-                                                    } catch (_: Exception) {}
-                                                },
-                                                modifier = Modifier.size(38.dp).background(
-                                                    if (isPlaying) Color(0xFFF44336) else Color(0xFF4CAF50),
-                                                    CircleShape
-                                                )
-                                            ) {
-                                                Icon(
-                                                    imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                                                    contentDescription = if (isPlaying) "Durdur" else "Oynat",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                            }
-                                        }
-
-                                        Spacer(Modifier.height(10.dp))
-                                        HorizontalDivider(color = themeColors.cardBorder.copy(alpha = 0.5f))
-                                        Spacer(Modifier.height(8.dp))
-
-                                        Text("Vakit Ses Modu:", color = themeColors.textSecondary, fontSize = 11.sp)
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            val modes = listOf(
-                                                "ezan" to "Ezan Oku",
-                                                "system" to "Sistem Sesi",
-                                                "silent" to "Sessiz"
-                                            )
-                                            modes.forEach { (mKey, mLabel) ->
-                                                FilterChip(
-                                                    selected = currentMode == mKey,
-                                                    onClick = { viewModel.setPrayerSoundMode(item.prayerKey, mKey) },
-                                                    label = { Text(mLabel, fontSize = 10.5.sp, fontWeight = FontWeight.Medium) },
-                                                    colors = FilterChipDefaults.filterChipColors(
-                                                        selectedContainerColor = Color(0xFF4CAF50),
-                                                        selectedLabelColor = Color.White,
-                                                        labelColor = themeColors.textPrimary
-                                                    ),
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        OutlinedButton(
+                            onClick = { showEzanDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
+                        ) {
+                            Icon(Icons.Default.Mosque, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Ezan ve Makam Ayarlarını Aç")
                         }
                     }
                 }
@@ -858,114 +761,131 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
 
             Spacer(Modifier.height(16.dp))
 
-            // SİSTEM
+            // SİSTEM (AÇILIR-KAPANIR) — İletişim ve Destek bu menünün altındadır
             var isLegalExpanded by remember { mutableStateOf(false) }
             var legalDetailType by remember { mutableStateOf<String?>(null) }
-
-            SettingsCard(title = "Sistem", icon = Icons.Default.Settings) {
-                Text("Otomatik Konum Güncelleme:", color = themeColors.textSecondary, fontSize = 12.sp)
-                val intervals = listOf(0 to "Kapalı", 1 to "1 Sa", 6 to "6 Sa", 12 to "12 Sa", 24 to "24 Sa")
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    intervals.forEach { (valHrs, label) ->
-                        FilterChip(
-                            selected = autoLocationInterval == valHrs,
-                            onClick = { viewModel.setAutoLocationInterval(valHrs) },
-                            label = { Text(label, color = if (autoLocationInterval == valHrs) Color.White else themeColors.textPrimary, fontSize = 10.sp) },
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF4CAF50))
-                        )
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = { viewModel.refreshLocation() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
-                    Icon(Icons.Default.MyLocation, null, tint = Color.White); Spacer(Modifier.width(8.dp)); Text("Konumu Güncelle", color = Color.White)
-                }
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = themeColors.cardBorder)
-                Spacer(Modifier.height(16.dp))
-                
-                InfoRow(label = "Proje Adı", value = AppConfig.PROJECT_NAME)
-                InfoRow(label = "Versiyon", value = "v${AppConfig.VERSION_NAME} (${AppConfig.VERSION_CODE})")
-                InfoRow(label = "Geliştirici", value = AppConfig.DEVELOPER)
-                InfoRow(label = "Web Sitesi", value = AppConfig.WEBSITE_NAME)
-                InfoRow(label = "İletişim E-Posta", value = AppConfig.CONTACT_EMAIL)
-                InfoRow(label = "Yapım Yılı", value = AppConfig.BUILD_DATE)
-                InfoRow(label = "Son Güncelleme", value = AppConfig.getAppLastUpdateTime(context))
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // İLETİŞİM VE DESTEK
+            var isSystemExpanded by remember { mutableStateOf(false) }
             var isContactExpanded by remember { mutableStateOf(false) }
             var showContactDialog by remember { mutableStateOf(false) }
 
             SettingsCard(
-                title = "İletişim ve Destek",
-                icon = Icons.Default.Email,
+                title = "Sistem",
+                icon = Icons.Default.Settings,
                 isExpandable = true,
-                isExpanded = isContactExpanded,
-                onExpandClick = { isContactExpanded = !isContactExpanded }
+                isExpanded = isSystemExpanded,
+                onExpandClick = { isSystemExpanded = !isSystemExpanded }
             ) {
-                AnimatedVisibility(visible = isContactExpanded, enter = expandVertically(), exit = shrinkVertically()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(
-                            text = "Görüş, öneri veya destek taleplerinizi doğrudan geliştiriciye iletebilirsiniz.",
-                            color = themeColors.textSecondary,
-                            fontSize = 12.5.sp,
-                            lineHeight = 18.sp
-                        )
+                AnimatedVisibility(visible = isSystemExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                    Column {
+                        Text("Otomatik Konum Güncelleme:", color = themeColors.textSecondary, fontSize = 12.sp)
+                        val intervals = listOf(0 to "Kapalı", 1 to "1 Sa", 6 to "6 Sa", 12 to "12 Sa", 24 to "24 Sa")
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            intervals.forEach { (valHrs, label) ->
+                                FilterChip(
+                                    selected = autoLocationInterval == valHrs,
+                                    onClick = { viewModel.setAutoLocationInterval(valHrs) },
+                                    label = { Text(label, color = if (autoLocationInterval == valHrs) Color.White else themeColors.textPrimary, fontSize = 10.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF4CAF50))
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { viewModel.refreshLocation() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
+                            Icon(Icons.Default.MyLocation, null, tint = Color.White); Spacer(Modifier.width(8.dp)); Text("Konumu Güncelle", color = Color.White)
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+                        Spacer(Modifier.height(16.dp))
 
+                        InfoRow(label = "Proje Adı", value = AppConfig.PROJECT_NAME)
+                        InfoRow(label = "Versiyon", value = "v${AppConfig.VERSION_NAME} (${AppConfig.VERSION_CODE})")
+                        InfoRow(label = "Geliştirici", value = AppConfig.DEVELOPER)
+                        InfoRow(label = "Yapım Yılı", value = AppConfig.BUILD_DATE)
+                        InfoRow(label = "Son Güncelleme", value = AppConfig.getAppLastUpdateTime(context))
+
+                        Spacer(Modifier.height(12.dp))
+                        HorizontalDivider(color = themeColors.cardBorder)
+
+                        // İLETİŞİM VE DESTEK (alt bölüm)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
-                                .clickable {
-                                    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                        data = Uri.parse("mailto:${AppConfig.CONTACT_EMAIL}")
-                                        putExtra(Intent.EXTRA_SUBJECT, "Mîkat-ı Nur - İletişim / Destek (v${AppConfig.VERSION_NAME})")
+                                .clickable { isContactExpanded = !isContactExpanded }
+                                .padding(vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Email, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text("İletişim ve Destek", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                            Icon(
+                                if (isContactExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                null, tint = themeColors.textSecondary
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isContactExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(
+                                    text = "Görüş, öneri veya destek taleplerinizi doğrudan geliştiriciye iletebilirsiniz.",
+                                    color = themeColors.textSecondary,
+                                    fontSize = 12.5.sp,
+                                    lineHeight = 18.sp
+                                )
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                                data = Uri.parse("mailto:${AppConfig.CONTACT_EMAIL}")
+                                                putExtra(Intent.EXTRA_SUBJECT, "Mîkat-ı Nur - İletişim / Destek (v${AppConfig.VERSION_NAME})")
+                                            }
+                                            try { context.startActivity(Intent.createChooser(emailIntent, "E-Posta Gönder")) } catch (_: Exception) {}
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Mail, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(22.dp))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("E-Posta Adresi", color = themeColors.textSecondary, fontSize = 11.sp)
+                                        Text(AppConfig.CONTACT_EMAIL, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                                     }
-                                    try { context.startActivity(Intent.createChooser(emailIntent, "E-Posta Gönder")) } catch (_: Exception) {}
+                                    Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
                                 }
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Mail, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(22.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("E-Posta Adresi", color = themeColors.textSecondary, fontSize = 11.sp)
-                                Text(AppConfig.CONTACT_EMAIL, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                            }
-                            Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
-                        }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
-                                .clickable {
-                                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.WEBSITE_URL))
-                                    try { context.startActivity(webIntent) } catch (_: Exception) {}
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(themeColors.background.copy(0.5f), RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.WEBSITE_URL))
+                                            try { context.startActivity(webIntent) } catch (_: Exception) {}
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Language, null, tint = themeColors.secondary, modifier = Modifier.size(22.dp))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Web Sitesi", color = themeColors.textSecondary, fontSize = 11.sp)
+                                        Text(AppConfig.WEBSITE_NAME, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                    }
+                                    Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
                                 }
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Language, null, tint = themeColors.secondary, modifier = Modifier.size(22.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Web Sitesi", color = themeColors.textSecondary, fontSize = 11.sp)
-                                Text(AppConfig.WEBSITE_NAME, color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                            }
-                            Icon(Icons.Default.OpenInNew, null, tint = themeColors.textSecondary, modifier = Modifier.size(18.dp))
-                        }
 
-                        Button(
-                            onClick = { showContactDialog = true },
-                            modifier = Modifier.fillMaxWidth().height(46.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                        ) {
-                            Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("İletişim Formunu Aç", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Button(
+                                    onClick = { showContactDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                                ) {
+                                    Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("İletişim Formunu Aç", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
                         }
                     }
                 }
@@ -1039,6 +959,18 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             Spacer(Modifier.width(8.dp))
                             Text("Gizlilik ve KVKK Politikasını Oku", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
+
+                        OutlinedButton(
+                            onClick = { showLicensesDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = themeColors.textPrimary),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(themeColors.cardBorder))
+                        ) {
+                            Icon(Icons.Default.Copyright, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Lisanslar ve Kaynaklar", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -1048,6 +980,13 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                     type = legalDetailType!!,
                     onDismiss = { legalDetailType = null }
                 )
+            }
+
+            if (showEzanDialog) {
+                EzanMakamDialog(viewModel = viewModel, onDismiss = { showEzanDialog = false })
+            }
+            if (showLicensesDialog) {
+                LicensesDialog(onDismiss = { showLicensesDialog = false })
             }
 
             Spacer(Modifier.height(24.dp))

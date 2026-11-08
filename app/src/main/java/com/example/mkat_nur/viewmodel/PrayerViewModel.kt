@@ -188,18 +188,23 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _prayerSoundModes = MutableStateFlow<Map<String, String>>(
         mapOf(
-            "sabah" to (prefs.getString("prayer_sound_mode_sabah", "ezan") ?: "ezan"),
-            "ogle" to (prefs.getString("prayer_sound_mode_ogle", "ezan") ?: "ezan"),
-            "ikindi" to (prefs.getString("prayer_sound_mode_ikindi", "ezan") ?: "ezan"),
-            "aksam" to (prefs.getString("prayer_sound_mode_aksam", "ezan") ?: "ezan"),
-            "yatsi" to (prefs.getString("prayer_sound_mode_yatsi", "ezan") ?: "ezan"),
-            "imsak" to (prefs.getString("prayer_sound_mode_imsak", "ezan") ?: "ezan")
+            "sabah" to (prefs.getString("prayer_sound_mode_sabah", "system") ?: "system"),
+            "ogle" to (prefs.getString("prayer_sound_mode_ogle", "system") ?: "system"),
+            "ikindi" to (prefs.getString("prayer_sound_mode_ikindi", "system") ?: "system"),
+            "aksam" to (prefs.getString("prayer_sound_mode_aksam", "system") ?: "system"),
+            "yatsi" to (prefs.getString("prayer_sound_mode_yatsi", "system") ?: "system"),
+            "imsak" to (prefs.getString("prayer_sound_mode_imsak", "system") ?: "system")
         )
     )
     val prayerSoundModes: StateFlow<Map<String, String>> = _prayerSoundModes.asStateFlow()
 
     fun getPrayerSoundMode(prayerKey: String): String {
-        return _prayerSoundModes.value[prayerKey] ?: (prefs.getString("prayer_sound_mode_$prayerKey", "ezan") ?: "ezan")
+        return _prayerSoundModes.value[prayerKey] ?: (prefs.getString("prayer_sound_mode_$prayerKey", "system") ?: "system")
+    }
+
+    /** Tüm vakitlerin ses modunu varsayılana (sistem sesi) döndürür. */
+    fun resetPrayerSoundModes() {
+        listOf("sabah", "ogle", "ikindi", "aksam", "yatsi", "imsak").forEach { setPrayerSoundMode(it, "system") }
     }
 
     fun setPrayerSoundMode(prayerKey: String, mode: String) {
@@ -222,7 +227,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _updateStatus.value = UpdateStatus.Checking
             try {
-                val release = com.example.mkat_nur.network.GitHubApiService.create().getLatestUpdateInfo()
+                val release = com.example.mkat_nur.network.UpdateChecker.fetchLatest()
                 _latestVersion.value = release
                 val context = getApplication<Application>().applicationContext
                 val isNewer = com.example.mkat_nur.util.AppConfig.isNewerVersion(context, release.tagName)
@@ -652,6 +657,22 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             action = "REFRESH_WIDGET"
         }
         getApplication<Application>().sendBroadcast(intent)
+    }
+
+    /** Görünüm ve Tema ayarlarını ilk kurulumdaki haline döndürür. */
+    fun resetAppearanceToDefaults() {
+        toggleDarkMode(null)
+        setFontSize(16f)
+        setAppThemeKey("klasik")
+        setHighlightColor(0xFF2196F3.toInt())
+    }
+
+    /** Widget ayarlarını ilk kurulumdaki haline döndürür. */
+    fun resetWidgetToDefaults() {
+        setWidgetTransparency(0.9f)
+        setWidgetTitleColor(0xFFFFD700.toInt())
+        setWidgetTextColor(0xFFFFFFFF.toInt())
+        setWidgetFontSize(14f)
     }
 
     fun refreshLocation() {

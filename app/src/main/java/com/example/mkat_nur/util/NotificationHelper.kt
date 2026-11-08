@@ -78,7 +78,7 @@ class NotificationHelper(val context: Context) {
         }
 
         val soundMode = if (prayerKey != "generic") {
-            prefs.getString("prayer_sound_mode_$prayerKey", "ezan") ?: "ezan"
+            prefs.getString("prayer_sound_mode_$prayerKey", "system") ?: "system"
         } else "system"
 
         val ezanResMap = mapOf(

@@ -19,9 +19,18 @@ object AppConfig {
     const val WEBSITE_URL = "https://www.mikatinur.com.tr"
     const val CONTACT_EMAIL = "ilker.tuna@mikatinur.com.tr"
 
-    // Güncelleme kontrolü için ham URL
-    private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/bytuna/MikatiNur/master/update_info.json"
+    // Güncelleme denetimi artık indirme sayfasından yapılır (bkz. network/UpdateChecker.kt)
+    const val UPDATE_PAGE_URL = "https://www.mikatinur.com.tr/download/"
     const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.5.apk"
+
+    /** Telefonda yüklü olan sürümün adı (paket bilgisinden). */
+    fun getInstalledVersionName(context: Context): String {
+        return try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: VERSION_NAME
+        } catch (e: Exception) {
+            VERSION_NAME
+        }
+    }
 
     fun isNewerVersion(context: Context, latestVersionName: String): Boolean {
         val currentVersionName = try {
