@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.text.Normalizer
 import java.util.Locale
 
@@ -281,8 +282,24 @@ private fun SurahReader(content: Quran1UiState.Success, target: Quran1Target?, v
     val listState = rememberLazyListState()
     val hasAudio = surah.ayahs.isNotEmpty() && surah.ayahs.all { it.surahNumber > 0 || !it.audioUrl.isNullOrBlank() }
 
-    // Yeni bölüm açılınca en başa dön
-    LaunchedEffect(target) { listState.scrollToItem(0) }
+    // Bölüm açılınca kalınan ayete git (kayıt yoksa başa)
+    LaunchedEffect(content) {
+        val startItem = if (content.startIndex > 0) content.startIndex + 1 else 0
+        listState.scrollToItem(startItem)
+    }
+
+    // Kaydırırken en üstteki ayeti hatırla
+    LaunchedEffect(content) {
+        snapshotFlow { listState.firstVisibleItemIndex }.collectLatest { i ->
+            delay(700)
+            surah.ayahs.getOrNull((i - 1).coerceAtLeast(0))?.let { viewModel.savePosition(it.globalNumber) }
+        }
+    }
+
+    // Dinlerken çalan ayeti hatırla
+    LaunchedEffect(content, playingIndex) {
+        if (playingIndex >= 0) surah.ayahs.getOrNull(playingIndex)?.let { viewModel.savePosition(it.globalNumber) }
+    }
 
     // Çalan ayeti ekranın tam ortasında tut
     CenterOnPlayingAyah(listState, playingIndex, autoScroll && playingIndex >= 0, headerCount = 1)
@@ -367,13 +384,13 @@ private fun SectionFooter(target: Quran1Target?, viewModel: Quran1ViewModel) {
             val unit = if (target is Quran1Target.Juz) "Cüz" else "Sayfa"
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
-                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number - 1) else viewModel.openPage(number - 1) },
+                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number - 1, false) else viewModel.openPage(number - 1, false) },
                     enabled = number > 1,
                     modifier = Modifier.weight(1f),
                     border = BorderStroke(1.dp, P.Gold.copy(alpha = if (number > 1) 0.8f else 0.3f))
                 ) { Text("◀ Önceki $unit", color = P.Gold, fontSize = 12.sp, maxLines = 1) }
                 Button(
-                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number + 1) else viewModel.openPage(number + 1) },
+                    onClick = { if (target is Quran1Target.Juz) viewModel.openJuz(number + 1, false) else viewModel.openPage(number + 1, false) },
                     enabled = number < max,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = P.Gold, disabledContainerColor = P.Gold.copy(alpha = 0.3f))

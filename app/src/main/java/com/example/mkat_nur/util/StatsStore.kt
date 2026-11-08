@@ -138,6 +138,16 @@ object StatsStore {
         return next
     }
 
+    /** Ekrandaki sayacı verilen değere ayarlar (zikir değiştirilince o zikrin sayısı gösterilir). */
+    fun zikirSetCurrent(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_ZIKIR_CURRENT, value.coerceAtLeast(0)).apply()
+    }
+
+    /** Toplam zikir sayısını ve sayacı sıfırlar. Son 7 gün özeti ayrı tutulur, korunur. */
+    fun zikirResetTotal(context: Context) {
+        prefs(context).edit().putLong(KEY_ZIKIR_TOTAL, 0L).putInt(KEY_ZIKIR_CURRENT, 0).apply()
+    }
+
     /** Sayacı sıfırlar; toplam zikir sayısı korunur. */
     fun zikirResetCurrent(context: Context) {
         prefs(context).edit().putInt(KEY_ZIKIR_CURRENT, 0).apply()

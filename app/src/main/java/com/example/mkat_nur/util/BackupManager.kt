@@ -23,12 +23,15 @@ import java.util.Locale
  *
  * Yedek dosyası düz bir JSON'dur ve Belgeler/MikatNur klasörüne kaydedilir.
  * İçeriği: ayarlar (tema, bildirimler, vakit dakika ayarları), konum, kaza borçları,
- * zikir sayaçları, Kur'an yer imleri ve son kalınan yer.
+ * zikir sayaçları ve kendi zikirleriniz, Kur'an yer imleri, son kalınan yer ve ayet,
+ * hatim ilerlemesi (cüz dağıtımı, tamamlananlar) ve Kur'an okuma tercihleri.
  * Hesap bilgisi, şifre ve bildirim sesi gibi cihaza özgü şeyler yedeğe girmez.
  */
 object BackupManager {
     private const val MAIN_PREFS = "mkat_nur_prefs"
     private const val KAZA_PREFS = "kaza_prefs"
+    private const val QURAN1_PREFS = "quran1_prefs"
+    private const val DHIKR_PREFS = "dhikr_prefs"
     private const val FORMAT = 1
     private const val APP_ID = "mikat-nur"
     private const val FOLDER = "MikatNur"
@@ -84,6 +87,27 @@ object BackupManager {
         Spec("quran_last_juz_tab_read_page", T.INT, 1.0, 604.0)
     )
 
+    /** Kur'an-ı Kerim: hatim ilerlemesi, son kalınan yerler ve okuma tercihleri ("quran1_prefs"). */
+    private val QURAN1 = buildList {
+        add(Spec("q1_hatim_start", T.INT, 1.0, 30.0))
+        add(Spec("q1_hatim_done", T.STRING_SET))
+        add(Spec("q1_hatim_active", T.BOOL))
+        for (i in 1..30) add(Spec("q1_hatim_assign_$i", T.STRING))
+        add(Spec("q1_last_juz", T.INT, 1.0, 30.0))
+        add(Spec("q1_last_page", T.INT, 1.0, 604.0))
+        add(Spec("q1_positions", T.STRING))
+        add(Spec("mealli", T.BOOL)); add(Spec("tajweed", T.BOOL))
+        add(Spec("font_size", T.FLOAT, 18.0, 48.0)); add(Spec("font_key", T.STRING))
+        add(Spec("auto_scroll", T.BOOL)); add(Spec("reciter_id", T.STRING))
+        add(Spec("playback_speed", T.FLOAT, 1.0, 2.0))
+    }
+
+    /** Zikirmatik: kendi zikirleriniz, zikir sayaçları ve hedefleri ("dhikr_prefs"). */
+    private val DHIKR = listOf(
+        Spec("custom_list", T.STRING), Spec("counts", T.STRING),
+        Spec("targets", T.STRING), Spec("selected_id", T.STRING)
+    )
+
     // ------------------------------------------------------------------ Dışa aktar
 
     data class ExportResult(val fileName: String, val displayPath: String)
@@ -135,6 +159,8 @@ object BackupManager {
             put("kaza", readSection(kaza, KAZA))
             put("zikir", readSection(main, ZIKIR))
             put("quran", readSection(main, QURAN))
+            put("quran1", readSection(context.getSharedPreferences(QURAN1_PREFS, Context.MODE_PRIVATE), QURAN1))
+            put("dhikr", readSection(context.getSharedPreferences(DHIKR_PREFS, Context.MODE_PRIVATE), DHIKR))
         }
     }
 
@@ -206,12 +232,16 @@ object BackupManager {
 
         val main = app.getSharedPreferences(MAIN_PREFS, Context.MODE_PRIVATE).edit()
         val kaza = app.getSharedPreferences(KAZA_PREFS, Context.MODE_PRIVATE).edit()
+        val quran1 = app.getSharedPreferences(QURAN1_PREFS, Context.MODE_PRIVATE).edit()
+        val dhikr = app.getSharedPreferences(DHIKR_PREFS, Context.MODE_PRIVATE).edit()
 
         var count = 0
         count += applySection(root.optJSONObject("settings"), SETTINGS, main)
         count += applySection(root.optJSONObject("location"), LOCATION, main)
         count += applySection(root.optJSONObject("zikir"), ZIKIR, main)
         count += applySection(root.optJSONObject("quran"), QURAN, main)
+        count += applySection(root.optJSONObject("quran1"), QURAN1, quran1)
+        count += applySection(root.optJSONObject("dhikr"), DHIKR, dhikr)
         val kazaCount = applySection(root.optJSONObject("kaza"), KAZA, kaza)
         count += kazaCount
 
@@ -220,6 +250,8 @@ object BackupManager {
         // Eski dakika ayarı anahtarlarından kalan değerler yeni değerleri ezmesin
         main.commit()
         kaza.commit()
+        quran1.commit()
+        dhikr.commit()
 
         val kazaMap: Map<String, Int>? = if (kazaCount > 0) {
             val p = app.getSharedPreferences(KAZA_PREFS, Context.MODE_PRIVATE)
@@ -248,7 +280,7 @@ object BackupManager {
                     T.INT -> editor.putInt(s.key, clamp(obj.getLong(s.key).toDouble(), s).toInt())
                     T.LONG -> editor.putLong(s.key, clamp(obj.getLong(s.key).toDouble(), s).toLong())
                     T.FLOAT -> editor.putFloat(s.key, clamp(obj.getDouble(s.key), s).toFloat())
-                    T.STRING -> editor.putString(s.key, obj.getString(s.key).take(4000))
+                    T.STRING -> editor.putString(s.key, obj.getString(s.key).take(40000))
                     T.STRING_SET -> {
                         val arr = obj.getJSONArray(s.key)
                         val set = HashSet<String>()

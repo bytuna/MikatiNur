@@ -55,7 +55,7 @@ fun RisaleWebViewScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1B263B),
+                    containerColor = Color(0xFF7A1F1F),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )

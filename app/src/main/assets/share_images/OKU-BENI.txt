@@ -1,0 +1,15 @@
+PAYLASIM RESIMLERI KLASORU
+==========================
+Bu klasore koydugunuz resimler; Hayirli Cumalar, Gunun Ayeti, Hadisi, Veciz Sozu ve
+diger tum paylasim kartlarinin ARKA PLANI olarak her paylasimda RASTGELE secilir.
+(Klasor bos ise uygulamanin kendi arka planlari kullanilir.)
+
+Yer      : app/src/main/assets/share_images/
+Format   : JPG (onerilen) veya WebP / PNG
+Boyut    : 1080 x 1350 piksel (4:5 dikey). Daha buyuk olabilir, uygulama kendisi kucultur.
+Dosya    : en fazla ~400 KB (uygulama boyutu sismesin). 20-40 resim idealdir.
+Isim     : istediginiz isim olabilir; kucuk harf, bosluksuz onerilir. Ornek:
+           bg_01.jpg, bg_02.jpg, cuma_01.jpg, kandil_03.webp
+Not      : Uzerine yazi gelecegi icin cok parlak/karmasik resimlerden kacinin;
+           uygulama okunabilirlik icin resmi hafif karartir. Ortada sade bir alan birakin.
+Ekleyince: uygulamayi yeniden derleyin (Run). Telefona kurulu surum yeni resimleri bilmez.

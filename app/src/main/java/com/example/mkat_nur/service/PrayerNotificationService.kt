@@ -243,8 +243,7 @@ class PrayerNotificationService : Service() {
                 .setSilent(true)
 
             if (totalMinutesLeft in 1..60) {
-                val minuteIcon = generateMinuteIconBitmap(this, totalMinutesLeft, isKerahatActive)
-                builder.setSmallIcon(minuteIcon)
+                builder.setSmallIcon(minuteIcon(this, totalMinutesLeft, isKerahatActive))
             } else {
                 builder.setSmallIcon(R.drawable.ic_launcher_mosque)
             }
@@ -256,49 +255,53 @@ class PrayerNotificationService : Service() {
         }
     }
 
+    // Aynı dakika için bitmap'i her saniye yeniden üretmeyip önbellekten kullanır
+    private var minuteIconKey: String? = null
+    private var minuteIconCache: IconCompat? = null
+
+    private fun minuteIcon(context: Context, minutes: Int, isKerahat: Boolean): IconCompat {
+        val key = "$minutes-$isKerahat"
+        val cached = minuteIconCache
+        if (cached != null && minuteIconKey == key) return cached
+        val icon = generateMinuteIconBitmap(context, minutes, isKerahat)
+        minuteIconKey = key
+        minuteIconCache = icon
+        return icon
+    }
+
+    /**
+     * Durum çubuğu simgesi Android tarafından yalnızca "alfa" kanalıyla (tek renk) çizilir; renkli
+     * zemin/yazı kullanılırsa rakam çoğu cihazda görünmez. Bu yüzden rakam zeminsiz, saf beyaz ve
+     * opak çizilir. Kerahat vaktinde rakamın çevresine bir halka eklenir.
+     */
     private fun generateMinuteIconBitmap(context: Context, minutes: Int, isKerahat: Boolean = false): IconCompat {
-        val sizePx = 128
+        val sizePx = 96
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val originalDrawable = ContextCompat.getDrawable(context, R.drawable.ic_launcher_mosque)
-        if (originalDrawable != null) {
-            originalDrawable.setBounds(0, 0, sizePx, sizePx)
-            originalDrawable.draw(canvas)
-        } else {
-            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFF1B263B.toInt()
-                style = Paint.Style.FILL
+        if (isKerahat) {
+            val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFFFFFFFF.toInt()
+                style = Paint.Style.STROKE
+                strokeWidth = 6f
             }
-            canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, bgPaint)
+            canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f - 4f, ring)
         }
 
-        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = if (isKerahat) 0xEE800000.toInt() else 0xDD000000.toInt()
-            style = Paint.Style.FILL
-        }
-        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, badgePaint)
-
-        val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = if (isKerahat) 0xFFFF1744.toInt() else 0xFFFFD700.toInt()
-            style = Paint.Style.STROKE
-            strokeWidth = 5f
-        }
-        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx * 0.46f, borderPaint)
-
+        val text = minutes.toString()
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = if (isKerahat) 0xFFFFFFFF.toInt() else 0xFFFFD700.toInt()
-            textSize = when {
-                minutes < 10 -> 82f
-                minutes < 100 -> 68f
-                else -> 54f
-            }
+            color = 0xFFFFFFFF.toInt()
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
+            textSize = if (text.length >= 2) 66f else 80f
         }
-
+        // İki hane de halkanın içine sığsın
+        val maxWidth = if (isKerahat) sizePx * 0.62f else sizePx * 0.94f
+        while (textPaint.measureText(text) > maxWidth && textPaint.textSize > 20f) {
+            textPaint.textSize -= 2f
+        }
         val textY = (sizePx / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
-        canvas.drawText(minutes.toString(), sizePx / 2f, textY, textPaint)
+        canvas.drawText(text, sizePx / 2f, textY, textPaint)
 
         return IconCompat.createWithBitmap(bitmap)
     }

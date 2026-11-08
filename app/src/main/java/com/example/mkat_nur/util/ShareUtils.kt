@@ -33,8 +33,11 @@ object ShareUtils {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        if (customBackground != null) {
-            drawCustomBitmapBackground(canvas, width, height, customBackground)
+        // Öncelik: çağıranın verdiği (ör. yapay zekâ) görsel; yoksa assets/share_images içinden rastgele bir resim;
+        // o da yoksa uygulamanın yerleşik arka planlarından biri.
+        val background = customBackground ?: pickRandomAssetBackground(context)
+        if (background != null) {
+            drawCustomBitmapBackground(canvas, width, height, background)
         } else {
             // Arka plan resmi seç ve çiz
             val randomBgResId = backgroundDrawables.random()
@@ -117,6 +120,37 @@ object ShareUtils {
         }
 
         saveAndShare(context, bitmap, "mikat_nur_paylasim.png")
+    }
+
+    /** assets/share_images klasöründeki resimler. Bu klasöre atılan her .jpg/.png/.webp havuza girer. */
+    const val SHARE_IMAGES_DIR = "share_images"
+    private var lastPickedImage: String? = null
+
+    private fun pickRandomAssetBackground(context: Context): Bitmap? {
+        return try {
+            val names = (context.assets.list(SHARE_IMAGES_DIR) ?: emptyArray()).filter {
+                val n = it.lowercase()
+                n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp")
+            }
+            if (names.isEmpty()) return null
+            // Art arda aynı resim gelmesin
+            val pool = if (names.size > 1) names.filter { it != lastPickedImage } else names
+            val pick = pool.random()
+            lastPickedImage = pick
+
+            // Büyük resimleri bellek için küçült (genişlik ~1080'e yakın kalsın)
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            context.assets.open("$SHARE_IMAGES_DIR/$pick").use { BitmapFactory.decodeStream(it, null, bounds) }
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= 1080) sample *= 2
+            val opts = BitmapFactory.Options().apply {
+                inSampleSize = sample
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            context.assets.open("$SHARE_IMAGES_DIR/$pick").use { BitmapFactory.decodeStream(it, null, opts) }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun drawCustomBitmapBackground(canvas: Canvas, width: Int, height: Int, backgroundBitmap: Bitmap) {

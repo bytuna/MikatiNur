@@ -31,6 +31,25 @@ object Quran1HatimStore {
     private val _lastPage = MutableStateFlow(1)
     val lastPage: StateFlow<Int> = _lastPage.asStateFlow()
 
+    // Her sure/cüz/sayfa için son kalınan ayet (genel ayet numarası). "surah_2:262,juz_3:300" biçiminde saklanır.
+    private val positions = LinkedHashMap<String, Int>()
+    private const val MAX_POSITIONS = 150
+
+    fun position(name: String): Int? = positions[name]
+
+    fun savePosition(name: String, globalAyah: Int) {
+        positions.remove(name)          // en son kullanılan sona gelsin
+        positions[name] = globalAyah
+        while (positions.size > MAX_POSITIONS) positions.remove(positions.keys.first())
+        prefs?.edit()?.putString("q1_positions", positions.entries.joinToString(",") { "${it.key}:${it.value}" })?.apply()
+    }
+
+    fun clearPosition(name: String) {
+        if (positions.remove(name) != null) {
+            prefs?.edit()?.putString("q1_positions", positions.entries.joinToString(",") { "${it.key}:${it.value}" })?.apply()
+        }
+    }
+
     fun init(context: Context) {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences("quran1_prefs", Context.MODE_PRIVATE)
@@ -47,6 +66,11 @@ object Quran1HatimStore {
         _assignments.value = map
         _lastJuz.value = p.getInt("q1_last_juz", 1).coerceIn(1, 30)
         _lastPage.value = p.getInt("q1_last_page", 1).coerceIn(1, 604)
+        positions.clear()
+        (p.getString("q1_positions", "") ?: "").split(",").forEach { part ->
+            val i = part.lastIndexOf(':')
+            if (i > 0) part.substring(i + 1).toIntOrNull()?.let { positions[part.substring(0, i)] = it }
+        }
     }
 
     fun sequence(startJuz: Int): List<Int> = (0..29).map { i -> ((startJuz - 1 + i) % 30) + 1 }

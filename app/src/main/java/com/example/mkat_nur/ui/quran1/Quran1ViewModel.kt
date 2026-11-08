@@ -23,7 +23,7 @@ sealed class Quran1UiState {
     /** Liste (sure/cüz/sayfa/hatim sekmeleri) görünüyor, açık okuma yok. */
     object ListView : Quran1UiState()
     object Loading : Quran1UiState()
-    data class Success(val surah: Quran1Surah, val fromCache: Boolean) : Quran1UiState()
+    data class Success(val surah: Quran1Surah, val fromCache: Boolean, val startIndex: Int = 0) : Quran1UiState()
     data class Error(val message: String) : Quran1UiState()
 }
 
@@ -111,17 +111,31 @@ class Quran1ViewModel(application: Application) : AndroidViewModel(application) 
 
     // ------------------------------------------------------------------ Açma / kapama
 
-    fun openSurah(number: Int) = open(Quran1Target.Surah(number))
+    fun openSurah(number: Int) {
+        resumeNext = true
+        open(Quran1Target.Surah(number))
+    }
 
-    fun openJuz(number: Int) {
+    private var resumeNext = true
+
+    /** Okunan/dinlenen ayeti hatırlar; bölüm yeniden açılınca oradan devam edilir. */
+    fun savePosition(globalAyah: Int) {
+        val t = _openTarget.value ?: return
+        Quran1HatimStore.savePosition(t.cacheName, globalAyah)
+    }
+
+    /** resume=false: kayıtlı ayet yerine bölümün başından başla (önceki/sonraki gezinmesi). */
+    fun openJuz(number: Int, resume: Boolean = true) {
         val n = number.coerceIn(1, 30)
+        resumeNext = resume
         Quran1HatimStore.saveLastJuz(n)
         Quran1HatimStore.saveLastPage(QuranUtils.getJuzPageRange(n).first)
         open(Quran1Target.Juz(n))
     }
 
-    fun openPage(number: Int) {
+    fun openPage(number: Int, resume: Boolean = true) {
         val n = number.coerceIn(1, 604)
+        resumeNext = resume
         Quran1HatimStore.saveLastPage(n)
         open(Quran1Target.Page(n))
     }
@@ -274,7 +288,10 @@ class Quran1ViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
 
-            _uiState.value = Quran1UiState.Success(surah, result.second)
+            val saved = if (resumeNext) Quran1HatimStore.position(target.cacheName) else null
+            if (!resumeNext) Quran1HatimStore.clearPosition(target.cacheName)
+            val start = saved?.let { g -> surah.ayahs.indexOfFirst { it.globalNumber == g } }?.coerceAtLeast(0) ?: 0
+            _uiState.value = Quran1UiState.Success(surah, result.second, start)
             applyAudio(surah, target)
         }
     }

@@ -30,6 +30,11 @@ object UpdateChecker {
     private val absoluteApk = Regex("""https?://[^"'\s\\<>()]*Mikat-Nur-v(\d+(?:\.\d+)+)\.apk""", RegexOption.IGNORE_CASE)
     private val relativeApk = Regex("""(/[^"'\s\\<>()]*Mikat-Nur-v(\d+(?:\.\d+)+)\.apk)""", RegexOption.IGNORE_CASE)
 
+    // Dosya adı kalıbı değişirse yedek: herhangi bir .apk bağlantısı + "Sürüm" başlığı yanındaki sürüm numarası
+    private val anyApkHref = Regex("""href\s*=\s*["']([^"']+\.apk)(?:\?[^"']*)?["']""", RegexOption.IGNORE_CASE)
+    private val versionLabel = Regex("""S[üu]r[üu]m\s*(?:<[^>]*>|\s|&nbsp;|:)*v?(\d+(?:\.\d+)+)""", RegexOption.IGNORE_CASE)
+    private val anyVersionInName = Regex("""[vV](\d+(?:\.\d+)+)[^/"']*\.apk""")
+
     private fun get(url: String): String {
         val request = Request.Builder()
             .url(url)
@@ -68,12 +73,23 @@ object UpdateChecker {
             // Mutlak bir adresin parçasıysa zaten yukarıda yakalandı
             if (!found.any { it.second.endsWith(path) }) found.add(m.groupValues[2] to SITE_ROOT + path)
         }
-        return found.maxWithOrNull(Comparator { a, b -> compareVersions(a.first, b.first) })
+        if (found.isNotEmpty()) {
+            return found.maxWithOrNull(Comparator { a, b -> compareVersions(a.first, b.first) })
+        }
+
+        // Yedek: dosya adı kalıba uymuyorsa sayfadaki .apk bağlantılarını ve "Sürüm vX.Y.Z" yazısını kullan
+        val hrefs = anyApkHref.findAll(text).map { it.groupValues[1] }.toList()
+        val candidates = hrefs.mapNotNull { href ->
+            val url = if (href.startsWith("http")) href else SITE_ROOT + (if (href.startsWith("/")) href else "/$href")
+            val v = anyVersionInName.find(href)?.groupValues?.get(1) ?: versionLabel.find(text)?.groupValues?.get(1)
+            v?.let { it to url }
+        }
+        return candidates.maxWithOrNull(Comparator { a, b -> compareVersions(a.first, b.first) })
     }
 
     suspend fun fetchLatest(): GitHubRelease = withContext(Dispatchers.IO) {
         val fromSite = try {
-            parseDownloadPage(get(DOWNLOAD_PAGE_URL))
+            parseDownloadPage(get("$DOWNLOAD_PAGE_URL?t=${System.currentTimeMillis()}"))
         } catch (_: Exception) { null }
 
         val github = fetchGithubJson()
