@@ -10,8 +10,8 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.1.5"
-    const val VERSION_CODE = 8
+    const val VERSION_NAME = "1.1.6"
+    const val VERSION_CODE = 9
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
@@ -21,7 +21,7 @@ object AppConfig {
 
     // Güncelleme denetimi artık indirme sayfasından yapılır (bkz. network/UpdateChecker.kt)
     const val UPDATE_PAGE_URL = "https://www.mikatinur.com.tr/download/"
-    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.5.apk"
+    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.6.apk"
 
     /** Telefonda yüklü olan sürümün adı (paket bilgisinden). */
     fun getInstalledVersionName(context: Context): String {
@@ -81,6 +81,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.6",
+            versionCode = 9,
+            date = "2026-11-08",
+            description = "Yeni Kur'an-ı Kerim modülü (sure, cüz, sayfa, hatim, 13 okuyucu, okuma hızı, kalınan ayetten devam). Zengin zikirmatik. Profil, yedekle/geri yükle ve kullanım istatistikleri. Güncelleme denetimi indirme sayfasından. Bildirimdeki kalan dakika düzeltmesi. Paylaşım kartlarında rastgele arka plan.",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.1.5",
             versionCode = 8,
