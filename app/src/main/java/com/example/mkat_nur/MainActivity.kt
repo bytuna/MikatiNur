@@ -47,6 +47,7 @@ import com.example.mkat_nur.ui.imsakiye.ImsakiyeScreen
 import com.example.mkat_nur.ui.kaza.KazaScreen
 import com.example.mkat_nur.ui.prayer.PrayerTimesScreen
 import com.example.mkat_nur.ui.profile.ProfileScreen
+import com.example.mkat_nur.ui.quran1.Quran1Screen
 import com.example.mkat_nur.ui.profile.UserAvatar
 import com.example.mkat_nur.ui.dhikr.DhikrScreen
 import com.example.mkat_nur.util.FullScreenIntentHelper
@@ -397,6 +398,16 @@ fun MkatNurApp(
                         colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                     )
                     NavigationDrawerItem(
+                        label = { Text("Kur'an-ı Kerim 1", color = themeColors.drawerTextColor) },
+                        selected = false,
+                        icon = { Icon(Icons.Default.LibraryBooks, null, tint = themeColors.drawerTextColor) },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("quran1")
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                    )
+                    NavigationDrawerItem(
                         label = { Text("Risale-i Nur", color = themeColors.drawerTextColor) },
                         selected = false,
                         icon = { Icon(Icons.Default.AutoStories, null, tint = themeColors.drawerTextColor) },
@@ -573,6 +584,11 @@ fun MkatNurApp(
             }
             composable("quran") {
                 QuranScreen(
+                    onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            }
+            composable("quran1") {
+                Quran1Screen(
                     onMenuClick = { scope.launch { drawerState.open() } }
                 )
             }

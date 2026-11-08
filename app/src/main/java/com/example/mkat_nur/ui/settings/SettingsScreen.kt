@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mkat_nur.R
+import com.example.mkat_nur.ui.quran1.Quran1SettingsSection
 import com.example.mkat_nur.util.AppConfig
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import com.example.mkat_nur.viewmodel.UpdateStatus
@@ -103,6 +104,7 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
     var isCardExpanded by remember { mutableStateOf(false) }
     var isSpecialExpanded by remember { mutableStateOf(false) }
     var showEzanDialog by remember { mutableStateOf(false) }
+    var isQuran1Expanded by remember { mutableStateOf(false) }
     var showLicensesDialog by remember { mutableStateOf(false) }
 
     val soundPickerLauncher = rememberLauncherForActivityResult(
@@ -635,6 +637,21 @@ fun SettingsScreen(viewModel: PrayerViewModel) {
                             Text("Ezan ve Makam Ayarlarını Aç")
                         }
                     }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // KUR'AN-I KERİM 1 AYARLARI (AÇILIR-KAPANIR)
+            SettingsCard(
+                title = "Kur'an-ı Kerim 1 Ayarları",
+                icon = Icons.Default.MenuBook,
+                isExpandable = true,
+                isExpanded = isQuran1Expanded,
+                onExpandClick = { isQuran1Expanded = !isQuran1Expanded }
+            ) {
+                AnimatedVisibility(visible = isQuran1Expanded, enter = expandVertically(), exit = shrinkVertically()) {
+                    Quran1SettingsSection()
                 }
             }
 

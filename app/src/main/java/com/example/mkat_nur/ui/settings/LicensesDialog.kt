@@ -52,6 +52,12 @@ private val NOTICE_GROUPS = listOf(
                 "https://quran.com"
             ),
             NoticeItem(
+                "AlQuran Cloud API (Islamic Network)",
+                "Kur'an-ı Kerim 1 bölümünde sure, tecvid, okunuş, Diyanet meali ve Alafasy kıraat sesleri.",
+                "Servisin hizmet şartları",
+                "https://alquran.cloud"
+            ),
+            NoticeItem(
                 "EveryAyah.com",
                 "Ayet ayet kıraat sesleri.",
                 "Hizmet şartları: everyayah.com",
@@ -132,7 +138,7 @@ private val NOTICE_GROUPS = listOf(
         "Yazılım Bileşenleri",
         listOf(
             NoticeItem(
-                "AndroidX: Jetpack Compose, Navigation, WorkManager, Lifecycle, Activity, Core, WebKit",
+                "AndroidX: Jetpack Compose, Navigation, WorkManager, Lifecycle, Activity, Core, WebKit, Media3 (ExoPlayer)",
                 "Arayüz ve arka plan işleri.",
                 "Apache License 2.0",
                 "https://www.apache.org/licenses/LICENSE-2.0"

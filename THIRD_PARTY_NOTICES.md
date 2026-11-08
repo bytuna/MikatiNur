@@ -8,6 +8,7 @@ Uygulama içinde aynı liste **Ayarlar → Gizlilik ve Yasal → Lisanslar ve Ka
 | Kaynak | Kullanım | Lisans |
 |---|---|---|
 | Tanzil Quran Text (Uthmani, v1.1), © 2007-2026 Tanzil Project — https://tanzil.net | Arapça Kur'an metni (`assets/quran-uthmani.txt`) | Creative Commons Attribution 3.0. Metin değiştirilemez; kaynak belirtilmeli ve tanzil.net'e bağlantı verilmeli; telif bloğu dosyada korunmalıdır. |
+| AlQuran Cloud API (Islamic Network) — https://alquran.cloud | Kur'an-ı Kerim 1: sure, tecvid, okunuş, Diyanet meali, Alafasy sesleri | Servisin hizmet şartları |
 | Quran.com API (Quran Foundation) — https://quran.com | Meal/çeviriler (Diyanet İşleri Başkanlığı Türkçe meali dahil) | Servisin hizmet şartları |
 | EveryAyah.com — https://everyayah.com | Kıraat sesleri | Servisin hizmet şartları |
 | android.quran.com ve TheQuran/quran-images | Mushaf sayfa görselleri | Kaynak sitelerin kullanım şartları |
@@ -25,7 +26,7 @@ Uygulama içinde aynı liste **Ayarlar → Gizlilik ve Yasal → Lisanslar ve Ka
 | Me Quran, © 2005 Meor Ridzuan | Yazı tipi dosyasında: "Free for non commercial use" (ticari olmayan kullanım) |
 
 ## Yazılım Bileşenleri
-AndroidX (Compose, Navigation, WorkManager, Lifecycle, Activity, Core, WebKit), Kotlin ve Coroutines, Retrofit, OkHttp, Gson, Coil, Material Icons: **Apache License 2.0** (https://www.apache.org/licenses/LICENSE-2.0).
+AndroidX (Compose, Navigation, WorkManager, Lifecycle, Activity, Core, WebKit, Media3), Kotlin ve Coroutines, Retrofit, OkHttp, Gson, Coil, Material Icons: **Apache License 2.0** (https://www.apache.org/licenses/LICENSE-2.0).
 Firebase (Authentication, Firestore, AI Logic): Apache License 2.0 ve Firebase Hizmet Şartları. Google Play Hizmetleri: Google Play Hizmetleri Şartları.
 
 ## Yapay Zekâ ve Görsel Servisler

@@ -165,7 +165,7 @@ fun QuranScreen(
     val juzListState = rememberLazyListState()
     val pageListState = rememberLazyListState()
 
-    val bgColors = listOf(Color(0xFF002B36), Color(0xFF073642))
+    val bgColors = listOf(Color(0xFF0B3D33), Color(0xFF14584A))
 
     if (mushafModeNotice != null) {
         AlertDialog(
@@ -177,7 +177,7 @@ fun QuranScreen(
                     Text("ANLADIM", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
-            containerColor = Color(0xFFFCF8EC),
+            containerColor = Color(0xFFF8F1DD),
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -343,7 +343,7 @@ fun QuranScreen(
                             Text(
                                 text = titleText,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFD700),
+                                color = Color(0xFFC9A24B),
                                 fontSize = 12.sp,
                                 maxLines = 1
                             )
@@ -382,26 +382,26 @@ fun QuranScreen(
                         TabRow(
                             selectedTabIndex = selectedTab,
                             containerColor = Color.Transparent,
-                            contentColor = Color(0xFFFFD700),
+                            contentColor = Color(0xFFC9A24B),
                             indicator = { tabPositions ->
                                 TabRowDefaults.SecondaryIndicator(
                                     Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    color = Color(0xFFFFD700)
+                                    color = Color(0xFFC9A24B)
                                 )
                             },
                             divider = {}
                         ) {
                             Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
-                                Text("SURELER", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 0) Color(0xFFFFD700) else Color.White.copy(0.6f), maxLines = 1)
+                                Text("SURELER", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 0) Color(0xFFC9A24B) else Color.White.copy(0.6f), maxLines = 1)
                             }
                             Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
-                                Text("CÜZLER", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 1) Color(0xFFFFD700) else Color.White.copy(0.6f), maxLines = 1)
+                                Text("CÜZLER", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 1) Color(0xFFC9A24B) else Color.White.copy(0.6f), maxLines = 1)
                             }
                             Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) {
-                                Text("SAYFALAR", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 2) Color(0xFFFFD700) else Color.White.copy(0.6f), maxLines = 1)
+                                Text("SAYFALAR", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 2) Color(0xFFC9A24B) else Color.White.copy(0.6f), maxLines = 1)
                             }
                             Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }) {
-                                Text("HATİM", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 3) Color(0xFFFFD700) else Color.White.copy(0.6f), maxLines = 1)
+                                Text("HATİM", modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp), fontWeight = FontWeight.Bold, fontSize = 11.sp, color = if(selectedTab == 3) Color(0xFFC9A24B) else Color.White.copy(0.6f), maxLines = 1)
                             }
                         }
 
@@ -413,7 +413,7 @@ fun QuranScreen(
                                 placeholder = { Text("Sure veya ayet ara...", color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp) },
                                 leadingIcon = { Icon(Icons.Default.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFFFD700),
+                                    focusedBorderColor = Color(0xFFC9A24B),
                                     unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White
@@ -463,9 +463,9 @@ fun QuranScreen(
                                 // YALNIZCA CÜZLER SEKMESİNDEN YAPILAN OKUMALARIN YERİNİ HATIRLATAN KART
                                 Surface(
                                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                    color = Color(0xFFFFD700).copy(alpha = 0.15f),
+                                    color = Color(0xFFC9A24B).copy(alpha = 0.15f),
                                     shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.4f))
+                                    border = BorderStroke(1.dp, Color(0xFFC9A24B).copy(alpha = 0.4f))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(12.dp),
@@ -473,7 +473,7 @@ fun QuranScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column {
-                                            Text("Son Kalınan Cüz", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFFFD700))
+                                            Text("Son Kalınan Cüz", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFC9A24B))
                                             Text("$lastJuzTabReadJuz. Cüz — Sayfa $lastJuzTabReadPage", fontSize = 12.sp, color = Color.White)
                                         }
                                         Button(
@@ -483,7 +483,7 @@ fun QuranScreen(
                                                 activePageNumber = lastJuzTabReadPage
                                                 viewModel.fetchPageDetail(lastJuzTabReadPage)
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC9A24B)),
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
@@ -784,7 +784,7 @@ fun HatimTab(
                     Text("İPTAL", color = Color.Gray)
                 }
             },
-            containerColor = Color(0xFFFCF8EC),
+            containerColor = Color(0xFFF8F1DD),
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -811,7 +811,7 @@ fun HatimTab(
                     Text("İPTAL", color = Color.Gray)
                 }
             },
-            containerColor = Color(0xFFFCF8EC),
+            containerColor = Color(0xFFF8F1DD),
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -824,7 +824,7 @@ fun HatimTab(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCF8EC)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F1DD)),
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.5.dp, Color(0xFF8B5A2B))
                 ) {
@@ -860,8 +860,8 @@ fun HatimTab(
                                         .size(36.dp)
                                         .clickable { selectedStartJuz = num },
                                     shape = CircleShape,
-                                    color = if (isSelected) Color(0xFF8B5A2B) else Color(0xFFFFD700).copy(alpha = 0.2f),
-                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF8B5A2B) else Color(0xFFFFD700).copy(alpha = 0.5f))
+                                    color = if (isSelected) Color(0xFF8B5A2B) else Color(0xFFC9A24B).copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF8B5A2B) else Color(0xFFC9A24B).copy(alpha = 0.5f))
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(text = num.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (isSelected) Color.White else Color(0xFF2C1810))
@@ -893,7 +893,7 @@ fun HatimTab(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCF8EC)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F1DD)),
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.5.dp, Color(0xFF8B5A2B))
                 ) {
@@ -949,7 +949,7 @@ fun HatimTab(
                                 context.startActivity(Intent.createChooser(intent, "Hatim Listesini Paylaş"))
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F6B4F)),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -962,7 +962,7 @@ fun HatimTab(
                             Button(
                                 onClick = { showDuaDialog = true },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC9A24B)),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF2C1810))
@@ -975,7 +975,7 @@ fun HatimTab(
             }
 
             item {
-                Text("Cüz Dağıtımı ve Tamamlama Durumu", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFFFFD700))
+                Text("Cüz Dağıtımı ve Tamamlama Durumu", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFFC9A24B))
             }
 
             itemsIndexed(activeSequence) { idx, juzNum ->
@@ -985,9 +985,9 @@ fun HatimTab(
 
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { onOpenJuz(juzNum) },
-                    colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFE8F5E9) else Color(0xFFFCF8EC)),
+                    colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFE4EFE3) else Color(0xFFF8F1DD)),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, if (isCompleted) Color(0xFF4CAF50) else Color.LightGray)
+                    border = BorderStroke(1.dp, if (isCompleted) Color(0xFF2F7D5B) else Color.LightGray)
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -996,7 +996,7 @@ fun HatimTab(
                         Surface(
                             modifier = Modifier.size(32.dp),
                             shape = CircleShape,
-                            color = if (isCompleted) Color(0xFF4CAF50) else Color(0xFF8B5A2B)
+                            color = if (isCompleted) Color(0xFF2F7D5B) else Color(0xFF8B5A2B)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text("#${idx + 1}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -1012,7 +1012,7 @@ fun HatimTab(
                                 text = personDisplay,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (!assignedPerson.isNullOrBlank()) Color(0xFF1565C0) else Color(0xFF2E7D32),
+                                color = if (!assignedPerson.isNullOrBlank()) Color(0xFF2A5F6B) else Color(0xFF1F6B4F),
                                 modifier = Modifier.clickable {
                                     editingJuzAssignment = juzNum
                                     personNameInput = assignedPerson ?: ""
@@ -1023,7 +1023,7 @@ fun HatimTab(
                         Checkbox(
                             checked = isCompleted,
                             onCheckedChange = { viewModel.toggleHatimJuzCompleted(juzNum) },
-                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF2F7D5B))
                         )
 
                         TextButton(onClick = { onOpenJuz(juzNum) }) {
@@ -1112,7 +1112,7 @@ fun HatimDuasiDialog(
                 Text("ÂMİN (KAPAT)", fontWeight = FontWeight.Bold, color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -1126,7 +1126,7 @@ fun BismillahHeaderDecoration(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 16.dp)
-            .background(Color(0xFFFCF8EC), RoundedCornerShape(8.dp))
+            .background(Color(0xFFF8F1DD), RoundedCornerShape(8.dp))
             .border(1.dp, Color(0xFF8B5A2B).copy(alpha = 0.3f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         contentAlignment = Alignment.Center
@@ -1192,13 +1192,13 @@ fun MushafView(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFAF6EE))) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F1DD))) {
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 90.dp)) {
             // Üst Bar: Mod Geçişi (Hat / Resim)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFE8E3D0))
+                    .background(Color(0xFFEADFC0))
                     .padding(horizontal = 16.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -1245,7 +1245,7 @@ fun MushafView(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(12.dp)
-                        .background(Color(0xFFFFFDF7), RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFBF6E8), RoundedCornerShape(12.dp))
                         .border(2.dp, Color(0xFF8B5A2B).copy(alpha = 0.6f), RoundedCornerShape(12.dp))
                         .padding(12.dp)
                 ) {
@@ -1269,7 +1269,7 @@ fun MushafView(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isPlayingThis) Color(0xFFFFF9C4) else Color.Transparent)
+                                    .background(if (isPlayingThis) Color(0xFFF3E7B8) else Color.Transparent)
                                     .clickable { onPlayClick(verse) }
                                     .padding(vertical = 8.dp, horizontal = 6.dp)
                             ) {
@@ -1296,7 +1296,7 @@ fun MushafView(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
-            color = Color(0xFFE8E3D0),
+            color = Color(0xFFEADFC0),
             shadowElevation = 10.dp,
             border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
         ) {
@@ -1369,7 +1369,7 @@ fun MushafView(
                             Icon(
                                 imageVector = Icons.Default.Repeat,
                                 contentDescription = "Tekrar",
-                                tint = if (isRepeatEnabled) Color(0xFFFF9800) else Color(0xFF2C1810)
+                                tint = if (isRepeatEnabled) Color(0xFFB8742A) else Color(0xFF2C1810)
                             )
                         }
                     }
@@ -1381,7 +1381,7 @@ fun MushafView(
                         Icon(
                             imageVector = if (isFirstBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "Yer İmi",
-                            tint = if (isFirstBookmarked) Color(0xFFFF9800) else Color(0xFF2C1810)
+                            tint = if (isFirstBookmarked) Color(0xFFB8742A) else Color(0xFF2C1810)
                         )
                     }
                 }
@@ -1404,7 +1404,7 @@ fun MushafImagePage(pageNumber: Int) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFCF8EC))
+            .background(Color(0xFFF8F1DD))
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -1458,7 +1458,7 @@ fun MushafImagePage(pageNumber: Int) {
 @Composable
 fun LoadingBox() {
     Box(Modifier.fillMaxSize(), Alignment.Center) {
-        CircularProgressIndicator(color = Color(0xFFFFD700))
+        CircularProgressIndicator(color = Color(0xFFC9A24B))
     }
 }
 
@@ -1474,11 +1474,11 @@ fun DecorativeNumber(number: String) {
     Surface(
         modifier = Modifier.size(36.dp),
         shape = CircleShape,
-        color = Color(0xFFFFD700).copy(alpha = 0.15f),
-        border = BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.4f))
+        color = Color(0xFFC9A24B).copy(alpha = 0.15f),
+        border = BorderStroke(1.dp, Color(0xFFC9A24B).copy(alpha = 0.4f))
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = number, color = Color(0xFFFFD700), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(text = number, color = Color(0xFFC9A24B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1508,7 +1508,7 @@ fun SurahItem(surah: Surah, onClick: (Surah) -> Unit) {
             Text(text = surah.name ?: "", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(text = "İniş Sırası: ${surah.revelationOrder ?: "-"}", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
         }
-        Text(text = "${surah.verseCount} AYET", color = Color(0xFFFFD700), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(text = "${surah.verseCount} AYET", color = Color(0xFFC9A24B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
         if (surah.arabicName != null) {
             Spacer(Modifier.width(12.dp))
             Text(text = surah.arabicName, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -1565,7 +1565,7 @@ fun SurahHeaderDecoration(arabicName: String, fontFamily: FontFamily = FontFamil
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp, horizontal = 16.dp)
-            .background(Color(0xFFE8E3D0), RoundedCornerShape(12.dp))
+            .background(Color(0xFFEADFC0), RoundedCornerShape(12.dp))
             .border(2.dp, Color(0xFF8B5A2B), RoundedCornerShape(12.dp))
             .padding(16.dp),
         contentAlignment = Alignment.Center
@@ -1686,7 +1686,7 @@ fun EzanVaktiVerseList(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
-            color = Color(0xFFE8E3D0),
+            color = Color(0xFFEADFC0),
             shadowElevation = 10.dp,
             border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
         ) {
@@ -1759,7 +1759,7 @@ fun EzanVaktiVerseList(
                             Icon(
                                 imageVector = Icons.Default.Repeat,
                                 contentDescription = "Tekrar",
-                                tint = if (isRepeatEnabled) Color(0xFFFF9800) else Color(0xFF2C1810)
+                                tint = if (isRepeatEnabled) Color(0xFFB8742A) else Color(0xFF2C1810)
                             )
                         }
                     }
@@ -1771,7 +1771,7 @@ fun EzanVaktiVerseList(
                         Icon(
                             imageVector = if (isFirstBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "Yer İmi",
-                            tint = if (isFirstBookmarked) Color(0xFFFF9800) else Color(0xFF2C1810)
+                            tint = if (isFirstBookmarked) Color(0xFFB8742A) else Color(0xFF2C1810)
                         )
                     }
                 }
@@ -1815,7 +1815,7 @@ fun EzanVaktiVerseItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isCurrentPlaying) Color(0xFFFFF9C4) else Color(0xFFFCF8EC))
+            .background(if (isCurrentPlaying) Color(0xFFF3E7B8) else Color(0xFFF8F1DD))
             .padding(16.dp)
     ) {
         TajweedAyahText(
@@ -2052,7 +2052,7 @@ fun QuickJumpDialog(
                 Text("İPTAL", color = Color.Gray)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2099,7 +2099,7 @@ fun SideMenuSheet(
             }
         },
         confirmButton = {},
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2202,9 +2202,9 @@ fun MeallerDialog(
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFF8B5A2B), strokeWidth = 2.dp)
                         } else if (isDownloaded) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = "İndirildi", tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.CheckCircle, contentDescription = "İndirildi", tint = Color(0xFF2F7D5B), modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("İndirildi", fontSize = 10.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+                                Text("İndirildi", fontSize = 10.sp, color = Color(0xFF2F7D5B), fontWeight = FontWeight.Bold)
                             }
                         } else {
                             Button(
@@ -2230,7 +2230,7 @@ fun MeallerDialog(
                 Text("TAMAM", color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2283,7 +2283,7 @@ fun HafizlarDialog(
                 Text("TAMAM", color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2335,7 +2335,7 @@ fun SayfaGorunumuDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) { Text("KAPAT", color = Color(0xFF8B5A2B)) }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2382,7 +2382,7 @@ fun SecimTakipDialog(
                 Text("TAMAM", color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2469,7 +2469,7 @@ fun TecvidDialog(
                 Text("KAPAT", color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2511,7 +2511,7 @@ fun BookmarksDialog(
                 Text("KAPAT", color = Color.White)
             }
         },
-        containerColor = Color(0xFFFCF8EC),
+        containerColor = Color(0xFFF8F1DD),
         shape = RoundedCornerShape(16.dp)
     )
 }
@@ -2544,10 +2544,10 @@ fun SettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("AYARLAR", fontWeight = FontWeight.Black, color = Color(0xFFFFD700), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+        title = { Text("AYARLAR", fontWeight = FontWeight.Black, color = Color(0xFFC9A24B), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.Transparent, contentColor = Color(0xFFFFD700)) {
+                TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.Transparent, contentColor = Color(0xFFC9A24B)) {
                     Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) { Text("OKUYUCU", modifier = Modifier.padding(8.dp)) }
                     Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) { Text("GÖRÜNÜM", modifier = Modifier.padding(8.dp)) }
                 }
@@ -2588,6 +2588,6 @@ fun SettingsDialog(
             }
         },
         confirmButton = { Button(onClick = onDismiss) { Text("TAMAM") } },
-        containerColor = Color(0xFF073642)
+        containerColor = Color(0xFF14584A)
     )
 }

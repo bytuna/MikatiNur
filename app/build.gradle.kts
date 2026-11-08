@@ -58,6 +58,9 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation("androidx.compose.material:material-icons-extended")
+    // Kur'an-ı Kerim 1: sesli tilavet
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-common:1.3.1")
     implementation("androidx.webkit:webkit:1.11.0")
     
     // NAVİGASYON
