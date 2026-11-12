@@ -1,6 +1,6 @@
 {
-  "tag_name": "1.1.6",
-  "body": "• Yeni Kur'an-ı Kerim modülü: sure, cüz, sayfa ve hatim; 13 okuyucu (Kâbe imamları dâhil); okuma hızı; kalınan ayetten devam.\n• Zengin zikirmatik: hazır zikirler, kendi zikrini ekleme, hedef ve tur sayacı.\n• Profil, yedekle/geri yükle ve kullanım istatistikleri.\n• Güncelleme denetimi indirme sayfasından yapılıyor.\n• Bildirimdeki kalan dakika göstergesi düzeltildi.\n• Paylaşım kartlarında rastgele arka plan.",
-  "html_url": "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.6.apk",
-  "name": "Mîkat-ı Nur Güncellemesi v1.1.6"
+  "tag_name": "1.1.7",
+  "body": "• Kulaklık ve kilit ekranı çal/duraklat düğmeleri çalışır hale getirildi.\n• Ekran kapalıyken Kur'an sesi kesilmeden oynamaya devam eder.\n• Kur'an, Risale ve Tesbihat ekranlarında ekran kararması engellendi.\n• Güvenlik sertleştirmesi: şifresiz ağ trafiği kapatıldı, hassas loglar kaldırıldı, yedekleme kısıtlandı.\n• AI arka plan üretimi kaldırıldı; ücretsiz statik arka planlar kullanılıyor.",
+  "html_url": "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.7.apk",
+  "name": "Mîkat-ı Nur Güncellemesi v1.1.7"
 }
