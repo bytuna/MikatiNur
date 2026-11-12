@@ -55,7 +55,7 @@ import com.example.mkat_nur.util.StatsStore
 import com.example.mkat_nur.ui.qibla.QiblaScreen
 import com.example.mkat_nur.ui.religious.ReligiousDaysScreen
 import com.example.mkat_nur.ui.religious.WomenSpecialScreen
-import com.example.mkat_nur.ui.risale.RisaleWebViewScreen
+import com.example.mkat_nur.ui.kutuphane.RisaleKutuphaneScreen
 import com.example.mkat_nur.ui.settings.SettingsScreen
 import com.example.mkat_nur.ui.share.ShareCardScreen
 import com.example.mkat_nur.util.AppConfig
@@ -225,9 +225,8 @@ fun MkatNurApp(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val gesturesEnabled = drawerState.isOpen || (
-        currentRoute != "risale" && 
-        currentRoute != "qibla_map" && 
-        currentRoute?.startsWith("risale_reader") != true
+        currentRoute != "risale" &&
+        currentRoute != "qibla_map"
     )
 
     // Geri tuşu ile menüyü kapatma
@@ -587,18 +586,7 @@ fun MkatNurApp(
                 )
             }
             composable("risale") {
-                RisaleWebViewScreen(
-                    bookId = null,
-                    onBackClick = { navController.popBackStack() },
-                    onMenuClick = { scope.launch { drawerState.open() } }
-                )
-            }
-            composable("risale_reader/{bookId}") { backStackEntry ->
-                val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
-                RisaleWebViewScreen(
-                    bookId = bookId,
-                    onBackClick = { navController.popBackStack() }
-                )
+                RisaleKutuphaneScreen()
             }
             composable("tesbihat?prayer={prayer}",
                 arguments = listOf(navArgument("prayer") { 
