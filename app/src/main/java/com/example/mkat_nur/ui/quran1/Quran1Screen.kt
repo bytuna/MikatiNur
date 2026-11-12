@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -61,6 +62,13 @@ fun Quran1Screen(
 
     // Ekrandan ayrılırken sesi duraklat
     DisposableEffect(Unit) { onDispose { viewModel.pauseAudio() } }
+
+    // Okuma ekranında ekranın kararmasını engelle; ekrandan çıkınca normal davranışa dön
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
+    }
 
     // Okuma açıkken geri tuşu listeye döner
     BackHandler(enabled = target != null) { viewModel.closeReader() }

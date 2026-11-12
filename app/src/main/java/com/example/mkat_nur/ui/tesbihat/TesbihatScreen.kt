@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
@@ -45,6 +46,13 @@ fun TesbihatScreen(
     onMenuClick: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // Tesbihat okunurken ekran kararmasın; ekrandan çıkınca normal davranışa dön
+    val tesbihatView = LocalView.current
+    DisposableEffect(Unit) {
+        tesbihatView.keepScreenOn = true
+        onDispose { tesbihatView.keepScreenOn = false }
+    }
     val prayerKeys = mapOf(
         "imsak" to "sabah", "sabah" to "sabah", "güneş" to "sabah",
         "öğle" to "ogle", "ikindi" to "ikindi", "akşam" to "aksam", "yatsı" to "yatsi",
