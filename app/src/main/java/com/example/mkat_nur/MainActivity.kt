@@ -490,9 +490,8 @@ fun MkatNurApp(
                             .fillMaxWidth()
                             .clickable {
                                 scope.launch { drawerState.close() }
-                                val appUri = Uri.parse("http://instagram.com/_u/mikati_nur")
                                 val webUri = Uri.parse("https://www.instagram.com/mikati_nur/")
-                                val instagramIntent = Intent(Intent.ACTION_VIEW, appUri).apply {
+                                val instagramIntent = Intent(Intent.ACTION_VIEW, webUri).apply {
                                     setPackage("com.instagram.android")
                                 }
                                 try {
@@ -616,7 +615,6 @@ fun MkatNurApp(
             }
             composable("share_card") {
                 ShareCardScreen(
-                    prayerViewModel = viewModel,
                     onBackClick = { navController.popBackStack() }
                 )
             }

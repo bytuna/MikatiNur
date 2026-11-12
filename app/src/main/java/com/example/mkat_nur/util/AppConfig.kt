@@ -10,8 +10,8 @@ object AppConfig {
         println("Yeni güncellemeler kontrol ediliyor...")
     }
 
-    const val VERSION_NAME = "1.1.6"
-    const val VERSION_CODE = 9
+    const val VERSION_NAME = "1.1.7"
+    const val VERSION_CODE = 10
     const val DEVELOPER = "ByTuna"
     const val PROJECT_NAME = "Mîkat-ı Nur"
     const val BUILD_DATE = "2026"
@@ -21,7 +21,7 @@ object AppConfig {
 
     // Güncelleme denetimi artık indirme sayfasından yapılır (bkz. network/UpdateChecker.kt)
     const val UPDATE_PAGE_URL = "https://www.mikatinur.com.tr/download/"
-    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.6.apk"
+    const val DOWNLOAD_URL = "https://mikatinur.com.tr/apk/Mikat-Nur-v1.1.7.apk"
 
     /** Telefonda yüklü olan sürümün adı (paket bilgisinden). */
     fun getInstalledVersionName(context: Context): String {
@@ -81,6 +81,13 @@ object AppConfig {
     )
 
     val history = listOf(
+        VersionHistory(
+            versionName = "1.1.7",
+            versionCode = 10,
+            date = "2026-11-12",
+            description = "Kulaklık ve kilit ekranı çal/duraklat düğmeleri çalışır hale getirildi, ekran kapalıyken ses oynamaya devam eder. Kur'an, Risale ve Tesbihat ekranlarında ekran kararması engellendi. Güvenlik sertleştirmesi: şifresiz ağ trafiği kapatıldı, hassas loglar kaldırıldı, yedekleme kısıtlandı. AI arka plan üretimi kaldırıldı (ücretsiz statik arka planlar kullanılıyor).",
+            developer = "ByTuna"
+        ),
         VersionHistory(
             versionName = "1.1.6",
             versionCode = 9,

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Varsayılan: yalnızca HTTPS, yalnızca sistem sertifikaları (kullanıcı CA'ları güvenilmez). -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true">
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
         </trust-anchors>
     </base-config>
+    <!-- HTTPS'ten bağlanamayan bilinen Diyanet/vakit kaynaklarına istisna. -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">acikkaynakkuran-dev.diyanet.gov.tr</domain>
         <domain includeSubdomains="true">kuranapi.diyanet.gov.tr</domain>

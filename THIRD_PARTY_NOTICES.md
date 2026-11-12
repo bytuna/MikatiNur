@@ -27,14 +27,11 @@ Uygulama içinde aynı liste **Ayarlar → Gizlilik ve Yasal → Lisanslar ve Ka
 
 ## Yazılım Bileşenleri
 AndroidX (Compose, Navigation, WorkManager, Lifecycle, Activity, Core, WebKit, Media3), Kotlin ve Coroutines, Retrofit, OkHttp, Gson, Coil, Material Icons: **Apache License 2.0** (https://www.apache.org/licenses/LICENSE-2.0).
-Firebase (Authentication, Firestore, AI Logic): Apache License 2.0 ve Firebase Hizmet Şartları. Google Play Hizmetleri: Google Play Hizmetleri Şartları.
-
-## Yapay Zekâ ve Görsel Servisler
-Google Gemini (Firebase AI Logic) ve Pollinations.ai: servislerin hizmet şartları.
+Firebase (Authentication, Firestore): Apache License 2.0 ve Firebase Hizmet Şartları. Google Play Hizmetleri: Google Play Hizmetleri Şartları.
 
 ---
 ### Yayın öncesi doğrulanması gerekenler
 1. **Me Quran** yazı tipi ticari olmayan kullanım içindir. Uygulama ücretsiz ve reklamsız ise sorun olmayabilir; para kazanma (reklam, abonelik, ücretli sürüm) planı varsa yazı tipini kaldırın veya yazardan izin alın.
 2. **Ezan kayıtları** (`res/raw/*_ezani.mp3`) için kaynak sitenin yeniden dağıtım izni doğrulanmalıdır.
 3. **Tecvid verisi** (`assets/tajweed_data.json`) ve **Risale-i Nur** metinlerinin yayın hakları/kaynakları doğrulanmalıdır.
-4. Quran.com, EveryAyah ve Pollinations servislerinin güncel kullanım şartları, uygulamanın kullanım biçimine uygun olmalıdır.
+4. Quran.com ve EveryAyah servislerinin güncel kullanım şartları, uygulamanın kullanım biçimine uygun olmalıdır.

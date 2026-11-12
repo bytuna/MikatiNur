@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mkat_nur.R
-import com.example.mkat_nur.util.AiImageService
 import com.example.mkat_nur.util.ShareUtils
 import com.example.mkat_nur.viewmodel.PrayerViewModel
 import com.example.mkat_nur.viewmodel.QuranViewModel
@@ -30,20 +29,14 @@ import com.example.mkat_nur.viewmodel.QuranViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareCardScreen(
-    prayerViewModel: PrayerViewModel = viewModel(),
     quranViewModel: QuranViewModel = viewModel(),
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val isPrayerAiLoading by prayerViewModel.isAiLoading.collectAsState()
-    val isQuranAiLoading by quranViewModel.isAiLoading.collectAsState()
-    val isAiLoading = isPrayerAiLoading || isQuranAiLoading
-    
+    val isVerseLoading by quranViewModel.isAiLoading.collectAsState()
+
     val randomVerse by quranViewModel.randomVerse.collectAsState()
     val randomSurahName by quranViewModel.randomSurahName.collectAsState()
-    
-    var selectedStyle by remember { mutableStateOf<AiImageService.ShareStyle?>(null) }
-    var showStyleMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (randomVerse == null) {
@@ -65,7 +58,7 @@ fun ShareCardScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { quranViewModel.fetchRandomVerse() }, enabled = !isAiLoading) {
+                        IconButton(onClick = { quranViewModel.fetchRandomVerse() }, enabled = !isVerseLoading) {
                             Icon(Icons.Default.Refresh, "Yenile", tint = Color.White)
                         }
                     },
@@ -82,7 +75,7 @@ fun ShareCardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (randomVerse == null || isAiLoading) {
+                if (randomVerse == null || isVerseLoading) {
                     CircularProgressIndicator(color = Color(0xFFFFD700))
                     Spacer(Modifier.height(16.dp))
                     Text("Rastgele bir ayet seçiliyor...", color = Color.White.copy(alpha = 0.7f))
@@ -137,59 +130,6 @@ fun ShareCardScreen(
 
                     Spacer(Modifier.height(32.dp))
 
-                    Text("Görsel Tarzı Seçin", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Button(
-                            onClick = { showStyleMenu = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = selectedStyle?.displayName ?: "Standart (Uygulama İçi)",
-                                    color = if (selectedStyle == null) Color.White.copy(alpha = 0.6f) else Color(0xFFFFD700)
-                                )
-                                Icon(Icons.Default.ArrowDropDown, null, tint = Color.White)
-                            }
-                        }
-
-                        DropdownMenu(
-                            expanded = showStyleMenu,
-                            onDismissRequest = { showStyleMenu = false },
-                            modifier = Modifier.background(Color(0xFF1B263B)).fillMaxWidth(0.85f)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Standart (Mîkat-ı Nur Arka Planları)", color = Color.White) },
-                                leadingIcon = { Icon(Icons.Default.PhotoLibrary, null, tint = Color.White.copy(alpha = 0.7f)) },
-                                onClick = {
-                                    selectedStyle = null
-                                    showStyleMenu = false
-                                }
-                            )
-                            
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                            
-                            AiImageService.ShareStyle.entries.forEach { style ->
-                                DropdownMenuItem(
-                                    text = { Text(style.displayName, color = Color.White) },
-                                    leadingIcon = { Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFFFFD700)) },
-                                    onClick = {
-                                        selectedStyle = style
-                                        showStyleMenu = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
                     Spacer(Modifier.height(24.dp))
 
                     Button(
@@ -202,26 +142,21 @@ fun ShareCardScreen(
                             } else {
                                 "Kur'an-ı Kerim (${verse.verseKey})"
                             }
-                            
-                            if (selectedStyle == null) {
-                                ShareUtils.shareInfoAsImage(context, title, content, source, arabicText = verse.arabicText)
-                            } else {
-                                prayerViewModel.shareWithAi(context, title, content, source, selectedStyle!!, arabicText = verse.arabicText)
-                            }
+                            ShareUtils.shareInfoAsImage(context, title, content, source, arabicText = verse.arabicText)
                         },
                         modifier = Modifier.fillMaxWidth().height(60.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = !isAiLoading
+                        enabled = !isVerseLoading
                     ) {
                         Icon(
-                            imageVector = if (selectedStyle != null) Icons.Default.AutoAwesome else Icons.Default.Share,
+                            imageVector = Icons.Default.Share,
                             contentDescription = null,
                             tint = Color(0xFF1B263B)
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            text = if (selectedStyle != null) "AI İLE OLUŞTUR VE PAYLAŞ" else "PAYLAŞ",
+                            text = "PAYLAŞ",
                             color = Color(0xFF1B263B),
                             fontWeight = FontWeight.Black,
                             fontSize = 16.sp
@@ -231,7 +166,7 @@ fun ShareCardScreen(
                     TextButton(
                         onClick = { quranViewModel.fetchRandomVerse() },
                         modifier = Modifier.padding(top = 8.dp),
-                        enabled = !isAiLoading
+                        enabled = !isVerseLoading
                     ) {
                         Text("BAŞKA BİR AYET SEÇ", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
                     }

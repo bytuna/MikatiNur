@@ -652,13 +652,8 @@ class QuranViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun shareWithAi(context: android.content.Context, title: String, content: String, source: String, style: com.example.mkat_nur.util.AiImageService.ShareStyle = com.example.mkat_nur.util.AiImageService.ShareStyle.MINIMALIST, arabicText: String? = null) {
-        viewModelScope.launch {
-            _isAiLoading.value = true
-            val aiBitmap = com.example.mkat_nur.util.AiImageService.generateAiBackground(content, style)
-            _isAiLoading.value = false
-            com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, aiBitmap, arabicText)
-        }
+    fun shareWithAi(context: android.content.Context, title: String, content: String, source: String, arabicText: String? = null) {
+        com.example.mkat_nur.util.ShareUtils.shareInfoAsImage(context, title, content, source, null, arabicText)
     }
 
     override fun onCleared() {

@@ -392,7 +392,6 @@ fun HeaderSection(cityName: String, data: PrayerData, dataSource: String, lastUp
 fun InfoCard(title: String, content: String, source: String, icon: ImageVector, viewModel: PrayerViewModel) {
     val context = LocalContext.current
     val themeColors = com.example.mkat_nur.ui.theme.LocalAppThemeColors.current
-    val isAiLoading by viewModel.isAiLoading.collectAsState()
 
     Card(
         modifier = Modifier.fillMaxWidth().height(220.dp),
@@ -413,63 +412,34 @@ fun InfoCard(title: String, content: String, source: String, icon: ImageVector, 
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isAiLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = themeColors.textSecondary,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(Modifier.width(12.dp))
-                    } else {
-                        var showMenu by remember { mutableStateOf(false) }
+                    var showMenu by remember { mutableStateOf(false) }
 
-                        Box {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Paylaş",
-                                    tint = themeColors.textSecondary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                    Box {
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Paylaş",
+                                tint = themeColors.textSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
 
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false },
-                                modifier = Modifier.background(themeColors.surface)
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Hızlı Paylaş", color = themeColors.textPrimary) },
-                                    leadingIcon = { Icon(Icons.Default.Share, null, tint = themeColors.textSecondary) },
-                                    onClick = {
-                                        showMenu = false
-                                        ShareUtils.shareInfoAsImage(context, title, content, source)
-                                    }
-                                )
-                                
-                                HorizontalDivider(color = themeColors.cardBorder)
-                                
-                                Text(
-                                    "Kart Paylaş (AI)",
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = themeColors.accent
-                                )
-
-                                com.example.mkat_nur.util.AiImageService.ShareStyle.entries.forEach { style ->
-                                    DropdownMenuItem(
-                                        text = { Text(style.displayName, color = themeColors.textPrimary) },
-                                        leadingIcon = { Icon(Icons.Default.AutoAwesome, null, tint = themeColors.accent) },
-                                        onClick = {
-                                            showMenu = false
-                                            viewModel.shareWithAi(context, title, content, source, style)
-                                        }
-                                    )
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(themeColors.surface)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Hızlı Paylaş", color = themeColors.textPrimary) },
+                                leadingIcon = { Icon(Icons.Default.Share, null, tint = themeColors.textSecondary) },
+                                onClick = {
+                                    showMenu = false
+                                    ShareUtils.shareInfoAsImage(context, title, content, source)
                                 }
-                            }
+                            )
                         }
                     }
                 }

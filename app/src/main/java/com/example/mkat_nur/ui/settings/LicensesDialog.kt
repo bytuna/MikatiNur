@@ -118,23 +118,6 @@ private val NOTICE_GROUPS = listOf(
         )
     ),
     NoticeGroup(
-        "Yapay Zekâ ve Görsel",
-        listOf(
-            NoticeItem(
-                "Google Gemini (Firebase AI Logic)",
-                "Paylaşım kartlarının hazırlanmasında kullanılır.",
-                "Google / Firebase hizmet şartları",
-                "https://firebase.google.com/terms"
-            ),
-            NoticeItem(
-                "Pollinations.ai",
-                "Paylaşım kartı arka plan görselleri bu servisle üretilir.",
-                "Hizmet şartları: pollinations.ai",
-                "https://pollinations.ai"
-            )
-        )
-    ),
-    NoticeGroup(
         "Yazılım Bileşenleri",
         listOf(
             NoticeItem(

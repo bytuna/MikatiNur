@@ -27,7 +27,7 @@ object UpdateChecker {
         .cache(null)
         .build()
 
-    private val absoluteApk = Regex("""https?://[^"'\s\\<>()]*Mikat-Nur-v(\d+(?:\.\d+)+)\.apk""", RegexOption.IGNORE_CASE)
+    private val absoluteApk = Regex("""https://[^"'\s\\<>()]*Mikat-Nur-v(\d+(?:\.\d+)+)\.apk""", RegexOption.IGNORE_CASE)
     private val relativeApk = Regex("""(/[^"'\s\\<>()]*Mikat-Nur-v(\d+(?:\.\d+)+)\.apk)""", RegexOption.IGNORE_CASE)
 
     // Dosya adı kalıbı değişirse yedek: herhangi bir .apk bağlantısı + "Sürüm" başlığı yanındaki sürüm numarası

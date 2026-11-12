@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -11,16 +13,32 @@ android {
         applicationId = "com.example.mkat_nur"
         minSdk = 24
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.1.6"
+        versionCode = 10
+        versionName = "1.1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            // Kimlik bilgileri local.properties'ten okunur (git'e girmez).
+            val props = Properties()
+            val localProps = rootProject.file("local.properties")
+            if (localProps.exists()) {
+                localProps.inputStream().use { props.load(it) }
+            }
+            storeFile = props.getProperty("MIKATINUR_STORE_FILE")?.let { file(it) }
+            storePassword = props.getProperty("MIKATINUR_STORE_PASSWORD")
+            keyAlias = props.getProperty("MIKATINUR_KEY_ALIAS")
+            keyPassword = props.getProperty("MIKATINUR_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -52,7 +70,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
-    implementation(libs.firebase.ai)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
