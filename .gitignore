@@ -1,17 +1,56 @@
+# Gradle / Android Studio
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+.kotlin
+
+# Build çıktıları — repoya asla
+*.apk
+*.aab
+*.apks
+
+# Firebase / gizli yapılandırma
+app/google-services.json
+
+# Kitap içerikleri (telif — repoya asla; localde kalır)
+kitaplar/
+app/src/main/assets/books/
+app/src/main/assets/covers/
+app/src/main/assets/fihrist/
+app/src/main/assets/fonts/
+app/src/main/assets/hasiye/
+app/src/main/assets/lugat/
+app/src/main/assets/meal/
+app/src/main/assets/library.json
+
+# Pazarlama görselleri (repoya değil)
+Resim/
+
+# Veri işleme betikleri ve geçici veriler (erisale.com referanslı)
+muhtelif_data/
+__pycache__/
+*.pyc
+analyze_erisale.py
+muhtelif_*.py
+scrape_risale*.py
+risale_converter.py
+clean_assets.py
+
+# Kazıma atıkları / geçici dump'lar
+diyanet_*.html
+api_docs.json
+emushaf_vakitler.json
+*.artifact.md
+
+# Ajan çalışma alanları
+.artifacts/
+
+# Uygulama veri dosyaları
 /data/bug-reports.json
 /data/analytics.json
